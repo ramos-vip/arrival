@@ -98,7 +98,7 @@ body {
   box-shadow: 0 4px 18px rgba(99,102,241,.45);
 }
 .hdr-title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
-.hdr-sub   { font-size: 10px; color: #1e3050; margin-top: 2px; }
+.hdr-sub   { font-size: 10px; color: #3d5a7a; margin-top: 2px; }
 .hdr-right { display: flex; align-items: center; gap: 12px; }
 .hdr-pill {
   display: flex; align-items: center; gap: 7px;
@@ -523,9 +523,9 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
 /* ═══ TABLET ═══ */
 @media (max-width: 1050px) and (min-width: 641px) {
   .tbl-wrap { overflow-x: auto; }
-  table     { min-width: 720px; padding: 4px 6px 6px; }
   col.c-time{ width: 84px; } col.c-cust{ width: 185px; }
   col.c-trip{ width: 135px; } col.c-drv { width: 185px; }
+  table     { min-width: 660px; padding: 4px 6px 6px; }
   .td-time  { font-size: 28px; } .cust-name { font-size: 13px; }
   .trow > td{ padding: 12px 13px; }
   thead th:first-child, .trow > td:first-child { padding-left: 16px; }
@@ -725,9 +725,13 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
 /* rol: 'yonetici' → tüm tarihler + date bar
    rol: 'karsilama' → sadece bugün, date bar yok */
 var USERS = {
-  'ramos':     { sifre: 'vip2026', rol: 'yonetici'   },
-  'desk':      { sifre: '18811881', rol: 'karsilama'   }
+  'ramos': { _h: 'dmlwMjAyNg==', rol: 'yonetici'  },
+  'desk':  { _h: 'MTg4MTE4ODE=', rol: 'karsilama' }
 };
+function _checkPass(u, p){
+  try{ return !!USERS[u] && atob(USERS[u]._h) === p; } catch(e){ return false; }
+}
+var _loginBusy = false;
 function getRole(){ return localStorage.getItem('ramos_rol')||'karsilama'; }
 function isYonetici(){ return getRole()==='yonetici'; }
 
@@ -754,18 +758,6 @@ function parseTarih(s){
 
 function getToday()    { return fmtK(new Date()); }
 function getTomorrow() { var d=new Date(); d.setDate(d.getDate()+1); return fmtK(d); }
-
-/* Operasyonel gün: gece 00:00-02:59 arası hâlâ önceki gün sayılır.
-   03:00'dan itibaren yeni gün başlar. */
-function getOperationalDate(){
-  var now = new Date();
-  if(now.getHours() < 6){
-    var prev = new Date(now);
-    prev.setDate(now.getDate() - 1);
-    return fmtK(prev);
-  }
-  return fmtK(now);
-}
 
 function telLink(v){
   if(!v||v.trim()===''||v.indexOf('ERROR')>-1) return '';
@@ -1055,6 +1047,15 @@ function showVoucher(idx){
 }
 
 /* ════ FETCH ════ */
+/* Cache: 3 saatlik VE aynı gün içinde — gece yarısı geçişinde kendiliğinden iptal olur */
+function isCacheValid(ts){
+  if(!ts) return false;
+  if((Date.now()-ts) > 3*60*60*1000) return false;
+  var cd=new Date(ts), nd=new Date();
+  return cd.getDate()===nd.getDate() &&
+         cd.getMonth()===nd.getMonth() &&
+         cd.getFullYear()===nd.getFullYear();
+}
 function yukle(){
   if(localStorage.getItem('ramos_auth')!=='ok') return;
   if(isLoading) return;                        /* çakışan istek engelle */
@@ -1062,7 +1063,7 @@ function yukle(){
   /* 1) Cache: max 3 saat geçerli */
   var cacheRaw = localStorage.getItem('ramos_cache');
   var cacheTs  = parseInt(localStorage.getItem('ramos_cache_ts')||'0');
-  var cacheOk  = cacheRaw && (Date.now() - cacheTs) < 3 * 60 * 60 * 1000;
+  var cacheOk  = cacheRaw && isCacheValid(cacheTs);
 
   /* isLoading ÖNCE true yapılıyor — cache render sırasında da
      "transfer bulunamadı" yerine "yükleniyor" göstermek için */
@@ -1157,9 +1158,11 @@ function checkSession(){
 
 /* ════ LOGIN / AUTH ════ */
 function doLogin(){
+  if(_loginBusy) return;                        /* çift tık koruması */
   var u=$('#l-user').val().trim().toLowerCase();
   var p=$('#l-pass').val();
-  if(USERS[u]&&USERS[u].sifre===p){
+  if(_checkPass(u, p)){
+    _loginBusy = true;
     localStorage.setItem('ramos_auth','ok');
     localStorage.setItem('ramos_rol', USERS[u].rol);
     localStorage.setItem('ramos_login_ts', String(Date.now()));
@@ -1168,7 +1171,7 @@ function doLogin(){
       applyRole();
       yukle();
       setInterval(yukle, 60000);
-      setInterval(checkSession, 60000); /* her dakika oturum süresi kontrol */
+      setInterval(checkSession, 60000);
     });
   } else {
     $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
