@@ -978,31 +978,56 @@ function render(veriler){
   $('#upd').text('Son güncelleme: '+saat);
 
   if(isYonetici()){
-    /* İlk yükleme → bugün. Seçili tarihin verisi sildiyse → bugün.
-       Kullanıcı farklı tarih seçtiyse koru. */
-    if(!selectedDate){
-      selectedDate = today;                 /* her zaman bugünden başla */
-    } else if(!counts[selectedDate]){
-      selectedDate = counts[today] ? today  /* bugüne dön */
-        : (counts[tomorrow] ? tomorrow      /* bugün boşsa yarın */
-        : (Object.keys(counts).sort(function(a,b){
-            var pa=a.split('.'),pb=b.split('.');
-            return new Date(+pa[2],+pa[1]-1,+pa[0])-new Date(+pb[2],+pb[1]-1,+pb[0]);
-           })[0] || today));
+    /* Tarih seçimi:
+       - selectedDate boşsa VEYA seçili tarihin verisi yoksa → en yakın tarihi bul
+       - Kullanıcı geçerli bir tarih seçmişse koru */
+    if(!selectedDate || !counts[selectedDate]){
+      var sorted = Object.keys(counts).sort(function(a,b){
+        var pa=a.split('.'), pb=b.split('.');
+        return new Date(+pa[2],+pa[1]-1,+pa[0]) - new Date(+pb[2],+pb[1]-1,+pb[0]);
+      });
+      /* Bugün varsa → bugün. Yarın varsa → yarın. Yoksa ilk gelecek tarih. */
+      var todayD = new Date(today.split('.')[2], today.split('.')[1]-1, today.split('.')[0]);
+      var future = sorted.filter(function(d){
+        var p=d.split('.');
+        return new Date(+p[2],+p[1]-1,+p[0]) >= todayD;
+      });
+      selectedDate = counts[today] ? today
+        : (future.length ? future[0] : (sorted[0] || today));
     }
     buildDateBar(allData);
     showDate(selectedDate);
   } else {
-    /* Karşılamacı:
-       03:00-23:59 → sadece bugün
-       00:00-02:59 → dün + bugün (gece vardiyası geçiş saati) */
+    /* Karşılamacı — bugün + varsa yarın göster.
+       Gece 00:00-05:59 → dün de dahil (gece vardiyası).
+       Bugün boşsa → en yakın gelecek tarihi göster. */
     var now = new Date();
+    var tarihler = [];
     if(now.getHours() < 6){
-      var prev = new Date(now);
-      prev.setDate(now.getDate()-1);
-      showDates([fmtK(prev), fmtK(now)]);
+      var prev = new Date(now); prev.setDate(now.getDate()-1);
+      tarihler = [fmtK(prev), fmtK(now)];
     } else {
-      showDate(today);
+      tarihler = [today];
+    }
+    /* Gösterilecek tarihte veri var mı? Yoksa en yakın gelecek tarihe geç */
+    var herhangiVarMi = tarihler.some(function(t){ return counts[t] > 0; });
+    if(!herhangiVarMi){
+      var sortedAll = Object.keys(counts).sort(function(a,b){
+        var pa=a.split('.'), pb=b.split('.');
+        return new Date(+pa[2],+pa[1]-1,+pa[0]) - new Date(+pb[2],+pb[1]-1,+pb[0]);
+      });
+      var todayD2 = new Date(today.split('.')[2], today.split('.')[1]-1, today.split('.')[0]);
+      var fut = sortedAll.filter(function(d){
+        var p=d.split('.'); return new Date(+p[2],+p[1]-1,+p[0]) >= todayD2;
+      });
+      if(fut.length){
+        /* En yakın gelecek transferi göster */
+        showDate(fut[0]);
+      } else {
+        showDate(today); /* yine de bugünü göster (boş mesajı çıkar) */
+      }
+    } else {
+      showDates(tarihler);
     }
   }
 }
