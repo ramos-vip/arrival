@@ -1119,21 +1119,6 @@ function yukle(){
     clearTimeout(timer);
     isLoading = false;
 
-    /* Boş veri → görmezden gel */
-    if(!data || !data.length){
-      if(allData.length > 0){ delete window[cb]; $(s).remove(); return; }
-    }
-
-    /* API bugünkü transferleri döndürmediyse cache'dekini ekle */
-    if(data && data.length && allData.length){
-      var _t = getToday();
-      var apiHasToday = data.some(function(d){ return String(d.tarih||'').trim()===_t; });
-      if(!apiHasToday){
-        var todayRows = allData.filter(function(d){ return d.tarih===_t; });
-        if(todayRows.length) data = todayRows.concat(data);
-      }
-    }
-
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
       localStorage.setItem('ramos_cache_ts', String(Date.now()));
