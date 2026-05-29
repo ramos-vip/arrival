@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>RAMOS NJT VIP TRANSFER</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@600&display=swap" rel="stylesheet">
+<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+<style>
+
+*,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', sans-serif;
+  background: #07111f;
+  color: #e2e8f0;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ════════════════════════════════
+   LOGIN
+════════════════════════════════ */
+#login-screen {
+  position: fixed; inset: 0; z-index: 9999;
+  background: #07111f;
+  display: flex; align-items: center; justify-content: center;
+  padding: 20px;
+}
+.login-box {
+  background: linear-gradient(160deg, #0d1e38, #09142a);
+  border: 1px solid #1a3050;
+  border-radius: 24px;
+  padding: 46px 42px 42px;
+  width: 100%; max-width: 390px;
+  box-shadow: 0 40px 100px rgba(0,0,0,.75), 0 0 0 1px rgba(79,70,229,.07);
+}
+.login-ico {
+  width: 60px; height: 60px; border-radius: 18px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; margin: 0 auto 22px;
+  box-shadow: 0 10px 30px rgba(99,102,241,.5);
+}
+.login-title { font-size: 18px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 6px; letter-spacing: -.4px; }
+.login-sub   { font-size: 12px; color: #334155; text-align: center; margin-bottom: 34px; }
+.field-wrap  { margin-bottom: 12px; }
+.field-wrap label {
+  display: block;
+  font-size: 10px; font-weight: 700; color: #334155;
+  text-transform: uppercase; letter-spacing: 1px;
+  margin-bottom: 6px; padding-left: 2px;
+}
+.login-box input {
+  width: 100%;
+  background: #060e1d; border: 1px solid #1a3050; border-radius: 11px;
+  padding: 13px 16px; font-size: 14px; font-family: 'Inter', sans-serif;
+  color: #e2e8f0; outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+.login-box input::placeholder { color: #243450; }
+.login-box input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.18); }
+#l-btn {
+  width: 100%; display: block;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  border: none; border-radius: 11px; padding: 14px;
+  font-size: 14px; font-weight: 700; color: #fff; cursor: pointer;
+  margin-top: 8px; letter-spacing: .3px;
+  box-shadow: 0 6px 20px rgba(79,70,229,.4);
+  font-family: 'Inter', sans-serif;
+  transition: opacity .15s, transform .1s;
+}
+#l-btn:hover  { opacity: .92; }
+#l-btn:active { transform: scale(.98); }
+#l-err { margin-top: 14px; font-size: 12px; color: #f87171; text-align: center; min-height: 18px; font-weight: 500; }
+
+/* ════════════════════════════════
+   APP
+════════════════════════════════ */
+#app { display: none; }
+
+/* HEADER */
+.hdr {
+  position: sticky; top: 0; z-index: 100;
+  background: rgba(7,17,31,.97);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid #0d1e36;
+  padding: 12px 28px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.hdr-brand { display: flex; align-items: center; gap: 13px; }
+.hdr-ico {
+  width: 40px; height: 40px; border-radius: 11px;
+  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; flex-shrink: 0;
+  box-shadow: 0 4px 18px rgba(99,102,241,.45);
+}
+.hdr-title { font-size: 15px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+.hdr-sub   { font-size: 10px; color: #1e3050; margin-top: 2px; }
+.hdr-right { display: flex; align-items: center; gap: 12px; }
+.hdr-pill {
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.22);
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; color: #a5b4fc;
+}
+.live {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: #4ade80; box-shadow: 0 0 7px rgba(74,222,128,.8);
+  animation: blink 2s ease-in-out infinite; flex-shrink: 0;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:.15} }
+.hdr-time { font-size: 11px; color: #1e3050; }
+.logout-btn {
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.18);
+  color: #f87171; padding: 5px 13px; border-radius: 8px;
+  font-size: 11px; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: background .15s;
+}
+.logout-btn:hover { background: rgba(239,68,68,.15); }
+
+/* ════════════════════════════════
+   DATE BAR
+════════════════════════════════ */
+.date-bar {
+  position: sticky; top: 65px; z-index: 90;
+  background: rgba(7,17,31,.98);
+  backdrop-filter: blur(16px);
+  border-bottom: 1px solid #0d1e36;
+  padding: 10px 22px;
+  display: flex; align-items: center; gap: 7px;
+  overflow-x: auto;
+}
+.date-bar::-webkit-scrollbar { display: none; }
+
+.date-label {
+  font-size: 10px; font-weight: 700; color: #1e3050;
+  text-transform: uppercase; letter-spacing: 1px;
+  white-space: nowrap; flex-shrink: 0; margin-right: 4px;
+}
+
+.dc {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 7px 15px; border-radius: 20px;
+  font-size: 12px; font-weight: 600;
+  cursor: pointer; white-space: nowrap; flex-shrink: 0;
+  border: 1px solid #1a3050;
+  background: transparent; color: #3d5a7a;
+  font-family: 'Inter', sans-serif;
+  transition: all .18s;
+  position: relative;
+}
+.dc:hover {
+  background: rgba(79,70,229,.1);
+  border-color: rgba(79,70,229,.25);
+  color: #a5b4fc;
+}
+.dc.active {
+  background: rgba(79,70,229,.18);
+  border-color: rgba(99,102,241,.4);
+  color: #c7d2fe;
+  font-weight: 700;
+  box-shadow: 0 2px 12px rgba(79,70,229,.2);
+}
+.dc.dc-today        { border-color: rgba(52,211,153,.15); color: #2d6a53; }
+.dc.dc-today:hover  { background: rgba(52,211,153,.08); border-color: rgba(52,211,153,.3); color: #6ee7b7; }
+.dc.dc-today.active { background: rgba(52,211,153,.14); border-color: rgba(52,211,153,.35); color: #6ee7b7; box-shadow: 0 2px 12px rgba(52,211,153,.15); }
+
+.dc.dc-tmrw        { border-color: rgba(167,139,250,.15); color: #3d2d6a; }
+.dc.dc-tmrw:hover  { background: rgba(167,139,250,.08); border-color: rgba(167,139,250,.3); color: #c4b5fd; }
+.dc.dc-tmrw.active { background: rgba(167,139,250,.14); border-color: rgba(167,139,250,.35); color: #c4b5fd; box-shadow: 0 2px 12px rgba(139,92,246,.15); }
+
+.dc-count {
+  background: rgba(255,255,255,.08);
+  border-radius: 20px; padding: 1px 7px;
+  font-size: 10px; font-weight: 700;
+}
+.dc-nodata { opacity: .35; cursor: default; pointer-events: none; }
+.dc-more {
+  font-size: 11px; font-weight: 600; color: #1e3456;
+  white-space: nowrap; flex-shrink: 0; align-self: center;
+  padding: 0 4px;
+}
+
+/* PAGE */
+.page { max-width: 1500px; margin: 0 auto; padding: 24px 22px 80px; }
+
+/* SECTION */
+.sec { margin-bottom: 0; }
+.sec-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 24px;
+  background: linear-gradient(90deg, rgba(79,70,229,.13), rgba(79,70,229,.04), transparent);
+  border: 1px solid #0d1e36;
+  border-left: 4px solid #4f46e5;
+  border-bottom: none;
+  border-radius: 12px 12px 0 0;
+}
+.sec-head.sh-today { border-left-color: #34d399; }
+.sec-head.sh-tmrw  { border-left-color: #a78bfa; }
+.sec-label { font-size: 18px; font-weight: 800; color: #fff; letter-spacing: -.3px; }
+.sec-date  { font-size: 13px; color: #334155; font-weight: 400; }
+.sec-count {
+  margin-left: auto;
+  font-size: 11px; font-weight: 700; color: #818cf8;
+  background: rgba(99,102,241,.12); border: 1px solid rgba(99,102,241,.22);
+  padding: 4px 14px; border-radius: 20px;
+}
+
+/* TABLE WRAPPER */
+.tbl-wrap {
+  border: 1px solid #0d1e36; border-radius: 0 0 12px 12px;
+  background: #060f1c; overflow: hidden;
+}
+
+/* TABLE */
+table {
+  width: 100%; border-collapse: separate; border-spacing: 0 2px;
+  padding: 6px 8px 8px;
+}
+col.c-time { width: 105px; }
+col.c-cust { width: 225px; }
+col.c-trip { width: 160px; }
+col.c-drv  { width: 240px; }
+
+/* THEAD */
+thead th {
+  padding: 10px 18px 11px;
+  font-size: 9px; font-weight: 700; color: #1e3456;
+  text-transform: uppercase; letter-spacing: 1.4px;
+  text-align: left; white-space: nowrap;
+  border-bottom: 1px solid #0d1e36;
+}
+thead th:first-child { padding-left: 22px; }
+thead th:last-child  { padding-right: 22px; }
+
+/* TBODY ROWS */
+.trow > td {
+  background: #0b1a2f; padding: 15px 18px; vertical-align: middle;
+  border-top: 1px solid #0f2244; border-bottom: 1px solid #0f2244;
+  transition: background .15s, border-color .15s;
+}
+.trow > td + td { border-left: 1px solid #091829; }
+.trow > td:first-child { border-left: 3px solid transparent; border-radius: 9px 0 0 9px; padding-left: 20px; }
+.trow > td:last-child  { border-right: 1px solid #0f2244; border-radius: 0 9px 9px 0; padding-right: 22px; }
+
+.trow:hover > td             { background: #0d2246; border-top-color: #1a3360; border-bottom-color: #1a3360; }
+.trow:hover > td + td        { border-left-color: #112036; }
+.trow:hover > td:first-child { border-left-color: #4f46e5; }
+.trow:hover > td:last-child  { border-right-color: #1a3360; }
+
+/* TIME */
+.td-time {
+  font-size: 36px; font-weight: 900; color: #fff;
+  letter-spacing: -2px; line-height: 1;
+  font-variant-numeric: tabular-nums; white-space: nowrap;
+}
+.td-tarih {
+  font-size: 11px; font-weight: 600; color: #3d5a7a;
+  letter-spacing: .3px; margin-top: 5px;
+  font-variant-numeric: tabular-nums;
+}
+
+/* CUSTOMER */
+.cust-name {
+  font-size: 14px; font-weight: 700; color: #f0f4ff;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px;
+}
+a.phn {
+  display: inline-flex; align-items: center; gap: 4px;
+  color: #38bdf8; text-decoration: none;
+  font-size: 11px; font-weight: 500; white-space: nowrap;
+  background: rgba(56,189,248,.07); border: 1px solid rgba(56,189,248,.14);
+  padding: 2px 9px; border-radius: 20px; transition: background .15s;
+}
+a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
+.no-phone { font-size: 11px; color: #1a3050; }
+
+/* TRIP */
+.fl-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: linear-gradient(135deg, rgba(79,70,229,.22), rgba(124,58,237,.16));
+  border: 1px solid rgba(99,102,241,.32); color: #a5b4fc;
+  font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px;
+  white-space: nowrap; margin-bottom: 6px; letter-spacing: .3px;
+}
+.td-meta { font-size: 11px; color: #3d5a7a; display: flex; align-items: center; gap: 5px; }
+
+/* ROUTE */
+.route-row {
+  display: flex; align-items: flex-start; gap: 8px;
+  font-size: 12px; font-weight: 500; line-height: 1.5;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.route-from { color: #34d399; margin-bottom: 5px; }
+.route-to   { color: #a78bfa; }
+.rt-icon    { font-size: 11px; flex-shrink: 0; margin-top: 1px; opacity: .6; }
+
+/* DRIVER */
+.drv-name {
+  font-size: 13px; font-weight: 700; color: #818cf8;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px;
+}
+.drv-bottom { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
+.plaka {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 10px; font-weight: 600; color: #3d5a7a;
+  background: #060e1c; border: 1px solid #0d1e36;
+  padding: 2px 8px; border-radius: 4px; letter-spacing: 1.5px; white-space: nowrap;
+}
+.badge-un {
+  display: inline-flex; align-items: center; gap: 5px;
+  background: rgba(239,68,68,.08); border: 1px solid rgba(239,68,68,.18);
+  color: #f87171; font-size: 10px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
+}
+
+/* EMPTY */
+.empty { text-align: center; padding: 80px 20px; color: #1a3050; font-size: 15px; }
+.empty-ico { font-size: 48px; display: block; margin-bottom: 14px; opacity: .12; }
+.empty-hint { font-size: 12px; color: #0d1e36; margin-top: 8px; }
+.empty-loading { color: #3d5a7a; }
+.empty-loading .empty-ico { opacity: .5; animation: spin 1.4s linear infinite; display: inline-block; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* FOOTER */
+.footer { text-align: center; padding: 22px; font-size: 11px; color: #0d1e36; }
+
+/* ════════════════════════════════
+   SEARCH BAR
+════════════════════════════════ */
+.srch-wrap { margin-left: auto; flex-shrink: 0; }
+#search-input {
+  background: #060e1c; border: 1px solid #1a3050; border-radius: 20px;
+  padding: 6px 16px 6px 36px; font-size: 12px; font-family: 'Inter', sans-serif;
+  color: #e2e8f0; outline: none; width: 210px;
+  transition: border-color .2s, box-shadow .2s, width .25s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%231e3456' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: 12px center;
+}
+#search-input::placeholder { color: #1e3456; }
+#search-input:focus {
+  border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.15);
+  width: 270px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2.5'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E");
+}
+.trow.s-hide { display: none !important; }
+
+/* ════════════════════════════════
+   VOUCHER BUTTON (satır içi)
+════════════════════════════════ */
+.vchr-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  margin-top: 8px;
+  background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.22);
+  color: #c9a227; font-size: 10px; font-weight: 700;
+  padding: 3px 11px; border-radius: 20px; cursor: pointer;
+  font-family: 'Inter', sans-serif; letter-spacing: .4px;
+  transition: background .15s, border-color .15s;
+  white-space: nowrap;
+}
+.vchr-btn:hover { background: rgba(201,162,39,.2); border-color: rgba(201,162,39,.45); }
+
+/* ════════════════════════════════
+   VOUCHER OVERLAY / KART
+════════════════════════════════ */
+#voucher-overlay {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0,0,10,.88);
+  display: none; align-items: center; justify-content: center;
+  padding: 20px;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+#voucher-overlay.open { display: flex; }
+
+#voucher-card {
+  background: #ffffff; border-radius: 22px;
+  width: 100%; max-width: 480px;
+  overflow: hidden;
+  box-shadow: 0 40px 120px rgba(0,0,0,.75), 0 0 0 1px rgba(201,162,39,.18);
+  font-family: 'Inter', sans-serif;
+  animation: vSlide .22s ease;
+  display: flex; flex-direction: column;
+}
+@keyframes vSlide {
+  from { opacity:0; transform:scale(.95) translateY(14px); }
+  to   { opacity:1; transform:none; }
+}
+
+.v-header {
+  background: #07091a;
+  padding: 30px 36px 22px;
+  display: flex; flex-direction: column; align-items: center; text-align: center;
+}
+.v-logo-wrap { margin-bottom: 12px; }
+.v-logo-wrap svg { width: 64px; height: 76px; }
+.v-co-name { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: .8px; line-height: 1.2; }
+.v-co-sub  { font-size: 10px; font-weight: 700; color: #c9a227; letter-spacing: 3.5px; margin-top: 5px; }
+
+.v-goldbar {
+  height: 3px;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    #a07820 10%,
+    #e8c44a 40%,
+    #f5d978 50%,
+    #e8c44a 60%,
+    #a07820 90%,
+    transparent 100%);
+}
+
+/* Sade isim alanı — ekranda ortalanmış, baskıda A4 dolu */
+.v-name-area {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  padding: 40px 36px 44px; text-align: center; min-height: 220px;
+}
+.v-welcome-lbl {
+  font-size: 10px; font-weight: 700; color: #aaa;
+  letter-spacing: 7px; text-transform: uppercase; margin-bottom: 18px;
+}
+.v-cust-name {
+  font-size: 68px; font-weight: 900; color: #07091a;
+  letter-spacing: -3px; line-height: 1.02; text-transform: uppercase;
+  word-break: break-word;
+}
+
+.v-vfooter {
+  background: #07091a; padding: 15px 36px;
+  display: flex; align-items: center; justify-content: space-between; gap: 10px;
+}
+.v-print-btn {
+  background: linear-gradient(135deg, #c9a227, #e8c44a);
+  border: none; border-radius: 10px; padding: 11px 22px;
+  font-size: 13px; font-weight: 800; color: #07091a;
+  cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: opacity .15s; letter-spacing: .2px;
+}
+.v-print-btn:hover { opacity: .88; }
+.v-close-btn {
+  background: transparent; border: 1px solid rgba(255,255,255,.18);
+  color: #94a3b8; border-radius: 10px; padding: 11px 18px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all .15s;
+}
+.v-close-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
+
+/* ════ PRINT — A4 ════ */
+@media print {
+  @page { size: A4 portrait; margin: 0; }
+
+  /* Sayfa içeriğini gizle */
+  body > *:not(#voucher-overlay) { display: none !important; }
+
+  #voucher-overlay {
+    position: fixed !important; inset: 0 !important;
+    display: flex !important; background: #fff !important;
+    backdrop-filter: none !important; padding: 0 !important;
+  }
+  #voucher-card {
+    width: 210mm !important; height: 297mm !important;
+    max-width: none !important; border-radius: 0 !important;
+    box-shadow: none !important; animation: none !important;
+  }
+  /* Logo biraz büyük */
+  .v-header    { padding: 48px 60px 30px !important; }
+  .v-logo-wrap svg { width: 100px !important; height: 120px !important; }
+  .v-co-name   { font-size: 30px !important; }
+  .v-co-sub    { font-size: 14px !important; letter-spacing: 6px !important; }
+  .v-goldbar   { height: 5px !important; }
+  /* İsim sayfayı doldursun */
+  .v-name-area { padding: 0 60px 100px !important; }
+  .v-welcome-lbl { font-size: 14px !important; letter-spacing: 10px !important; margin-bottom: 28px !important; }
+  .v-cust-name { font-size: 110px !important; letter-spacing: -5px !important; line-height: 1.0 !important; }
+  /* Butonları gizle */
+  .v-vfooter   { display: none !important; }
+}
+
+/* ═══ TABLET ═══ */
+@media (max-width: 1050px) and (min-width: 641px) {
+  .tbl-wrap { overflow-x: auto; }
+  table     { min-width: 720px; padding: 4px 6px 6px; }
+  col.c-time{ width: 84px; } col.c-cust{ width: 185px; }
+  col.c-trip{ width: 135px; } col.c-drv { width: 185px; }
+  .td-time  { font-size: 28px; } .cust-name { font-size: 13px; }
+  .trow > td{ padding: 12px 13px; }
+  thead th:first-child, .trow > td:first-child { padding-left: 16px; }
+  thead th:last-child,  .trow > td:last-child  { padding-right: 16px; }
+}
+
+/* ═══ MOBILE CARDS ═══ */
+@media (max-width: 640px) {
+  .hdr    { padding: 10px 14px; }
+  .hdr-ico{ width: 34px; height: 34px; font-size: 17px; }
+  .hdr-title { font-size: 13px; }
+  .hdr-time  { display: none; }
+  /* Date bar: chip'ler kendi içinde yatay scroll, search altta ayrı satır */
+  .date-label { display: none; }
+  .date-bar {
+    top: 57px; padding: 6px 14px 4px; gap: 0;
+    flex-wrap: wrap; overflow-x: visible;
+  }
+  #date-chips {
+    flex: 0 0 100%; overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none; padding: 2px 0 4px;
+  }
+  #date-chips::-webkit-scrollbar { display: none; }
+  .srch-wrap { flex: 0 0 100%; margin: 2px 0 2px; }
+  #search-input, #search-input:focus { width: 100%; }
+  .page      { padding: 14px 10px 60px; }
+  .sec-head  { padding: 12px 14px; border-radius: 10px 10px 0 0; }
+  .sec-label { font-size: 16px; }
+
+  .tbl-wrap { border: none; background: transparent; }
+  table     { display: block; border-spacing: 0; padding: 0; }
+  colgroup  { display: none; }
+  thead     { display: none; }
+  tbody     { display: flex; flex-direction: column; gap: 12px; }
+
+  .trow { display: block; border: 1px solid #1a3050; border-radius: 14px; overflow: hidden; transition: border-color .2s; }
+  .trow:hover { border-color: #4f46e5; }
+
+  .trow > td {
+    display: flex; align-items: flex-start; gap: 10px;
+    background: #0b1a2f; border: none !important; border-radius: 0 !important;
+    border-bottom: 1px solid #0d2040 !important; padding: 10px 14px; vertical-align: top;
+  }
+  .trow > td:last-child { border-bottom: none !important; }
+  .trow > td:first-child {
+    display: block !important;
+    background: linear-gradient(90deg, rgba(79,70,229,.2), rgba(79,70,229,.06));
+    border-left: 3px solid #4f46e5 !important;
+    border-bottom: 1px solid #1a3050 !important;
+    padding: 13px 16px !important;
+  }
+  .trow > td:first-child::before { display: none; }
+  .td-time { font-size: 30px; letter-spacing: -1.5px; }
+
+  td::before {
+    content: attr(data-label);
+    font-size: 9px; font-weight: 700; color: #1e3456;
+    text-transform: uppercase; letter-spacing: 1px;
+    min-width: 68px; flex-shrink: 0; padding-top: 2px;
+  }
+  .cust-name, .drv-name { white-space: normal; overflow: visible; text-overflow: clip; }
+  .route-row { white-space: normal; overflow: visible; text-overflow: clip; }
+  .login-box { padding: 36px 28px 32px; }
+
+  /* Voucher — mobilde aşağıdan yükselen panel */
+  #voucher-overlay { align-items: flex-end; padding: 0; }
+  #voucher-card {
+    border-radius: 22px 22px 0 0; max-width: 100%;
+    animation: vSlideUp .25s ease;
+  }
+  @keyframes vSlideUp {
+    from { transform: translateY(60px); opacity: 0; }
+    to   { transform: none; opacity: 1; }
+  }
+  .v-header { padding: 20px 22px 14px; }
+  .v-logo-wrap svg { width: 46px; height: 55px; }
+  .v-co-name { font-size: 15px; }
+  .v-co-sub  { font-size: 8px; letter-spacing: 3px; margin-top: 3px; }
+  .v-name-area { min-height: 130px; padding: 22px 20px 26px; }
+  .v-welcome-lbl { font-size: 8px; letter-spacing: 5px; margin-bottom: 10px; }
+  .v-cust-name { font-size: 40px; letter-spacing: -1.5px; }
+  .v-vfooter { padding: 12px 20px 20px; }
+  .v-print-btn, .v-close-btn { padding: 10px 16px; font-size: 12px; }
+}
+@media (max-width: 380px) {
+  .page { padding: 12px 8px 60px; }
+  .date-bar { padding: 8px 10px; }
+}
+
+</style>
+</head>
+<body>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-ico">✈</div>
+    <div class="login-title">RAMOS NJT VIP TRANSFER</div>
+    <div class="login-sub">Arrival Panel — Yetkili Giriş</div>
+    <div class="field-wrap">
+      <label for="l-user">Kullanıcı Adı</label>
+      <input type="text" id="l-user" placeholder="kullanıcı adınızı girin" autocomplete="username">
+    </div>
+    <div class="field-wrap">
+      <label for="l-pass">Şifre</label>
+      <input type="password" id="l-pass" placeholder="••••••••" autocomplete="current-password">
+    </div>
+    <button id="l-btn">Giriş Yap →</button>
+    <div id="l-err"></div>
+  </div>
+</div>
+
+<!-- ═══ APP ═══ -->
+<div id="app">
+
+  <header class="hdr">
+    <div class="hdr-brand">
+      <div class="hdr-ico">✈</div>
+      <div>
+        <div class="hdr-title">RAMOS NJT VIP TRANSFER</div>
+        <div class="hdr-sub">Arrival Transfer Paneli</div>
+      </div>
+    </div>
+    <div class="hdr-right">
+      <div class="hdr-pill"><span class="live"></span><span id="cnt">—</span></div>
+      <div id="upd" class="hdr-time">Yükleniyor...</div>
+      <button class="logout-btn" id="logout-btn">Çıkış</button>
+    </div>
+  </header>
+
+  <!-- DATE BAR -->
+  <div class="date-bar">
+    <span class="date-label">Tarih:</span>
+    <div id="date-chips" style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;"></div>
+    <div class="srch-wrap">
+      <input type="text" id="search-input" placeholder="Misafir veya uçuş ara..." autocomplete="off" spellcheck="false">
+    </div>
+  </div>
+
+  <div class="page" id="page">
+    <div class="empty"><span class="empty-ico">✈</span>Yükleniyor...</div>
+  </div>
+
+  <div class="footer">RAMOS NJT VIP TRANSFER &nbsp;·&nbsp; Her 1 dakikada otomatik güncellenir</div>
+</div>
+
+<!-- ═══ VOUCHER OVERLAY ═══ -->
+<div id="voucher-overlay">
+  <div id="voucher-card">
+
+    <!-- Üst / logo bölümü -->
+    <div class="v-header">
+      <div class="v-logo-wrap">
+        <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="gld" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%"   stop-color="#f0d060"/>
+              <stop offset="50%"  stop-color="#c9a227"/>
+              <stop offset="100%" stop-color="#8a6010"/>
+            </linearGradient>
+          </defs>
+          <!-- Dış kalkan -->
+          <path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="url(#gld)"/>
+          <!-- İç koyu alan -->
+          <path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#07091a"/>
+          <!-- R harfi -->
+          <text x="50" y="78" text-anchor="middle"
+                font-family="Georgia, 'Times New Roman', serif"
+                font-size="54" font-weight="bold" fill="url(#gld)">R</text>
+        </svg>
+      </div>
+      <div class="v-co-name">RAMOS NJT</div>
+      <div class="v-co-sub">VIP TRANSFER</div>
+    </div>
+
+    <!-- Altın çizgi -->
+    <div class="v-goldbar"></div>
+
+    <!-- Misafir adı — büyük, ortalı -->
+    <div class="v-name-area">
+      <div class="v-welcome-lbl">WELCOME</div>
+      <div class="v-cust-name" id="v-cust-name">—</div>
+    </div>
+
+    <!-- Butonlar -->
+    <div class="v-vfooter">
+      <button class="v-print-btn" id="v-print-btn">🖨 Yazdır / Print</button>
+      <button class="v-close-btn" id="v-close-btn">✕ Kapat</button>
+    </div>
+
+  </div>
+</div>
+
+<script>
+/* ════ CREDENTIALS ════ */
+/* rol: 'yonetici' → tüm tarihler + date bar
+   rol: 'karsilama' → sadece bugün, date bar yok */
+var USERS = {
+  'ramos':     { sifre: 'vip2026', rol: 'yonetici'   },
+  'karsilama': { sifre: 'kars123', rol: 'karsilama'   }
+};
+function getRole(){ return localStorage.getItem('ramos_rol')||'karsilama'; }
+function isYonetici(){ return getRole()==='yonetici'; }
+
+/* ════ API ════ */
+var API = 'https://script.google.com/macros/s/AKfycbzJflnLJr_9C6ppfFMNNb8WlfJljsQl74C7ro9iICPm_COHGI32zKFMG5N-1K-OPKsFEg/exec';
+var MO  = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
+var GUN = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
+var GUN_K = ['Paz','Pts','Sal','Çar','Per','Cum','Cmt'];
+
+var allData = [];
+var selectedDate = null;
+var isLoading   = false;
+
+function pad(n){ return ('0'+n).slice(-2); }
+function fmtK(d){ return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear(); }
+function fmtU(d){ return d.getDate()+' '+MO[d.getMonth()]+' '+d.getFullYear()+', '+GUN[d.getDay()]; }
+function esc(s){ return $('<span>').text(String(s||'')).html(); }
+
+function parseTarih(s){
+  var p=s.split('.');
+  if(p.length!==3) return null;
+  return new Date(+p[2], +p[1]-1, +p[0]);
+}
+
+function getToday()    { return fmtK(new Date()); }
+function getTomorrow() { var d=new Date(); d.setDate(d.getDate()+1); return fmtK(d); }
+
+/* Operasyonel gün: gece 00:00-02:59 arası hâlâ önceki gün sayılır.
+   03:00'dan itibaren yeni gün başlar. */
+function getOperationalDate(){
+  var now = new Date();
+  if(now.getHours() < 3){
+    var prev = new Date(now);
+    prev.setDate(now.getDate() - 1);
+    return fmtK(prev);
+  }
+  return fmtK(now);
+}
+
+function telLink(v){
+  if(!v||v.trim()===''||v.indexOf('ERROR')>-1) return '';
+  return '<a href="tel:+'+v.replace(/\s/g,'')+'" class="phn">📞 +'+esc(v)+'</a>';
+}
+
+/* ════ BUILD ROW ════ */
+function buildRow(d){
+  /* Voucher için satırı kaydet */
+  if(!window.__voucherRows) window.__voucherRows = [];
+  var vIdx = window.__voucherRows.length;
+  window.__voucherRows.push(d);
+
+  var saat=esc(d.saat||'-'), isim=esc(d.musteri||'-');
+  var nereden=esc(d.nereden||'-'), nereye=esc(d.nereye||'-');
+  var ucus=esc(d.ucus||''), kisi=esc(d.kisi||''), arac=esc(d.arac||'');
+  var surucu=esc(d.surucu||''), plaka=esc(d.surucuPlaka||'');
+
+  var tripHtml='';
+  if(ucus&&ucus!=='-') tripHtml+='<div class="fl-chip">✈ '+ucus+'</div>';
+  var parts=[];
+  if(kisi) parts.push('👤 '+kisi);
+  if(arac&&arac!=='-') parts.push(arac);
+  if(parts.length) tripHtml+='<div class="td-meta">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
+
+  /* Karşılamacıda müşteri telefonu gizlenir */
+  var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
+
+  var drvHtml;
+  if(surucu){
+    var dbot=(plaka?'<span class="plaka">'+plaka+'</span>':'')+(telLink(d.surucuTel)||'');
+    drvHtml='<div class="drv-name" title="'+surucu+'">'+surucu+'</div>'+(dbot?'<div class="drv-bottom">'+dbot+'</div>':'');
+  } else {
+    drvHtml='<span class="badge-un">⚠ Atanmadı</span>';
+  }
+
+  /* Saatin altına küçük tarih: "29 May" */
+  var dateObj = parseTarih(d.tarih||'');
+  var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
+
+  return '<tr class="trow" style="opacity:0">'
+    +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
+    +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
+    +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
+    +'<td class="td-route" data-label="GÜZERGAH">'
+      +'<div class="route-row route-from"><span class="rt-icon">↑</span>'+nereden+'</div>'
+      +'<div class="route-row route-to"><span class="rt-icon">↓</span>'+nereye+'</div>'
+    +'</td>'
+    +'<td class="td-drv"   data-label="ŞOFÖR">'+drvHtml+'</td>'
+    +'</tr>';
+}
+
+/* ════ TEK TARİH BÖLÜMÜ HTML ════ */
+/* afterDt: isteğe bağlı Date — sadece bu andan sonraki transferleri göster (DÜN filtresi için) */
+function buildOneSec(tarih, afterDt){
+  var dateObj0 = parseTarih(tarih);
+  var liste = allData.filter(function(d){
+    if(d.tarih !== tarih) return false;
+    if(afterDt && dateObj0){
+      var tp = (d.saat||'00:00').split(':');
+      var dt = new Date(dateObj0.getFullYear(), dateObj0.getMonth(), dateObj0.getDate(),
+                        +tp[0]||0, +tp[1]||0, 0);
+      if(dt < afterDt) return false;
+    }
+    return true;
+  });
+  if(!liste.length) return '';
+  liste.sort(function(a,b){ return String(a.saat||'').localeCompare(String(b.saat||'')); });
+
+  var today=getToday(), tomorrow=getTomorrow();
+  var dateObj=parseTarih(tarih);
+  var emoji, gun, shClass='';
+
+  if(tarih===today){
+    emoji='📅'; gun='BUGÜN'; shClass='sh-today';
+  } else if(tarih===tomorrow){
+    emoji='🌙'; gun='YARIN'; shClass='sh-tmrw';
+  } else {
+    var dun = fmtK((function(){ var d=new Date(); d.setDate(d.getDate()-1); return d; })());
+    emoji = tarih===dun ? '🌙' : '📆';
+    gun   = tarih===dun ? 'DÜN' : GUN[dateObj.getDay()].toUpperCase();
+  }
+
+  return '<div class="sec">'
+    +'<div class="sec-head '+shClass+'">'
+      +'<span class="sec-label">'+emoji+' '+gun+'</span>'
+      +'<span class="sec-date">'+fmtU(dateObj)+'</span>'
+      +'<span class="sec-count">'+liste.length+' transfer</span>'
+    +'</div>'
+    +'<div class="tbl-wrap"><table>'
+      +'<colgroup><col class="c-time"><col class="c-cust"><col class="c-trip"><col class="c-route"><col class="c-drv"></colgroup>'
+      +'<thead><tr><th>Saat</th><th>Müşteri</th><th>Uçuş / Araç</th><th>Güzergah</th><th>Şoför</th></tr></thead>'
+      +'<tbody>'+liste.map(buildRow).join('')+'</tbody>'
+    +'</table></div></div>';
+}
+
+/* ════ SHOW DATE (tek tarih — yönetici) ════ */
+function showDate(tarih){
+  window.__voucherRows = [];
+  $('#search-input').val('');   /* tarih değişince aramayı sıfırla */
+  selectedDate = tarih;
+  $('.dc').removeClass('active');
+  $('.dc[data-date="'+tarih+'"]').addClass('active');
+
+  var html = buildOneSec(tarih);
+  var count = allData.filter(function(d){ return d.tarih===tarih; }).length;
+  $('#cnt').text(count+' transfer');
+
+  if(!html){
+    if(isLoading){
+      $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Veriler yükleniyor…<div class="empty-hint">Google sunucusu uyandırılıyor, lütfen bekleyin</div></div>');
+    } else {
+      $('#page').html('<div class="empty"><span class="empty-ico">✈</span>Bu tarih için transfer bulunamadı</div>');
+    }
+    return;
+  }
+
+  $('#page').html(html);
+  var delay=0;
+  $('.trow').each(function(){ $(this).delay(delay).animate({opacity:1},130); delay+=18; });
+}
+
+/* ════ SHOW DATES (çoklu tarih — karşılamacı gece modu) ════ */
+function showDates(tarihler){
+  window.__voucherRows = [];
+  /* DÜN bölümü için: sadece son 2 saat içindeki transferleri göster.
+     Eğer hiç transfer yoksa DÜN başlığı da çıkmaz. */
+  var now = new Date();
+  var twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
+
+  var visibleCount = 0;
+  var html = tarihler.map(function(tarih, i){
+    var cutoff = (i === 0 && tarihler.length > 1) ? twoHoursAgo : null;
+    /* Görünen transfer sayısını aynı filtreden geçirerek say */
+    var dateObjC = parseTarih(tarih);
+    allData.forEach(function(d){
+      if(d.tarih !== tarih) return;
+      if(cutoff && dateObjC){
+        var tp = (d.saat||'00:00').split(':');
+        var dt = new Date(dateObjC.getFullYear(), dateObjC.getMonth(), dateObjC.getDate(), +tp[0]||0, +tp[1]||0, 0);
+        if(dt < cutoff) return;
+      }
+      visibleCount++;
+    });
+    return buildOneSec(tarih, cutoff);
+  }).join('');
+
+  $('#cnt').text(visibleCount+' transfer');
+
+  if(!html){
+    if(isLoading){
+      $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Veriler yükleniyor…<div class="empty-hint">Google sunucusu uyandırılıyor, lütfen bekleyin</div></div>');
+    } else {
+      $('#page').html('<div class="empty"><span class="empty-ico">✈</span>Bugün için transfer bulunamadı</div>');
+    }
+    return;
+  }
+
+  $('#page').html(html);
+  var delay=0;
+  $('.trow').each(function(){ $(this).delay(delay).animate({opacity:1},130); delay+=18; });
+}
+
+/* ════ BUILD DATE BAR ════ */
+function buildDateBar(data){
+  var today=getToday(), tomorrow=getTomorrow();
+
+  /* Count by date */
+  var counts={};
+  data.forEach(function(d){ counts[d.tarih]=(counts[d.tarih]||0)+1; });
+
+  /* Sort dates ascending */
+  var dates=Object.keys(counts).sort(function(a,b){
+    var pa=a.split('.'), pb=b.split('.');
+    return new Date(+pa[2],+pa[1]-1,+pa[0]) - new Date(+pb[2],+pb[1]-1,+pb[0]);
+  });
+
+  if(!dates.length){
+    $('#date-chips').html('<span style="font-size:12px;color:#1e3456">Veri yok</span>');
+    return;
+  }
+
+  /* Seçili tarih görünür olsun: ilk 5'e dahil et */
+  var MAX = 5;
+  var visible = dates.slice(0, MAX);
+  if(selectedDate && visible.indexOf(selectedDate) === -1){
+    visible = dates.slice(0, MAX - 1);
+    visible.push(selectedDate);
+  }
+  var hidden = dates.length - visible.length;
+
+  var html='';
+  dates.forEach(function(tarih){
+    if(visible.indexOf(tarih) === -1) return; /* max 5 */
+    var cnt=counts[tarih]||0;
+    var cls='dc', label='', extra='';
+
+    if(tarih===today){
+      cls+=' dc-today';
+      label='📅 Bugün';
+    } else if(tarih===tomorrow){
+      cls+=' dc-tmrw';
+      label='🌙 Yarın';
+    } else {
+      var d=parseTarih(tarih);
+      label=GUN_K[d.getDay()]+' '+d.getDate()+' '+MO[d.getMonth()].slice(0,3);
+    }
+
+    if(tarih===selectedDate) cls+=' active';
+    html+='<button class="'+cls+'" data-date="'+tarih+'">'+label+'<span class="dc-count">'+cnt+'</span></button>';
+  });
+
+  /* "+ N daha" chip'i */
+  if(hidden > 0){
+    html+='<span class="dc-more">+'+hidden+' daha</span>';
+  }
+
+  $('#date-chips').html(html);
+
+  $('#date-chips').off('click').on('click','.dc',function(){
+    var t=$(this).data('date');
+    if(t) showDate(t);
+  });
+}
+
+/* ════ ROL UYGULA ════ */
+function applyRole(){
+  if(isYonetici()){
+    $('#date-bar').show();
+    $('#logout-btn').text('Çıkış');
+  } else {
+    $('#date-bar').hide(); /* karşılamacı date bar görmez */
+    $('#logout-btn').text('Çıkış');
+  }
+}
+
+/* ════ RENDER ════ */
+function render(veriler){
+  /* Tüm tarihleri trim'le — boşluk/karakter farkı olmasın */
+  allData = (veriler||[]).map(function(d){
+    return $.extend({}, d, { tarih: String(d.tarih||'').trim() });
+  });
+
+  var today    = getToday();
+  var tomorrow = getTomorrow();
+  var counts   = {};
+  allData.forEach(function(d){ if(d.tarih) counts[d.tarih]=(counts[d.tarih]||0)+1; });
+
+  var saat=new Date().toLocaleString('tr-TR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+  $('#upd').text('Son güncelleme: '+saat);
+
+  if(isYonetici()){
+    /* İlk yükleme → bugün. Seçili tarihin verisi sildiyse → bugün.
+       Kullanıcı farklı tarih seçtiyse koru. */
+    if(!selectedDate){
+      selectedDate = today;                 /* her zaman bugünden başla */
+    } else if(!counts[selectedDate]){
+      selectedDate = counts[today] ? today  /* bugüne dön */
+        : (counts[tomorrow] ? tomorrow      /* bugün boşsa yarın */
+        : (Object.keys(counts).sort(function(a,b){
+            var pa=a.split('.'),pb=b.split('.');
+            return new Date(+pa[2],+pa[1]-1,+pa[0])-new Date(+pb[2],+pb[1]-1,+pb[0]);
+           })[0] || today));
+    }
+    buildDateBar(allData);
+    showDate(selectedDate);
+  } else {
+    /* Karşılamacı:
+       03:00-23:59 → sadece bugün
+       00:00-02:59 → dün + bugün (gece vardiyası geçiş saati) */
+    var now = new Date();
+    if(now.getHours() < 6){
+      var prev = new Date(now);
+      prev.setDate(now.getDate()-1);
+      showDates([fmtK(prev), fmtK(now)]);
+    } else {
+      showDate(today);
+    }
+  }
+}
+
+/* ════ VOUCHER ════ */
+function detailRow(icon, label, val){
+  return '<div class="v-drow">'
+    +'<span class="v-dicon">'+icon+'</span>'
+    +'<span class="v-dlabel">'+label+'</span>'
+    +'<span class="v-dval">'+esc(String(val||'—'))+'</span>'
+    +'</div>';
+}
+
+function showVoucher(idx){
+  var d = window.__voucherRows && window.__voucherRows[idx];
+  if(!d) return;
+  var name = (d.musteri||'').trim().toUpperCase() || 'MİSAFİR';
+  $('#v-cust-name').text(name);
+  $('#voucher-overlay').addClass('open');
+}
+
+/* ════ FETCH ════ */
+function yukle(){
+  if(localStorage.getItem('ramos_auth')!=='ok') return;
+  if(isLoading) return;                        /* çakışan istek engelle */
+
+  /* 1) Cache: max 3 saat geçerli */
+  var cacheRaw = localStorage.getItem('ramos_cache');
+  var cacheTs  = parseInt(localStorage.getItem('ramos_cache_ts')||'0');
+  var cacheOk  = cacheRaw && (Date.now() - cacheTs) < 3 * 60 * 60 * 1000;
+
+  if(cacheOk){
+    try {
+      render(JSON.parse(cacheRaw));
+      $('#upd').text('Önbellek · güncelleniyor…');
+    } catch(e){ cacheOk = false; }
+  }
+
+  /* 2) Taze veri çek */
+  isLoading = true;
+  if(!cacheOk){
+    /* Cache yoksa/eskiyse spinner göster */
+    $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Yükleniyor…</div>');
+    $('#cnt').text('— transfer');
+  }
+
+  var cb = '__r' + Date.now();
+  var s  = document.createElement('script');
+  s.src  = API + '?cb=' + cb;
+
+  /* 45 sn içinde cevap gelmezse sıfırla */
+  var timer = setTimeout(function(){
+    isLoading = false;
+    delete window[cb];
+    $(s).remove();
+    $('#upd').text('⚠ Zaman aşımı — yenileniyor…');
+    /* Sayfa hâlâ spinner gösteriyorsa bilgi ver */
+    if($('.empty-loading').length){
+      $('#page').html('<div class="empty"><span class="empty-ico">✈</span>Sunucuya ulaşılamadı<div class="empty-hint">Otomatik olarak yeniden deneniyor…</div></div>');
+    }
+  }, 45000);
+
+  s.onerror = function(){
+    clearTimeout(timer);
+    isLoading = false;
+    delete window[cb];
+    $(s).remove();
+    $('#upd').text('⚠ Bağlantı hatası');
+  };
+
+  window[cb] = function(data){
+    clearTimeout(timer);
+    isLoading = false;
+    try {
+      localStorage.setItem('ramos_cache',    JSON.stringify(data));
+      localStorage.setItem('ramos_cache_ts', String(Date.now()));
+    } catch(e){}
+    render(data);
+    delete window[cb];
+    $(s).remove();
+  };
+
+  $('head').append(s);
+}
+
+/* ════ LOGIN / AUTH ════ */
+function doLogin(){
+  var u=$('#l-user').val().trim().toLowerCase();
+  var p=$('#l-pass').val();
+  if(USERS[u]&&USERS[u].sifre===p){
+    localStorage.setItem('ramos_auth','ok');
+    localStorage.setItem('ramos_rol', USERS[u].rol);
+    $('#login-screen').fadeOut(280,function(){
+      $('#app').fadeIn(220);
+      applyRole();
+      yukle();
+      setInterval(yukle,60000);
+    });
+  } else {
+    $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
+    $('#l-pass').val('').focus();
+    setTimeout(function(){ $('#l-err').text(''); },3000);
+  }
+}
+
+$(function(){
+  $('#l-btn').on('click', doLogin);
+  $('#l-user, #l-pass').on('keydown', function(e){ if(e.key==='Enter') doLogin(); });
+
+  /* ── ARAMA ── */
+  $('#search-input').on('input', function(){
+    var q = $(this).val().trim().toLowerCase();
+    $('.trow').each(function(){
+      var hay = $(this).find('.cust-name').text().toLowerCase()
+               +' '+ $(this).find('.fl-chip').text().toLowerCase()
+               +' '+ $(this).find('.drv-name').text().toLowerCase();
+      $(this).toggleClass('s-hide', q.length > 0 && hay.indexOf(q) === -1);
+    });
+    $('#cnt').text($('.trow:not(.s-hide)').length + ' transfer');
+  });
+
+  /* Voucher butonları */
+  $(document).on('click', '.vchr-btn', function(e){
+    e.stopPropagation();
+    showVoucher(+$(this).data('idx'));
+  });
+  $('#v-close-btn').on('click', function(){ $('#voucher-overlay').removeClass('open'); });
+  $('#v-print-btn').on('click', function(){ window.print(); });
+  /* Overlay dışına tıklayınca kapat */
+  $('#voucher-overlay').on('click', function(e){ if(e.target===this) $(this).removeClass('open'); });
+  /* ESC ile kapat */
+  $(document).on('keydown', function(e){ if(e.key==='Escape') $('#voucher-overlay').removeClass('open'); });
+
+  $('#logout-btn').on('click', function(){
+    localStorage.removeItem('ramos_auth');
+    localStorage.removeItem('ramos_rol');
+    location.reload();
+  });
+
+  if(localStorage.getItem('ramos_auth')==='ok'){
+    $('#login-screen').hide();
+    $('#app').show();
+    applyRole();
+    yukle();
+    setInterval(yukle,60000);
+  } else {
+    setTimeout(function(){ $('#l-user').focus(); },200);
+  }
+});
+</script>
+</body>
+</html>
