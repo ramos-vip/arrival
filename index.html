@@ -1044,7 +1044,7 @@ function yukle(){
 
   var cb = '__r' + Date.now();
   var s  = document.createElement('script');
-  s.src  = API + '?cb=' + cb;
+  s.src  = API + '?cb=' + cb + '&t=' + Date.now();
 
   /* 55 sn içinde cevap gelmezse sıfırla ve yeniden dene */
   var timer = setTimeout(function(){
@@ -1078,6 +1078,12 @@ function yukle(){
   window[cb] = function(data){
     clearTimeout(timer);
     isLoading = false;
+    /* Boş veri geldiyse ve elimizde veri varsa → görmezden gel, ekranı bozma */
+    if((!data || !data.length) && allData.length > 0){
+      $('#upd').text('⚠ Sunucu boş döndü — yenileniyor…');
+      delete window[cb]; $(s).remove();
+      return;
+    }
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
       localStorage.setItem('ramos_cache_ts', String(Date.now()));
