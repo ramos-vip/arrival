@@ -220,10 +220,11 @@ table {
   width: 100%; border-collapse: separate; border-spacing: 0 2px;
   padding: 6px 8px 8px;
 }
-col.c-time { width: 105px; }
-col.c-cust { width: 225px; }
-col.c-trip { width: 160px; }
-col.c-drv  { width: 240px; }
+col.c-time  { width: 105px; }
+col.c-cust  { width: 225px; }
+col.c-trip  { width: 160px; }
+col.c-route { width: 190px; }
+col.c-drv   { width: 240px; }
 
 /* THEAD */
 thead th {
@@ -619,7 +620,7 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
   <!-- DATE BAR -->
   <div class="date-bar">
     <span class="date-label">Tarih:</span>
-    <div id="date-chips" style="display:flex;gap:7px;align-items:center;flex-wrap:wrap;"></div>
+    <div id="date-chips" style="display:flex;gap:7px;align-items:center;flex-wrap:nowrap;"></div>
     <div class="srch-wrap">
       <input type="text" id="search-input" placeholder="Misafir veya uçuş ara..." autocomplete="off" spellcheck="false">
     </div>
@@ -718,7 +719,7 @@ function getTomorrow() { var d=new Date(); d.setDate(d.getDate()+1); return fmtK
    03:00'dan itibaren yeni gün başlar. */
 function getOperationalDate(){
   var now = new Date();
-  if(now.getHours() < 3){
+  if(now.getHours() < 6){
     var prev = new Date(now);
     prev.setDate(now.getDate() - 1);
     return fmtK(prev);
@@ -953,10 +954,10 @@ function buildDateBar(data){
 /* ════ ROL UYGULA ════ */
 function applyRole(){
   if(isYonetici()){
-    $('#date-bar').show();
+    $('.date-bar').show();
     $('#logout-btn').text('Çıkış');
   } else {
-    $('#date-bar').hide(); /* karşılamacı date bar görmez */
+    $('.date-bar').hide(); /* karşılamacı date bar görmez */
     $('#logout-btn').text('Çıkış');
   }
 }
@@ -1007,14 +1008,6 @@ function render(veriler){
 }
 
 /* ════ VOUCHER ════ */
-function detailRow(icon, label, val){
-  return '<div class="v-drow">'
-    +'<span class="v-dicon">'+icon+'</span>'
-    +'<span class="v-dlabel">'+label+'</span>'
-    +'<span class="v-dval">'+esc(String(val||'—'))+'</span>'
-    +'</div>';
-}
-
 function showVoucher(idx){
   var d = window.__voucherRows && window.__voucherRows[idx];
   if(!d) return;
@@ -1087,6 +1080,22 @@ function yukle(){
   $('head').append(s);
 }
 
+/* ════ SESSION ════ */
+var SESSION_MS = 2 * 60 * 60 * 1000; /* 2 saat */
+
+function checkSession(){
+  if(localStorage.getItem('ramos_auth')!=='ok') return false;
+  var ts = parseInt(localStorage.getItem('ramos_login_ts')||'0');
+  if(ts && (Date.now() - ts) > SESSION_MS){
+    localStorage.removeItem('ramos_auth');
+    localStorage.removeItem('ramos_rol');
+    localStorage.removeItem('ramos_login_ts');
+    location.reload();
+    return false;
+  }
+  return true;
+}
+
 /* ════ LOGIN / AUTH ════ */
 function doLogin(){
   var u=$('#l-user').val().trim().toLowerCase();
@@ -1094,11 +1103,13 @@ function doLogin(){
   if(USERS[u]&&USERS[u].sifre===p){
     localStorage.setItem('ramos_auth','ok');
     localStorage.setItem('ramos_rol', USERS[u].rol);
+    localStorage.setItem('ramos_login_ts', String(Date.now()));
     $('#login-screen').fadeOut(280,function(){
       $('#app').fadeIn(220);
       applyRole();
       yukle();
-      setInterval(yukle,60000);
+      setInterval(yukle, 60000);
+      setInterval(checkSession, 60000); /* her dakika oturum süresi kontrol */
     });
   } else {
     $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
@@ -1138,15 +1149,18 @@ $(function(){
   $('#logout-btn').on('click', function(){
     localStorage.removeItem('ramos_auth');
     localStorage.removeItem('ramos_rol');
+    localStorage.removeItem('ramos_login_ts');
     location.reload();
   });
 
   if(localStorage.getItem('ramos_auth')==='ok'){
+    if(!checkSession()){ return; } /* süresi dolmuşsa giriş ekranına */
     $('#login-screen').hide();
     $('#app').show();
     applyRole();
     yukle();
-    setInterval(yukle,60000);
+    setInterval(yukle, 60000);
+    setInterval(checkSession, 60000); /* her dakika oturum süresi kontrol */
   } else {
     setTimeout(function(){ $('#l-user').focus(); },200);
   }
