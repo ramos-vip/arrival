@@ -1119,6 +1119,14 @@ function yukle(){
     clearTimeout(timer);
     isLoading = false;
 
+    /* API boş döndürdüyse ve elimizde veri varsa → ekranı bozma, geçici hata */
+    if(!data || !data.length){
+      if(allData.length > 0){
+        $('#upd').text('⚠ Sunucu boş döndü — önbellek korunuyor');
+        delete window[cb]; $(s).remove(); return;
+      }
+    }
+
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
       localStorage.setItem('ramos_cache_ts', String(Date.now()));
