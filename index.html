@@ -978,20 +978,15 @@ function render(veriler){
   $('#upd').text('Son güncelleme: '+saat);
 
   if(isYonetici()){
-    /* İlk yükleme → bugün. Sonraki yüklemelerde kullanıcının seçimini koru.
-       Seçili tarihin verisi yoksa → en yakın gelecek tarihe git. */
     if(!selectedDate){
       selectedDate = today;
     } else if(!counts[selectedDate]){
-      var _s = Object.keys(counts).sort(function(a,b){
-        var pa=a.split('.'), pb=b.split('.');
-        return new Date(+pa[2],+pa[1]-1,+pa[0]) - new Date(+pb[2],+pb[1]-1,+pb[0]);
-      });
-      var _td = new Date(+today.split('.')[2], +today.split('.')[1]-1, +today.split('.')[0]);
-      var _fut = _s.filter(function(d){
-        var p=d.split('.'); return new Date(+p[2],+p[1]-1,+p[0]) >= _td;
-      });
-      selectedDate = counts[today] ? today : (_fut.length ? _fut[0] : (_s[0] || today));
+      selectedDate = counts[today] ? today
+        : (counts[tomorrow] ? tomorrow
+        : (Object.keys(counts).sort(function(a,b){
+            var pa=a.split('.'),pb=b.split('.');
+            return new Date(+pa[2],+pa[1]-1,+pa[0])-new Date(+pb[2],+pb[1]-1,+pb[0]);
+           })[0] || today));
     }
     buildDateBar(allData);
     showDate(selectedDate);
