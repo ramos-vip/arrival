@@ -1048,24 +1048,33 @@ function yukle(){
   var s  = document.createElement('script');
   s.src  = API + '?cb=' + cb;
 
-  /* 45 sn içinde cevap gelmezse sıfırla */
+  /* 55 sn içinde cevap gelmezse sıfırla ve yeniden dene */
   var timer = setTimeout(function(){
     isLoading = false;
     delete window[cb];
     $(s).remove();
-    $('#upd').text('⚠ Zaman aşımı — yenileniyor…');
-    /* Sayfa hâlâ spinner gösteriyorsa bilgi ver */
-    if($('.empty-loading').length){
-      $('#page').html('<div class="empty"><span class="empty-ico">✈</span>Sunucuya ulaşılamadı<div class="empty-hint">Otomatik olarak yeniden deneniyor…</div></div>');
+    /* Veri hiç gelmemişse → 10 sn sonra otomatik tekrar dene */
+    if(allData.length === 0){
+      $('#upd').text('⚠ Sunucu uyandırılıyor… yeniden deneniyor');
+      $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Sunucu uyandırılıyor…<div class="empty-hint">Birkaç saniye içinde otomatik yeniden denenecek</div></div>');
+      setTimeout(yukle, 10000);
+    } else {
+      $('#upd').text('⚠ Zaman aşımı — yenileniyor…');
     }
-  }, 45000);
+  }, 55000);
 
   s.onerror = function(){
     clearTimeout(timer);
     isLoading = false;
     delete window[cb];
     $(s).remove();
-    $('#upd').text('⚠ Bağlantı hatası');
+    /* Veri hiç gelmemişse → 10 sn sonra otomatik tekrar dene */
+    if(allData.length === 0){
+      $('#upd').text('⚠ Bağlantı hatası — yeniden deneniyor…');
+      setTimeout(yukle, 10000);
+    } else {
+      $('#upd').text('⚠ Bağlantı hatası');
+    }
   };
 
   window[cb] = function(data){
