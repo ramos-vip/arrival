@@ -1128,6 +1128,17 @@ function yukle(){
       }
     }
 
+    /* Kısmi okuma koruması: sheet yazılırken okunmuş olabilir.
+       Seçili tarihin verisi sıfıra düştüyse ama elimizde veri varsa koru. */
+    if(data && data.length && selectedDate && allData.length > 0){
+      var _eski = allData.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
+      var _yeni = data.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
+      if(_eski > 0 && _yeni === 0){
+        $('#upd').text('⚠ Geçici okuma hatası — veriler korunuyor');
+        delete window[cb]; $(s).remove(); return;
+      }
+    }
+
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
       localStorage.setItem('ramos_cache_ts', String(Date.now()));
