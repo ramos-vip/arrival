@@ -453,31 +453,71 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
 @media print {
   @page { size: A4 portrait; margin: 0; }
 
-  /* Sayfa içeriğini gizle */
   body > *:not(#voucher-overlay) { display: none !important; }
 
   #voucher-overlay {
     position: fixed !important; inset: 0 !important;
-    display: flex !important; background: #fff !important;
-    backdrop-filter: none !important; padding: 0 !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    justify-content: flex-start !important;
+    background: #fff !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    padding: 0 !important;
   }
+
   #voucher-card {
-    width: 210mm !important; height: 297mm !important;
-    max-width: none !important; border-radius: 0 !important;
-    box-shadow: none !important; animation: none !important;
+    width: 210mm !important;
+    height: 297mm !important;
+    max-width: none !important;
+    min-width: 210mm !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+    animation: none !important;
+    /* Kritik: mobil CSS'in flex yönünü bozmamak için açıkça yaz */
+    display: flex !important;
+    flex-direction: column !important;
+    overflow: hidden !important;
   }
-  /* Logo biraz büyük */
-  .v-header    { padding: 48px 60px 30px !important; }
+
+  .v-header {
+    flex-shrink: 0 !important;
+    padding: 48px 60px 30px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+  }
   .v-logo-wrap svg { width: 100px !important; height: 120px !important; }
-  .v-co-name   { font-size: 30px !important; }
-  .v-co-sub    { font-size: 14px !important; letter-spacing: 6px !important; }
-  .v-goldbar   { height: 5px !important; }
-  /* İsim sayfayı doldursun */
-  .v-name-area { padding: 0 60px 100px !important; }
-  .v-welcome-lbl { font-size: 14px !important; letter-spacing: 10px !important; margin-bottom: 28px !important; }
-  .v-cust-name { font-size: 110px !important; letter-spacing: -5px !important; line-height: 1.0 !important; }
-  /* Butonları gizle */
-  .v-vfooter   { display: none !important; }
+  .v-co-name  { font-size: 30px !important; }
+  .v-co-sub   { font-size: 14px !important; letter-spacing: 6px !important; }
+
+  .v-goldbar  { flex-shrink: 0 !important; height: 5px !important; }
+
+  .v-name-area {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 60px 80px !important;
+    width: 100% !important;
+  }
+  .v-welcome-lbl {
+    font-size: 14px !important;
+    letter-spacing: 10px !important;
+    margin-bottom: 28px !important;
+  }
+  .v-cust-name {
+    font-size: 100px !important;
+    letter-spacing: -4px !important;
+    line-height: 1.05 !important;
+    text-align: center !important;
+    word-break: break-word !important;
+    width: 100% !important;
+  }
+
+  .v-vfooter { display: none !important; }
 }
 
 /* ═══ TABLET ═══ */
