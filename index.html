@@ -1026,6 +1026,10 @@ function yukle(){
   var cacheTs  = parseInt(localStorage.getItem('ramos_cache_ts')||'0');
   var cacheOk  = cacheRaw && (Date.now() - cacheTs) < 3 * 60 * 60 * 1000;
 
+  /* isLoading ÖNCE true yapılıyor — cache render sırasında da
+     "transfer bulunamadı" yerine "yükleniyor" göstermek için */
+  isLoading = true;
+
   if(cacheOk){
     try {
       render(JSON.parse(cacheRaw));
@@ -1034,7 +1038,6 @@ function yukle(){
   }
 
   /* 2) Taze veri çek */
-  isLoading = true;
   if(!cacheOk){
     /* Cache yoksa/eskiyse spinner göster */
     $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Yükleniyor…</div>');
