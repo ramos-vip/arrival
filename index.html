@@ -721,16 +721,9 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
 </div>
 
 <script>
-/* ════ CREDENTIALS ════ */
-/* rol: 'yonetici' → tüm tarihler + date bar
-   rol: 'karsilama' → sadece bugün, date bar yok */
-var USERS = {
-  'ramos': { _h: 'dmlwMjAyNg==', rol: 'yonetici'  },
-  'desk':  { _h: 'MTg4MTE4ODE=', rol: 'karsilama' }
-};
-function _checkPass(u, p){
-  try{ return !!USERS[u] && atob(USERS[u]._h) === p; } catch(e){ return false; }
-}
+/* ════ AUTH ════ */
+/* Şifreler burada YOK — GAS Script Properties'te SHA-256 hash olarak saklanır.
+   Kaynak kodu görüntüleyen kimse şifreyi bulamaz. */
 var _loginBusy = false;
 function getRole(){ return localStorage.getItem('ramos_rol')||'karsilama'; }
 function isYonetici(){ return getRole()==='yonetici'; }
@@ -1083,9 +1076,10 @@ function yukle(){
     $('#cnt').text('— transfer');
   }
 
-  var cb = '__r' + Date.now();
-  var s  = document.createElement('script');
-  s.src  = API + '?cb=' + cb + '&t=' + Date.now();
+  var cb   = '__r' + Date.now();
+  var s    = document.createElement('script');
+  var _tok = localStorage.getItem('ramos_token') || '';
+  s.src    = API + '?tok=' + encodeURIComponent(_tok) + '&cb=' + cb + '&t=' + Date.now();
 
   /* 55 sn içinde cevap gelmezse sıfırla ve yeniden dene */
   var timer = setTimeout(function(){
@@ -1119,6 +1113,15 @@ function yukle(){
   window[cb] = function(data){
     clearTimeout(timer);
     isLoading = false;
+
+    /* Token geçersiz → şifre değişti veya oturum süresi doldu → çıkış */
+    if(data && data.error === 'unauthorized'){
+      localStorage.removeItem('ramos_auth');
+      localStorage.removeItem('ramos_token');
+      localStorage.removeItem('ramos_rol');
+      localStorage.removeItem('ramos_login_ts');
+      location.reload(); return;
+    }
 
     /* API boş döndürdüyse ve elimizde veri varsa → ekranı bozma, geçici hata */
     if(!data || !data.length){
@@ -1159,6 +1162,7 @@ function checkSession(){
   var ts = parseInt(localStorage.getItem('ramos_login_ts')||'0');
   if(ts && (Date.now() - ts) > SESSION_MS){
     localStorage.removeItem('ramos_auth');
+    localStorage.removeItem('ramos_token');
     localStorage.removeItem('ramos_rol');
     localStorage.removeItem('ramos_login_ts');
     location.reload();
@@ -1168,27 +1172,68 @@ function checkSession(){
 }
 
 /* ════ LOGIN / AUTH ════ */
-function doLogin(){
-  if(_loginBusy) return;                        /* çift tık koruması */
-  var u=$('#l-user').val().trim().toLowerCase();
-  var p=$('#l-pass').val();
-  if(_checkPass(u, p)){
-    _loginBusy = true;
-    localStorage.setItem('ramos_auth','ok');
-    localStorage.setItem('ramos_rol', USERS[u].rol);
-    localStorage.setItem('ramos_login_ts', String(Date.now()));
-    $('#login-screen').fadeOut(280,function(){
-      $('#app').fadeIn(220);
-      applyRole();
-      yukle();
-      setInterval(yukle, 60000);
-      setInterval(checkSession, 60000);
-    });
-  } else {
-    $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
-    $('#l-pass').val('').focus();
-    setTimeout(function(){ $('#l-err').text(''); },3000);
+async function doLogin(){
+  if(_loginBusy) return;
+  var u = $('#l-user').val().trim().toLowerCase();
+  var p = $('#l-pass').val();
+  if(!u || !p) return;
+
+  _loginBusy = true;
+  $('#l-btn').prop('disabled', true).text('Giriş yapılıyor…');
+
+  /* Şifreyi SHA-256 ile hashle — düz metin hiçbir yerde saklanmaz/gönderilmez */
+  var hashHex;
+  try {
+    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
+    hashHex = Array.from(new Uint8Array(buf)).map(function(b){
+      var h = b.toString(16); return h.length < 2 ? '0'+h : h;
+    }).join('');
+  } catch(ex) {
+    _loginBusy = false;
+    $('#l-btn').prop('disabled', false).text('Giriş Yap →');
+    $('#l-err').text('❌ Tarayıcı hatası');
+    return;
   }
+
+  /* JSONP ile GAS'a gönder */
+  var cb = '__lg' + Date.now();
+  var s  = document.createElement('script');
+  s.src  = API + '?action=login&user=' + encodeURIComponent(u)
+         + '&h=' + hashHex + '&cb=' + cb;
+
+  var timer = setTimeout(function(){
+    _loginBusy = false;
+    delete window[cb]; $(s).remove();
+    $('#l-btn').prop('disabled', false).text('Giriş Yap →');
+    $('#l-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
+    setTimeout(function(){ $('#l-err').text(''); }, 3000);
+  }, 20000);
+
+  window[cb] = function(result){
+    clearTimeout(timer);
+    delete window[cb]; $(s).remove();
+    if(result && result.ok){
+      localStorage.setItem('ramos_auth',     'ok');
+      localStorage.setItem('ramos_token',    result.token);
+      localStorage.setItem('ramos_rol',      result.rol);
+      localStorage.setItem('ramos_login_ts', String(Date.now()));
+      $('#login-screen').fadeOut(280, function(){
+        $('#app').fadeIn(220);
+        applyRole();
+        yukle();
+        setInterval(yukle, 60000);
+        setInterval(checkSession, 60000);
+      });
+    } else {
+      _loginBusy = false;
+      $('#l-btn').prop('disabled', false).text('Giriş Yap →');
+      $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
+      $('#l-pass').val('').focus();
+      setTimeout(function(){ $('#l-err').text(''); }, 3000);
+    }
+  };
+
+  $('head').append(s);
 }
 
 $(function(){
@@ -1221,6 +1266,7 @@ $(function(){
 
   $('#logout-btn').on('click', function(){
     localStorage.removeItem('ramos_auth');
+    localStorage.removeItem('ramos_token');
     localStorage.removeItem('ramos_rol');
     localStorage.removeItem('ramos_login_ts');
     location.reload();
