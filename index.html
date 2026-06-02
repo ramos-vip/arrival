@@ -903,7 +903,7 @@ function showDate(tarih){
 
   var html = buildOneSec(tarih);
   var count = allData.filter(function(d){ return d.tarih===tarih; }).length;
-  $('#cnt').text(count+' transfer');
+  $('#cnt').text(count+' Transfer');
 
   if(!html){
     if(isLoading){
@@ -944,7 +944,7 @@ function showDates(tarihler){
     return buildOneSec(tarih, cutoff);
   }).join('');
 
-  $('#cnt').text(visibleCount+' transfer');
+  $('#cnt').text(visibleCount+' Transfer');
 
   if(!html){
     if(isLoading){
@@ -1109,6 +1109,7 @@ function printList(tarih){
       +'<td style="color:#7c3aed;font-size:11px">'+esc(d.nereye||'')+'</td>'
       +'<td style="font-weight:600">'+esc(d.surucu||'⚠ Atanmadı')+'</td>'
       +'<td style="font-family:monospace;font-size:10px;color:#888">'+esc(d.surucuPlaka||'')+'</td>'
+      +'<td style="color:#555">'+esc(d.surucuTel ? '+'+d.surucuTel : '')+'</td>'
       +'<td><span style="font-size:10px;padding:2px 8px;border-radius:20px;background:'+(d.surucu?'#dcfce7':'#fee2e2')+';color:'+(d.surucu?'#166534':'#991b1b')+'">'+esc(d.durum||'Bekleyen')+'</span></td>'
       +'</tr>';
   }).join('');
@@ -1133,7 +1134,7 @@ function printList(tarih){
     +'<div class="hd-right">'+liste.length+' transfer<br><span style="font-size:10px">'+new Date().toLocaleString('tr-TR')+'</span></div>'
     +'</div>'
     +'<table><thead><tr>'
-    +'<th>Saat</th><th>Müşteri</th>'+(showTel ? '<th>Tel</th>' : '')+'<th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Nereden</th><th>Nereye</th><th>Şoför</th><th>Plaka</th><th>Durum</th>'
+    +'<th>Saat</th><th>Müşteri</th>'+(showTel ? '<th>Müşteri Tel</th>' : '')+'<th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Nereden</th><th>Nereye</th><th>Şoför</th><th>Plaka</th><th>Şoför Tel</th><th>Durum</th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<script>window.onload=function(){window.print()}<\/script>'
     +'</body></html>';
@@ -1362,7 +1363,7 @@ $(function(){
       $(this).toggleClass('s-hide', q.length > 0 && hay.indexOf(q) === -1);
     });
     var vis = $('.trow:not(.s-hide)').length;
-    $('#cnt').text(vis + ' transfer');
+    $('#cnt').text(vis + ' Transfer');
     $('#srch-clear').toggle(q.length > 0);
   });
   $('#srch-clear').on('click', function(){
