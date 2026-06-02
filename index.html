@@ -1095,11 +1095,13 @@ function printList(tarih){
   var dateObj = parseTarih(tarih);
   var tarihStr = dateObj ? fmtU(dateObj) : tarih;
 
+  var showTel = isYonetici(); /* karşılamacı müşteri telini görmez */
+
   var rows = liste.map(function(d){
     return '<tr>'
       +'<td style="font-size:15px;font-weight:900;white-space:nowrap">'+esc(d.saat||'')+'</td>'
       +'<td><strong>'+esc(d.musteri||'')+'</strong></td>'
-      +'<td style="color:#555">'+esc(d.musteriTel ? '+'+d.musteriTel : '')+'</td>'
+      +(showTel ? '<td style="color:#555">'+esc(d.musteriTel ? '+'+d.musteriTel : '')+'</td>' : '')
       +'<td><span style="background:#1a1a3e;color:#a5b4fc;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">✈ '+esc(d.ucus||'—')+'</span></td>'
       +'<td style="text-align:center">'+esc(d.kisi||'')+'</td>'
       +'<td style="color:#555;font-size:11px">'+esc(d.arac||'')+'</td>'
@@ -1131,7 +1133,7 @@ function printList(tarih){
     +'<div class="hd-right">'+liste.length+' transfer<br><span style="font-size:10px">'+new Date().toLocaleString('tr-TR')+'</span></div>'
     +'</div>'
     +'<table><thead><tr>'
-    +'<th>Saat</th><th>Müşteri</th><th>Tel</th><th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Nereden</th><th>Nereye</th><th>Şoför</th><th>Plaka</th><th>Durum</th>'
+    +'<th>Saat</th><th>Müşteri</th>'+(showTel ? '<th>Tel</th>' : '')+'<th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Nereden</th><th>Nereye</th><th>Şoför</th><th>Plaka</th><th>Durum</th>'
     +'</tr></thead><tbody>'+rows+'</tbody></table>'
     +'<script>window.onload=function(){window.print()}<\/script>'
     +'</body></html>';
