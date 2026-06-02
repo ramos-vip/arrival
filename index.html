@@ -287,6 +287,14 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
   font-size: 11px; font-weight: 700; padding: 4px 11px; border-radius: 20px;
   white-space: nowrap; margin-bottom: 6px; letter-spacing: .3px;
 }
+a.fl-chip {
+  text-decoration: none; cursor: pointer;
+  transition: background .15s, border-color .15s, color .15s;
+}
+a.fl-chip:hover {
+  background: linear-gradient(135deg, rgba(79,70,229,.38), rgba(124,58,237,.3));
+  border-color: rgba(99,102,241,.6); color: #c7d2fe;
+}
 .td-meta { font-size: 11px; color: #3d5a7a; display: flex; align-items: center; gap: 5px; }
 
 /* ROUTE */
@@ -791,10 +799,11 @@ function buildRow(d){
   var saat=esc(d.saat||'-'), isim=esc(d.musteri||'-');
   var nereden=esc(d.nereden||'-'), nereye=esc(d.nereye||'-');
   var ucus=esc(d.ucus||''), kisi=esc(d.kisi||''), arac=esc(d.arac||'');
+  var ucusUrl = encodeURIComponent((d.ucus||'').replace(/\s/g,''));
   var surucu=esc(d.surucu||''), plaka=esc(d.surucuPlaka||'');
 
   var tripHtml='';
-  if(ucus&&ucus!=='-') tripHtml+='<div class="fl-chip">✈ '+ucus+'</div>';
+  if(ucus&&ucus!=='-') tripHtml+='<a class="fl-chip" href="https://www.flightradar24.com/flight/'+ucusUrl+'" target="_blank" rel="noopener">✈ '+ucus+'</a>';
   var parts=[];
   if(kisi) parts.push('👤 '+kisi);
   if(arac&&arac!=='-') parts.push(arac);
