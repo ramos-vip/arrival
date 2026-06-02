@@ -334,6 +334,17 @@ a.fl-chip:hover {
 .empty-loading .empty-ico { opacity: .5; animation: spin 1.4s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* PRINT BTN */
+.print-btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(99,102,241,.08); border: 1px solid rgba(99,102,241,.2);
+  color: #818cf8; font-size: 10px; font-weight: 700;
+  padding: 5px 13px; border-radius: 8px; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all .15s; letter-spacing: .4px;
+  margin-left: 10px;
+}
+.print-btn:hover { background: rgba(99,102,241,.18); border-color: rgba(99,102,241,.4); color: #c7d2fe; }
+
 /* FOOTER */
 .footer { text-align: center; padding: 22px; font-size: 11px; color: #0d1e36; }
 
@@ -768,7 +779,8 @@ var GUN_K = ['Paz','Pts','Sal','Çar','Per','Cum','Cmt'];
 
 var allData = [];
 var selectedDate = null;
-var isLoading   = false;
+var isLoading    = false;
+var _lastDataStr = ''; /* akıllı polling — gereksiz re-render önle */
 
 function pad(n){ return ('0'+n).slice(-2); }
 function fmtK(d){ return pad(d.getDate())+'.'+pad(d.getMonth()+1)+'.'+d.getFullYear(); }
@@ -872,6 +884,7 @@ function buildOneSec(tarih, afterDt){
       +'<span class="sec-label">'+emoji+' '+gun+'</span>'
       +'<span class="sec-date">'+fmtU(dateObj)+'</span>'
       +'<span class="sec-count">'+liste.length+' transfer</span>'
+      +'<button class="print-btn" onclick="printList(\''+tarih+'\')">🖨 Yazdır</button>'
     +'</div>'
     +'<div class="tbl-wrap"><table>'
       +'<colgroup><col class="c-time"><col class="c-cust"><col class="c-trip"><col class="c-route"><col class="c-drv"></colgroup>'
@@ -1075,6 +1088,58 @@ function showVoucher(idx){
   $('#voucher-overlay').addClass('open');
 }
 
+/* ════ YAZDIR ════ */
+function printList(tarih){
+  var liste = allData.filter(function(d){ return d.tarih===tarih; });
+  liste.sort(function(a,b){ return String(a.saat||'').localeCompare(String(b.saat||'')); });
+  var dateObj = parseTarih(tarih);
+  var tarihStr = dateObj ? fmtU(dateObj) : tarih;
+
+  var rows = liste.map(function(d){
+    return '<tr>'
+      +'<td style="font-size:15px;font-weight:900;white-space:nowrap">'+esc(d.saat||'')+'</td>'
+      +'<td><strong>'+esc(d.musteri||'')+'</strong></td>'
+      +'<td style="color:#555">'+esc(d.musteriTel ? '+'+d.musteriTel : '')+'</td>'
+      +'<td><span style="background:#1a1a3e;color:#a5b4fc;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">✈ '+esc(d.ucus||'—')+'</span></td>'
+      +'<td style="text-align:center">'+esc(d.kisi||'')+'</td>'
+      +'<td style="color:#555;font-size:11px">'+esc(d.arac||'')+'</td>'
+      +'<td style="color:#16a34a;font-size:11px">'+esc(d.nereden||'')+'</td>'
+      +'<td style="color:#7c3aed;font-size:11px">'+esc(d.nereye||'')+'</td>'
+      +'<td style="font-weight:600">'+esc(d.surucu||'⚠ Atanmadı')+'</td>'
+      +'<td style="font-family:monospace;font-size:10px;color:#888">'+esc(d.surucuPlaka||'')+'</td>'
+      +'<td><span style="font-size:10px;padding:2px 8px;border-radius:20px;background:'+(d.surucu?'#dcfce7':'#fee2e2')+';color:'+(d.surucu?'#166534':'#991b1b')+'">'+esc(d.durum||'Bekleyen')+'</span></td>'
+      +'</tr>';
+  }).join('');
+
+  var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
+    +'<title>RAMOS NJT – '+tarih+'</title>'
+    +'<style>'
+    +'*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:Arial,sans-serif;padding:18px;color:#111;font-size:12px}'
+    +'.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1a1a3e}'
+    +'.hd-left h1{font-size:17px;font-weight:900;letter-spacing:-.3px}'
+    +'.hd-left p{font-size:11px;color:#666;margin-top:3px}'
+    +'.hd-right{font-size:11px;color:#888;text-align:right}'
+    +'table{width:100%;border-collapse:collapse}'
+    +'th{background:#1a1a3e;color:#fff;padding:7px 9px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}'
+    +'td{padding:8px 9px;border-bottom:1px solid #e5e7eb;vertical-align:middle}'
+    +'tr:nth-child(even) td{background:#f9fafb}'
+    +'@media print{@page{margin:8mm;size:A4 landscape}}'
+    +'</style></head><body>'
+    +'<div class="hd">'
+    +'<div class="hd-left"><h1>✈ RAMOS NJT VIP TRANSFER</h1><p>Arrival Transfer Listesi — '+tarihStr+'</p></div>'
+    +'<div class="hd-right">'+liste.length+' transfer<br><span style="font-size:10px">'+new Date().toLocaleString('tr-TR')+'</span></div>'
+    +'</div>'
+    +'<table><thead><tr>'
+    +'<th>Saat</th><th>Müşteri</th><th>Tel</th><th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Nereden</th><th>Nereye</th><th>Şoför</th><th>Plaka</th><th>Durum</th>'
+    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<script>window.onload=function(){window.print()}<\/script>'
+    +'</body></html>';
+
+  var w=window.open('','_blank','width=1200,height=700');
+  w.document.write(html); w.document.close();
+}
+
 /* ════ FETCH ════ */
 /* Cache: 3 saatlik VE aynı gün içinde — gece yarısı geçişinde kendiliğinden iptal olur */
 function isCacheValid(ts){
@@ -1178,6 +1243,15 @@ function yukle(){
       }
     }
 
+    /* Akıllı polling: veri değişmediyse ekranı yeniden çizme */
+    var newStr = JSON.stringify(data);
+    if(newStr === _lastDataStr && allData.length > 0){
+      var st = new Date().toLocaleString('tr-TR',{hour:'2-digit',minute:'2-digit'});
+      $('#upd').text('Son güncelleme: '+st);
+      delete window[cb]; $(s).remove(); return;
+    }
+    _lastDataStr = newStr;
+
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
       localStorage.setItem('ramos_cache_ts', String(Date.now()));
@@ -1257,7 +1331,7 @@ async function doLogin(){
         $('#app').fadeIn(220);
         applyRole();
         yukle();
-        setInterval(yukle, 60000);
+        setInterval(yukle, 30000);
         setInterval(checkSession, 60000);
       });
     } else {
@@ -1319,7 +1393,7 @@ $(function(){
     $('#app').show();
     applyRole();
     yukle();
-    setInterval(yukle, 60000);
+    setInterval(yukle, 30000);
     setInterval(checkSession, 60000); /* her dakika oturum süresi kontrol */
   } else {
     setTimeout(function(){ $('#l-user').focus(); },200);
