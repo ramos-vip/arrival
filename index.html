@@ -803,7 +803,7 @@ function buildRow(d){
   var surucu=esc(d.surucu||''), plaka=esc(d.surucuPlaka||'');
 
   var tripHtml='';
-  if(ucus&&ucus!=='-') tripHtml+='<a class="fl-chip" href="https://www.flightradar24.com/flight/'+ucusUrl+'" target="_blank" rel="noopener">✈ '+ucus+'</a>';
+  if(ucus&&ucus!=='-') tripHtml+='<a class="fl-chip" href="https://www.flightaware.com/live/flight/'+ucusUrl+'" target="_blank" rel="noopener">✈ '+ucus+'</a>';
   var parts=[];
   if(kisi) parts.push('👤 '+kisi);
   if(arac&&arac!=='-') parts.push(arac);
