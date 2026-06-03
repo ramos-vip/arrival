@@ -40,30 +40,7 @@ function initPullToRefresh(){
   });
 }
 
-function initLongPress(){
-  if(!('ontouchstart' in window)) return;
-  var timer,$menu=$('#lp-menu');
-  function closeMenu(){$menu.removeClass('open');}
-  $('#lp-bg,#lp-cancel').on('click',closeMenu);
-  $(document).on('touchstart','.trow',function(e){
-    var $r=$(this);
-    timer=setTimeout(function(){
-      haptic('medium');
-      var tr=$r.data('tarih'),sa=$r.data('saat'),d=null;
-      for(var i=0;i<allData.length;i++){if(allData[i].tarih===tr&&allData[i].saat===sa){d=allData[i];break;}}
-      if(!d) return;
-      $('#lp-title').text(d.musteri||'Transfer');
-      var items=[];
-      if(d.surucuTel) items.push({i:'💬',t:'WhatsApp — Şoför',fn:function(){window.open('https://wa.me/'+d.surucuTel.replace(/\D/g,''));closeMenu();}});
-      if(d.musteriTel&&isYonetici()) items.push({i:'📞',t:'Müşteriyi Ara',fn:function(){window.open('tel:+'+d.musteriTel.replace(/\D/g,''));closeMenu();}});
-      items.push({i:'🎫',t:'Voucher Göster',fn:function(){var idx=null;window.__voucherRows&&window.__voucherRows.forEach(function(x,n){if(x.musteri===d.musteri&&x.saat===d.saat)idx=n;});if(idx!==null)showVoucher(idx);closeMenu();}});
-      items.push({i:'📋',t:'Bilgileri Kopyala',fn:function(){var txt=(d.musteri||'')+' · '+d.saat+' · ✈'+(d.ucus||'')+' · '+(d.nereden||'')+' → '+(d.nereye||'');if(navigator.clipboard)navigator.clipboard.writeText(txt);haptic('success');closeMenu();}});
-      $('#lp-items').html(items.map(function(x,n){return '<button class="lp-item" data-n="'+n+'"><span class="li">'+x.i+'</span>'+x.t+'</button>';}).join(''));
-      $('#lp-items .lp-item').each(function(n){$(this).on('click',function(){items[n].fn();});});
-      $menu.addClass('open');
-    },600);
-  }).on('touchmove touchend touchcancel','.trow',function(){clearTimeout(timer);});
-}
+function initLongPress(){ /* kaldırıldı */ }
 
 function initMobileNav(){
   if(!('ontouchstart' in window)) return;

@@ -857,51 +857,7 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   .trow { animation:rowIn .4s cubic-bezier(.16,1,.3,1) both !important; }
 
   /* ── Long press menu ── */
-  #lp-menu {
-    display:block; position:fixed; inset:0; z-index:10500;
-    pointer-events:none; opacity:0; transition:opacity .22s;
-  }
-  #lp-menu.open { pointer-events:all; opacity:1; }
-  .lp-bg {
-    position:absolute; inset:0;
-    background:rgba(0,0,10,.75); backdrop-filter:blur(5px);
-  }
-  .lp-sheet {
-    position:absolute; bottom:0; left:0; right:0;
-    background:linear-gradient(180deg,#0e1e38,#09142a);
-    border-radius:24px 24px 0 0;
-    padding:8px 16px calc(20px + env(safe-area-inset-bottom));
-    transform:translateY(105%);
-    transition:transform .32s cubic-bezier(.16,1,.3,1);
-    border-top:1px solid rgba(201,162,39,.22);
-    box-shadow:0 -8px 40px rgba(0,0,0,.6);
-  }
-  #lp-menu.open .lp-sheet { transform:none; }
-  .lp-handle {
-    width:38px; height:4px; border-radius:2px;
-    background:rgba(255,255,255,.14); margin:0 auto 14px;
-  }
-  .lp-title {
-    font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:700;
-    color:#e2e8f0; padding:0 4px 12px; border-bottom:1px solid #1a2d48;
-    margin-bottom:6px; letter-spacing:.4px;
-  }
-  .lp-item {
-    display:flex; align-items:center; gap:14px; width:100%;
-    padding:15px 6px; background:none; border:none;
-    color:#64748b; font-size:15px; font-weight:600;
-    font-family:'Inter',sans-serif; text-align:left; cursor:pointer;
-    border-bottom:1px solid rgba(255,255,255,.04); transition:color .15s;
-  }
-  .lp-item:active { color:#e2e8f0; background:rgba(255,255,255,.03); }
-  .lp-item .li { font-size:22px; width:30px; text-align:center; }
-  .lp-cancel {
-    display:block; width:100%; margin-top:12px; padding:15px;
-    background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.18);
-    border-radius:14px; color:#f87171; font-size:15px; font-weight:700;
-    font-family:'Inter',sans-serif; cursor:pointer; transition:background .15s;
-  }
-  .lp-cancel:active { background:rgba(239,68,68,.16); }
+  /* long press menu kaldırıldı */
 }
 @media (max-width: 380px) {
   .page { padding: 12px 8px 60px; }
