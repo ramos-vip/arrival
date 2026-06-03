@@ -13,7 +13,7 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: #07111f;
+  background: #050c18;
   color: #e2e8f0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -38,10 +38,10 @@ body {
 }
 .login-ico {
   width: 60px; height: 60px; border-radius: 18px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #a07820, #e8c44a);
   display: flex; align-items: center; justify-content: center;
   font-size: 28px; margin: 0 auto 22px;
-  box-shadow: 0 10px 30px rgba(99,102,241,.5);
+  box-shadow: 0 10px 30px rgba(201,162,39,.45);
 }
 .login-title { font-size: 18px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 6px; letter-spacing: -.4px; }
 .login-sub   { font-size: 12px; color: #334155; text-align: center; margin-bottom: 34px; }
@@ -92,23 +92,23 @@ body {
 .hdr-brand { display: flex; align-items: center; gap: 13px; }
 .hdr-ico {
   width: 40px; height: 40px; border-radius: 11px;
-  background: linear-gradient(135deg, #4f46e5, #7c3aed);
+  background: linear-gradient(135deg, #a07820, #e8c44a);
   display: flex; align-items: center; justify-content: center;
   font-size: 20px; flex-shrink: 0;
-  box-shadow: 0 4px 18px rgba(99,102,241,.45);
+  box-shadow: 0 4px 18px rgba(201,162,39,.38);
 }
 .hdr-title { font-size: 16px; font-weight: 900; color: #fff; letter-spacing: -.4px; }
 .hdr-sub   { font-size: 11px; color: #3d5a7a; margin-top: 2px; font-weight: 500; }
 .hdr-right { display: flex; align-items: center; gap: 12px; }
 .hdr-pill {
   display: flex; align-items: center; gap: 7px;
-  background: rgba(99,102,241,.1); border: 1px solid rgba(99,102,241,.22);
+  background: rgba(201,162,39,.08); border: 1px solid rgba(201,162,39,.22);
   padding: 5px 14px; border-radius: 20px;
-  font-size: 12px; font-weight: 700; color: #a5b4fc;
+  font-size: 12px; font-weight: 700; color: #e8c44a;
 }
 .live {
   width: 7px; height: 7px; border-radius: 50%;
-  background: #4ade80; box-shadow: 0 0 7px rgba(74,222,128,.8);
+  background: #e8c44a; box-shadow: 0 0 8px rgba(232,196,74,.9);
   animation: blink 2s ease-in-out infinite; flex-shrink: 0;
 }
 @keyframes blink { 0%,100%{opacity:1} 50%{opacity:.15} }
@@ -192,14 +192,14 @@ body {
 .sec-head {
   display: flex; align-items: center; gap: 16px;
   padding: 18px 26px;
-  background: linear-gradient(90deg, rgba(79,70,229,.13), rgba(79,70,229,.04), transparent);
-  border: 1px solid #0d1e36;
-  border-left: 4px solid #4f46e5;
+  background: linear-gradient(90deg, rgba(201,162,39,.07), rgba(79,70,229,.06), transparent);
+  border: 1px solid #111f36;
+  border-left: 4px solid #c9a227;
   border-bottom: none;
   border-radius: 12px 12px 0 0;
 }
-.sec-head.sh-today { border-left-color: #34d399; }
-.sec-head.sh-tmrw  { border-left-color: #a78bfa; }
+.sec-head.sh-today { border-left-color: #34d399; background: linear-gradient(90deg,rgba(52,211,153,.08),rgba(79,70,229,.04),transparent); }
+.sec-head.sh-tmrw  { border-left-color: #a78bfa; background: linear-gradient(90deg,rgba(167,139,250,.08),rgba(79,70,229,.04),transparent); }
 .sec-label { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -.5px; }
 .sec-date  { font-size: 12px; color: #475569; font-weight: 500; }
 .sec-count {
@@ -210,8 +210,8 @@ body {
 
 /* TABLE WRAPPER */
 .tbl-wrap {
-  border: 1px solid #0d1e36; border-radius: 0 0 12px 12px;
-  background: #060f1c; overflow: hidden;
+  border: 1px solid #111f36; border-radius: 0 0 12px 12px;
+  background: #060d1a; overflow: hidden;
 }
 
 /* TABLE */
@@ -238,8 +238,8 @@ thead th:last-child  { padding-right: 22px; }
 
 /* TBODY ROWS */
 .trow > td {
-  background: #0b1a2f; padding: 15px 18px; vertical-align: middle;
-  border-top: 1px solid #0f2244; border-bottom: 1px solid #0f2244;
+  background: #090f1e; padding: 15px 18px; vertical-align: middle;
+  border-top: 1px solid #0d1f36; border-bottom: 1px solid #0d1f36;
   transition: background .15s, border-color .15s;
 }
 .trow > td + td { border-left: 1px solid #091829; }
@@ -327,12 +327,53 @@ a.fl-chip:hover {
   padding: 4px 10px; border-radius: 20px; letter-spacing: .5px; text-transform: uppercase;
 }
 
-/* EMPTY */
-.empty { text-align: center; padding: 80px 20px; color: #1a3050; font-size: 15px; }
-.empty-ico { font-size: 48px; display: block; margin-bottom: 14px; opacity: .12; }
-.empty-hint { font-size: 12px; color: #0d1e36; margin-top: 8px; }
-.empty-loading { color: #3d5a7a; }
-.empty-loading .empty-ico { opacity: .5; animation: spin 1.4s linear infinite; display: inline-block; }
+/* EMPTY STATE */
+.ep {
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center; padding: 80px 24px; text-align: center;
+}
+.ep-ico {
+  font-size: 80px; line-height: 1; margin-bottom: 22px;
+  opacity: .055; filter: blur(.5px); user-select: none;
+}
+.ep-title {
+  font-size: 18px; font-weight: 800; color: #1e3456;
+  letter-spacing: -.3px; margin-bottom: 8px;
+}
+.ep-sub {
+  font-size: 13px; color: #0d1e36; line-height: 1.7;
+  max-width: 280px; font-weight: 500;
+}
+
+/* SKELETON LOADING */
+@keyframes shimmer {
+  0%   { background-position: -1000px 0; }
+  100% { background-position:  1000px 0; }
+}
+.sk-line {
+  background: linear-gradient(90deg,
+    #0c1a2e 0%, #0c1a2e 30%,
+    #172840 50%,
+    #0c1a2e 70%, #0c1a2e 100%);
+  background-size: 1000px 100%;
+  animation: shimmer 1.8s infinite linear;
+  border-radius: 6px; display: block;
+}
+.sk-row > td {
+  background: #090f1e !important; padding: 16px 18px !important;
+  border-top: 1px solid #0d1f36 !important; border-bottom: 1px solid #0d1f36 !important;
+  vertical-align: middle;
+}
+.sk-head {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 26px;
+  background: linear-gradient(90deg,rgba(201,162,39,.04),transparent) !important;
+  border: 1px solid #111f36 !important; border-bottom: none !important;
+  border-left: 4px solid #1a2e50 !important; border-radius: 12px 12px 0 0;
+}
+
+/* keep old empty classes for any missed refs */
+.empty { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
 /* ADD BTN */
@@ -1057,9 +1098,9 @@ function showDate(tarih){
 
   if(!html){
     if(isLoading){
-      $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Veriler yükleniyor…<div class="empty-hint">Google sunucusu uyandırılıyor, lütfen bekleyin</div></div>');
+      $('#page').html(buildSkeleton(5));
     } else {
-      $('#page').html('<div class="empty"><span class="empty-ico">✈</span>Bu tarih için transfer bulunamadı</div>');
+      $('#page').html(emptyState('Bu tarih için transfer bulunamadı','Shadowtransfer\'de bu tarihe ait arrival kaydı yok veya tüm transferler iptal edildi.'));
     }
     return;
   }
@@ -1098,9 +1139,9 @@ function showDates(tarihler){
 
   if(!html){
     if(isLoading){
-      $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Veriler yükleniyor…<div class="empty-hint">Google sunucusu uyandırılıyor, lütfen bekleyin</div></div>');
+      $('#page').html(buildSkeleton(4));
     } else {
-      $('#page').html('<div class="empty"><span class="empty-ico">✈</span>Bugün için transfer bulunamadı</div>');
+      $('#page').html(emptyState('Bugün için transfer bulunamadı','Bugüne ait arrival transfer kaydı bulunamadı.'));
     }
     return;
   }
@@ -1342,6 +1383,41 @@ function updateStatus(tarih, saat, musteri, durum, btn){
   $('head').append(s);
 }
 
+/* ════ SKELETON ════ */
+function buildSkeleton(rows){
+  rows = rows || 4;
+  var r = '';
+  for(var i=0; i<rows; i++){
+    r += '<tr class="sk-row">'
+      +'<td><span class="sk-line" style="width:68px;height:36px;margin-bottom:7px"></span>'
+          +'<span class="sk-line" style="width:44px;height:12px"></span></td>'
+      +'<td><span class="sk-line" style="width:150px;height:15px;margin-bottom:9px"></span>'
+          +'<span class="sk-line" style="width:100px;height:11px"></span></td>'
+      +'<td><span class="sk-line" style="width:84px;height:22px;border-radius:20px;margin-bottom:9px"></span>'
+          +'<span class="sk-line" style="width:96px;height:11px"></span></td>'
+      +'<td><span class="sk-line" style="width:130px;height:13px;margin-bottom:9px"></span>'
+          +'<span class="sk-line" style="width:110px;height:13px"></span></td>'
+      +'<td><span class="sk-line" style="width:120px;height:14px;margin-bottom:9px"></span>'
+          +'<span class="sk-line" style="width:72px;height:11px"></span></td>'
+      +'</tr>';
+  }
+  return '<div class="sec"><div class="sk-head">'
+    +'<span class="sk-line" style="width:100px;height:20px"></span>'
+    +'<span class="sk-line" style="width:170px;height:12px;margin-left:6px"></span>'
+    +'</div>'
+    +'<div class="tbl-wrap"><table>'
+    +'<colgroup><col class="c-time"><col class="c-cust"><col class="c-trip"><col class="c-route"><col class="c-drv"></colgroup>'
+    +'<tbody>'+r+'</tbody></table></div></div>';
+}
+
+function emptyState(title, sub){
+  return '<div class="ep">'
+    +'<div class="ep-ico">✈</div>'
+    +'<div class="ep-title">'+title+'</div>'
+    +(sub ? '<div class="ep-sub">'+sub+'</div>' : '')
+    +'</div>';
+}
+
 /* ════ YAZDIR ════ */
 function printList(tarih){
   var liste = allData.filter(function(d){ return d.tarih===tarih; });
@@ -1429,9 +1505,8 @@ function yukle(){
 
   /* 2) Taze veri çek */
   if(!cacheOk){
-    /* Cache yoksa/eskiyse spinner göster */
-    $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Yükleniyor…</div>');
-    $('#cnt').text('— transfer');
+    $('#page').html(buildSkeleton(5));
+    $('#cnt').text('— Transfer');
   }
 
   var cb   = '__r' + Date.now();
@@ -1446,8 +1521,8 @@ function yukle(){
     $(s).remove();
     /* Veri hiç gelmemişse → 10 sn sonra otomatik tekrar dene */
     if(allData.length === 0){
-      $('#upd').text('⚠ Sunucu uyandırılıyor… yeniden deneniyor');
-      $('#page').html('<div class="empty empty-loading"><span class="empty-ico">⟳</span>Sunucu uyandırılıyor…<div class="empty-hint">Birkaç saniye içinde otomatik yeniden denenecek</div></div>');
+      $('#upd').text('⚠ Sunucu uyandırılıyor…');
+      $('#page').html(buildSkeleton(4));
       setTimeout(yukle, 10000);
     } else {
       $('#upd').text('⚠ Zaman aşımı — yenileniyor…');
