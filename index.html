@@ -517,6 +517,59 @@ body::before {
 }
 .ep-ico { animation: planeDrift 5s ease-in-out infinite !important; }
 
+/* ════ CURSOR GLOW ════ */
+#cursor-glow {
+  position:fixed; width:260px; height:260px; border-radius:50%;
+  pointer-events:none; z-index:9998; top:0; left:0;
+  background:radial-gradient(circle,rgba(201,162,39,.09) 0%,transparent 65%);
+  transform:translate(-50%,-50%) translateZ(0);
+  transition:opacity .4s; opacity:0;
+}
+
+/* ════ RICH TOOLTIP ════ */
+#rich-tip {
+  position:fixed; z-index:9990; pointer-events:none; display:none;
+  background:linear-gradient(160deg,#0e1e38,#091428);
+  border:1px solid rgba(201,162,39,.3); border-radius:14px;
+  padding:14px 18px; min-width:230px;
+  box-shadow:0 24px 64px rgba(0,0,0,.78),0 0 0 1px rgba(201,162,39,.07);
+  backdrop-filter:blur(22px); animation:rtFade .16s ease;
+}
+@keyframes rtFade { from{opacity:0;transform:scale(.94) translateY(6px)} to{opacity:1;transform:none} }
+.rt-head { font-family:'Cormorant Garamond',serif; font-size:15px; font-weight:700; color:#f0f4ff; margin-bottom:10px; padding-bottom:8px; border-bottom:1px solid rgba(201,162,39,.14); letter-spacing:.3px; }
+.rt-row { font-size:11px; color:#3d5a7a; padding:3px 0; display:flex; align-items:center; gap:8px; font-weight:500; }
+.rt-row.rf { color:#34d399; }
+.rt-row.rt { color:#a78bfa; }
+
+/* ════ STATUS FEEDBACK ════ */
+.st-feedback {
+  position:fixed; width:36px; height:36px; border-radius:50%;
+  background:rgba(52,211,153,.14); border:2px solid #34d399;
+  color:#34d399; font-size:15px; font-weight:900;
+  display:flex; align-items:center; justify-content:center;
+  pointer-events:none; z-index:9995;
+  transform:scale(0); opacity:0;
+  transition:transform .28s cubic-bezier(.16,1,.3,1), opacity .28s;
+}
+.st-feedback.show { transform:scale(1); opacity:1; }
+.st-feedback.out  { transform:scale(1.4); opacity:0; }
+
+/* ════ LOGO GLOW ════ */
+@keyframes logoGlow {
+  0%,100% { filter:drop-shadow(0 0 5px rgba(201,162,39,.45)); }
+  50%      { filter:drop-shadow(0 0 16px rgba(201,162,39,.95)); }
+}
+.hdr-logo-svg   { animation:logoGlow 3.2s ease-in-out infinite; }
+.login-logo-svg { animation:logoGlow 3.2s ease-in-out infinite; }
+.hdr-ico { padding:3px !important; }
+
+/* ════ SAAT BAZLI TEMA ════ */
+body.theme-morning .aurora-1 { background:radial-gradient(ellipse,#f5d060 0%,#e8a820 35%,transparent 70%); opacity:.09; }
+body.theme-morning .aurora-3 { background:radial-gradient(ellipse,#fb923c 0%,#ea580c 35%,transparent 70%); }
+body.theme-noon    .aurora-1 { background:radial-gradient(ellipse,#3b82f6 0%,#1d4ed8 35%,transparent 70%); }
+body.theme-noon    .aurora-2 { background:radial-gradient(ellipse,#06b6d4 0%,#0891b2 35%,transparent 70%); }
+body.theme-noon    .aurora-3 { background:radial-gradient(ellipse,#10b981 0%,#059669 35%,transparent 70%); }
+
 /* ════ BODY GRADIENT SHIFT ════ */
 @keyframes bodyShift {
   0%   { background-color:#050c18; }
@@ -1055,6 +1108,8 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 </head>
 <body>
 
+<div id="cursor-glow"></div>
+<div id="rich-tip"></div>
 <div class="aurora aurora-1"></div>
 <div class="aurora aurora-2"></div>
 <div class="aurora aurora-3"></div>
@@ -1063,7 +1118,7 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen">
   <div class="login-box">
-    <div class="login-ico">✈</div>
+    <div class="login-ico"><svg class="login-logo-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="38" height="46"><defs><linearGradient id="gl" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0d060"/><stop offset="50%" stop-color="#c9a227"/><stop offset="100%" stop-color="#8a6010"/></linearGradient></defs><path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="url(#gl)"/><path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#050c18"/><text x="50" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="54" font-weight="bold" fill="url(#gl)">R</text></svg></div>
     <div class="login-title">RAMOS NJT VIP TRANSFER</div>
     <div class="login-sub">Arrival Panel — Yetkili Giriş</div>
     <div class="field-wrap">
@@ -1084,7 +1139,7 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 
   <header class="hdr">
     <div class="hdr-brand">
-      <div class="hdr-ico">✈</div>
+      <div class="hdr-ico"><svg class="hdr-logo-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="26" height="31"><defs><linearGradient id="gh" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0d060"/><stop offset="50%" stop-color="#c9a227"/><stop offset="100%" stop-color="#8a6010"/></linearGradient></defs><path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="url(#gh)"/><path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#07091a"/><text x="50" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="54" font-weight="bold" fill="url(#gh)">R</text></svg></div>
       <div>
         <div class="hdr-title">RAMOS NJT VIP TRANSFER</div>
         <div class="hdr-sub">Arrival Transfer Paneli</div>
@@ -1204,6 +1259,79 @@ var AIRLINE_CLR = {
 function airlineColor(ucusKod){
   var code=(ucusKod||'').replace(/\s/g,'').substring(0,2).toUpperCase();
   return AIRLINE_CLR[code]||null;
+}
+
+/* ════ CURSOR GLOW ════ */
+function initCursorGlow(){
+  if('ontouchstart' in window) return;
+  var $g=$('#cursor-glow'), gx=0, gy=0, tx=0, ty=0;
+  $(document).on('mousemove',function(e){ tx=e.clientX; ty=e.clientY; $g.css('opacity',1); })
+             .on('mouseleave',function(){ $g.css('opacity',0); });
+  (function loop(){
+    gx+=(tx-gx)*.1; gy+=(ty-gy)*.1;
+    $g.css('transform','translate('+gx+'px,'+gy+'px) translate(-50%,-50%) translateZ(0)');
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ════ 3D KART TILT ════ */
+function init3DTilt(){
+  if('ontouchstart' in window) return;
+  $(document).on('mousemove','.trow',function(e){
+    var r=this.getBoundingClientRect();
+    var x=(e.clientX-r.left)/r.width-.5;
+    var y=(e.clientY-r.top)/r.height-.5;
+    $(this).css({transform:'perspective(900px) rotateX('+(-y*4)+'deg) rotateY('+x*7+'deg) translateY(-2px)',transition:'transform .07s ease'});
+  }).on('mouseleave','.trow',function(){
+    $(this).css({transform:'',transition:'transform .35s ease, box-shadow .22s ease'});
+  });
+}
+
+/* ════ ZENGİN TOOLTIP ════ */
+function initRichTooltip(){
+  if('ontouchstart' in window) return;
+  var $t=$('#rich-tip');
+  $(document).on('mouseenter','.cust-name',function(e){
+    var $r=$(this).closest('.trow');
+    var tr=$r.data('tarih'), sa=$r.data('saat'), d=null;
+    for(var i=0;i<allData.length;i++){ if(allData[i].tarih===tr&&allData[i].saat===sa){d=allData[i];break;} }
+    if(!d) return;
+    var h='<div class="rt-head">'+esc(d.musteri||'')+'</div>';
+    if(d.ucus)       h+='<div class="rt-row"><span>✈</span>'+esc(d.ucus)+'</div>';
+    if(d.musteriTel&&isYonetici()) h+='<div class="rt-row"><span>📞</span>+'+esc(d.musteriTel)+'</div>';
+    if(d.arac)       h+='<div class="rt-row"><span>🚗</span>'+esc(d.arac)+'</div>';
+    if(d.kisi)       h+='<div class="rt-row"><span>👤</span>'+esc(d.kisi)+' kişi</div>';
+    if(d.nereden)    h+='<div class="rt-row rf"><span>↑</span>'+esc(d.nereden)+'</div>';
+    if(d.nereye)     h+='<div class="rt-row rt"><span>↓</span>'+esc(d.nereye)+'</div>';
+    if(d.surucu)     h+='<div class="rt-row"><span>🚘</span>'+esc(d.surucu)+'</div>';
+    $t.html(h).show();
+  }).on('mousemove','.cust-name',function(e){
+    var x=e.clientX+18, y=e.clientY-8;
+    if(x+250>innerWidth) x=e.clientX-268;
+    if(y+220>innerHeight) y=e.clientY-230;
+    $t.css({left:x,top:y});
+  }).on('mouseleave','.cust-name',function(){ $t.hide(); });
+}
+
+/* ════ SAAT BAZLI TEMA ════ */
+function applyTimeTheme(){
+  var h=new Date().getHours();
+  $('body').removeClass('theme-morning theme-noon theme-night');
+  if(h>=5&&h<11)       $('body').addClass('theme-morning');
+  else if(h>=11&&h<18) $('body').addClass('theme-noon');
+  else                  $('body').addClass('theme-night');
+}
+
+/* ════ STATUS FEEDBACK ════ */
+function showStatusFeedback(btn){
+  var $r=$(btn).closest('.trow');
+  if(!$r.length) return;
+  var rect=$r[0].getBoundingClientRect();
+  var $fb=$('<div class="st-feedback">✓</div>').css({top:rect.top+rect.height/2-18,left:rect.right-56});
+  $('body').append($fb);
+  setTimeout(function(){ $fb.addClass('show'); },10);
+  setTimeout(function(){ $fb.removeClass('show').addClass('out'); },900);
+  setTimeout(function(){ $fb.remove(); },1250);
 }
 
 /* ════ PARTİKÜLLER ════ */
@@ -1708,6 +1836,7 @@ function updateStatus(tarih, saat, musteri, durum, btn){
     $track.removeClass('loading');
     if(res && res.ok){
       _lastDataStr = '';
+      showStatusFeedback(btn);
       /* Stepper optimistik güncelleme */
       var lvl = durum==='Karşılandı'?1:durum==='Araçta'?2:durum==='Teslim Edildi'?3:0;
       $track.find('.st-step').each(function(i){
@@ -1762,58 +1891,92 @@ function emptyState(title, sub){
     +'</div>';
 }
 
-/* ════ YAZDIR ════ */
+/* ════ YAZDIR — PRINT EXCELLENCE ════ */
 function printList(tarih){
-  var liste = allData.filter(function(d){ return d.tarih===tarih; });
-  liste.sort(function(a,b){ return String(a.saat||'').localeCompare(String(b.saat||'')); });
-  var dateObj = parseTarih(tarih);
-  var tarihStr = dateObj ? fmtU(dateObj) : tarih;
+  var liste=allData.filter(function(d){return d.tarih===tarih;});
+  liste.sort(function(a,b){return String(a.saat||'').localeCompare(String(b.saat||''));});
+  var dateObj=parseTarih(tarih), tarihStr=dateObj?fmtU(dateObj):tarih;
+  var showTel=isYonetici();
+  var totalPax=liste.reduce(function(s,d){return s+(+d.kisi||0);},0);
+  var assigned=liste.filter(function(d){return d.surucu;}).length;
 
-  var showTel = isYonetici(); /* karşılamacı müşteri telini görmez */
+  var shield='<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="48" height="58">'
+    +'<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">'
+    +'<stop offset="0%" stop-color="#f0d060"/><stop offset="50%" stop-color="#c9a227"/><stop offset="100%" stop-color="#8a6010"/>'
+    +'</linearGradient></defs>'
+    +'<path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="url(#pg)"/>'
+    +'<path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#07091a"/>'
+    +'<text x="50" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="54" font-weight="bold" fill="url(#pg)">R</text>'
+    +'</svg>';
 
-  var rows = liste.map(function(d){
-    return '<tr>'
-      +'<td style="font-size:15px;font-weight:900;white-space:nowrap">'+esc(d.saat||'')+'</td>'
-      +'<td><strong>'+esc(d.musteri||'')+'</strong></td>'
-      +(showTel ? '<td style="color:#555">'+esc(d.musteriTel ? '+'+d.musteriTel : '')+'</td>' : '')
-      +'<td><span style="background:#1a1a3e;color:#a5b4fc;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700">✈ '+esc(d.ucus||'—')+'</span></td>'
-      +'<td style="text-align:center">'+esc(d.kisi||'')+'</td>'
-      +'<td style="color:#555;font-size:11px">'+esc(d.arac||'')+'</td>'
-      +'<td style="color:#16a34a;font-size:11px">'+esc(d.nereden||'')+'</td>'
-      +'<td style="color:#7c3aed;font-size:11px">'+esc(d.nereye||'')+'</td>'
-      +'<td style="font-weight:600">'+esc(d.surucu||'⚠ Atanmadı')+'</td>'
-      +'<td style="font-family:monospace;font-size:10px;color:#888">'+esc(d.surucuPlaka||'')+'</td>'
-      +'<td style="color:#555">'+esc(d.surucuTel ? '+'+d.surucuTel : '')+'</td>'
-      +'<td><span style="font-size:10px;padding:2px 8px;border-radius:20px;background:'+(d.surucu?'#dcfce7':'#fee2e2')+';color:'+(d.surucu?'#166534':'#991b1b')+'">'+esc(d.durum||'Bekleyen')+'</span></td>'
+  var rows=liste.map(function(d,i){
+    var even=i%2===1;
+    var hasDriver=!!d.surucu;
+    return '<tr style="background:'+(even?'#f8fafc':'#fff')+'">'
+      +'<td class="td-time">'+esc(d.saat||'')+'</td>'
+      +'<td><strong>'+esc(d.musteri||'')+'</strong>'
+        +(showTel&&d.musteriTel?'<br><small>📞 +'+esc(d.musteriTel)+'</small>':'')+'</td>'
+      +'<td>'+(d.ucus?'<span class="chip-ucus">✈ '+esc(d.ucus)+'</span>':'<span class="nd">—</span>')+'</td>'
+      +'<td class="ctr">'+esc(d.kisi||'—')+'</td>'
+      +'<td class="sm">'+esc(d.arac||'—')+'</td>'
+      +'<td><span class="from">↑</span> '+esc(d.nereden||'')+'<br><span class="to">↓</span> '+esc(d.nereye||'')+'</td>'
+      +'<td><strong>'+esc(d.surucu||'—')+'</strong>'
+        +(d.surucuPlaka?'<br><span class="plaka">'+esc(d.surucuPlaka)+'</span>':'')
+        +(d.surucuTel?'<br><small>📞 +'+esc(d.surucuTel)+'</small>':'')+'</td>'
+      +'<td><span class="badge-'+(hasDriver?'ok':'no')+'">'+(hasDriver?(d.durum||'Onaylandı'):'⚠ Atanmadı')+'</span></td>'
       +'</tr>';
   }).join('');
 
   var html='<!DOCTYPE html><html><head><meta charset="UTF-8">'
-    +'<title>RAMOS NJT – '+tarih+'</title>'
-    +'<style>'
-    +'*{box-sizing:border-box;margin:0;padding:0}'
-    +'body{font-family:Arial,sans-serif;padding:18px;color:#111;font-size:12px}'
-    +'.hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #1a1a3e}'
-    +'.hd-left h1{font-size:17px;font-weight:900;letter-spacing:-.3px}'
-    +'.hd-left p{font-size:11px;color:#666;margin-top:3px}'
-    +'.hd-right{font-size:11px;color:#888;text-align:right}'
+    +'<title>RAMOS NJT — '+tarih+'</title>'
+    +'<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">'
+    +'<style>*{box-sizing:border-box;margin:0;padding:0}'
+    +'body{font-family:"Inter",sans-serif;background:#fff;color:#111;padding:22px 26px;font-size:12px}'
+    +'.lh{display:flex;align-items:center;justify-content:space-between;padding-bottom:18px;margin-bottom:20px;border-bottom:3px solid #c9a227}'
+    +'.brand{display:flex;align-items:center;gap:16px}'
+    +'.co-name{font-family:"Cormorant Garamond",serif;font-size:26px;font-weight:700;color:#07091a;letter-spacing:.5px;line-height:1.1}'
+    +'.co-sub{font-size:9px;font-weight:700;color:#c9a227;letter-spacing:3.5px;text-transform:uppercase;margin-top:4px}'
+    +'.doc-r{text-align:right;font-size:11px;color:#666}'
+    +'.doc-r strong{font-size:14px;color:#111;display:block;font-family:"Cormorant Garamond",serif;font-weight:700;letter-spacing:.3px}'
+    +'.summary{display:flex;gap:0;margin-bottom:20px;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden}'
+    +'.si{flex:1;padding:12px 18px;border-right:1px solid #e5e7eb}'
+    +'.si:last-child{border-right:none}'
+    +'.si label{font-size:9px;font-weight:700;color:#999;text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:4px}'
+    +'.si strong{font-size:22px;font-weight:900;color:#07091a;font-family:"Cormorant Garamond",serif}'
     +'table{width:100%;border-collapse:collapse}'
-    +'th{background:#1a1a3e;color:#fff;padding:7px 9px;text-align:left;font-size:9px;text-transform:uppercase;letter-spacing:1px;white-space:nowrap}'
-    +'td{padding:8px 9px;border-bottom:1px solid #e5e7eb;vertical-align:middle}'
-    +'tr:nth-child(even) td{background:#f9fafb}'
-    +'@media print{@page{margin:8mm;size:A4 landscape}}'
-    +'</style></head><body>'
-    +'<div class="hd">'
-    +'<div class="hd-left"><h1>✈ RAMOS NJT VIP TRANSFER</h1><p>Arrival Transfer Listesi — '+tarihStr+'</p></div>'
-    +'<div class="hd-right">'+liste.length+' transfer<br><span style="font-size:10px">'+new Date().toLocaleString('tr-TR')+'</span></div>'
+    +'thead{background:#07091a}'
+    +'th{padding:9px 12px;text-align:left;font-size:9px;font-weight:700;color:#c9a227;text-transform:uppercase;letter-spacing:1.2px;white-space:nowrap}'
+    +'td{padding:9px 12px;border-bottom:1px solid #f1f5f9;vertical-align:top;font-size:11px}'
+    +'.td-time{font-size:18px;font-weight:900;color:#07091a;letter-spacing:-1px;white-space:nowrap;font-family:"Cormorant Garamond",serif}'
+    +'.chip-ucus{background:#1e1b4b;color:#a5b4fc;padding:2px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}'
+    +'.ctr{text-align:center;font-weight:700}'
+    +'.sm{color:#666}'
+    +'.from{color:#059669;font-weight:700}'
+    +'.to{color:#7c3aed;font-weight:700}'
+    +'.plaka{font-family:monospace;font-size:10px;background:#f3f4f6;padding:1px 6px;border-radius:3px;color:#666}'
+    +'.nd{color:#ccc}'
+    +'small{color:#888;font-size:10px}'
+    +'.badge-ok{background:#dcfce7;color:#166534;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}'
+    +'.badge-no{background:#fee2e2;color:#991b1b;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;white-space:nowrap}'
+    +'.footer{margin-top:18px;padding-top:10px;border-top:1px solid #e5e7eb;display:flex;justify-content:space-between;font-size:9px;color:#bbb}'
+    +'@media print{@page{margin:8mm;size:A4 landscape}body{padding:0}}</style>'
+    +'</head><body>'
+    +'<div class="lh"><div class="brand">'+shield+'<div><div class="co-name">RAMOS NJT</div><div class="co-sub">VIP Transfer</div></div></div>'
+    +'<div class="doc-r"><strong>Arrival Transfer Listesi</strong>'+tarihStr+'<br>Basım: '+new Date().toLocaleString('tr-TR')+'</div></div>'
+    +'<div class="summary">'
+    +'<div class="si"><label>Transfer</label><strong>'+liste.length+'</strong></div>'
+    +'<div class="si"><label>Toplam Kişi</label><strong>'+totalPax+'</strong></div>'
+    +'<div class="si"><label>Atandı</label><strong>'+assigned+'</strong></div>'
+    +'<div class="si"><label>Bekliyor</label><strong>'+(liste.length-assigned)+'</strong></div>'
     +'</div>'
-    +'<table><thead><tr>'
-    +'<th>Saat</th><th>Müşteri</th>'+(showTel ? '<th>Müşteri Tel</th>' : '')+'<th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Nereden</th><th>Nereye</th><th>Şoför</th><th>Plaka</th><th>Şoför Tel</th><th>Durum</th>'
-    +'</tr></thead><tbody>'+rows+'</tbody></table>'
+    +'<table><thead><tr><th>Saat</th><th>Müşteri'+(showTel?' / Tel':'')+'</th><th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Güzergah</th><th>Şoför / Plaka / Tel</th><th>Durum</th></tr></thead>'
+    +'<tbody>'+rows+'</tbody></table>'
+    +'<div class="footer"><span>shadowtransfer.com · RAMOS NJT VIP Transfer · Gizli — Yalnızca dahili kullanım</span>'
+    +'<span>'+tarihStr+' · '+new Date().toLocaleTimeString('tr-TR')+'</span></div>'
     +'<script>window.onload=function(){window.print()}<\/script>'
     +'</body></html>';
 
-  var w=window.open('','_blank','width=1200,height=700');
+  var w=window.open('','_blank','width=1350,height=800');
   w.document.write(html); w.document.close();
 }
 
@@ -2022,7 +2185,12 @@ async function doLogin(){
 
 $(function(){
   initParticles();
-  setInterval(highlightNextTransfer, 60000); /* her dakika güncelle */
+  initCursorGlow();
+  init3DTilt();
+  initRichTooltip();
+  applyTimeTheme();
+  setInterval(highlightNextTransfer, 60000);
+  setInterval(applyTimeTheme, 60 * 60 * 1000); /* saatte bir tema güncelle */
 
   $('#l-btn').on('click', doLogin);
   $('#l-user, #l-pass').on('keydown', function(e){ if(e.key==='Enter') doLogin(); });
