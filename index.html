@@ -2,7 +2,10 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <title>RAMOS NJT VIP TRANSFER</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%3C/text%3E%3C/svg%3E">
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@100..900&family=Roboto+Mono:wght@400..700&display=swap" rel="stylesheet">
@@ -513,31 +516,13 @@ body::before {
 }
 .ep-ico { animation: planeDrift 5s ease-in-out infinite !important; }
 
-/* ════ CUSTOM CURSOR ════ */
+/* ════ CUSTOM CURSOR — altın ok ════ */
 @media (hover: hover) {
-  body { cursor: none !important; }
+  body, button, .dc, .trow, a, label {
+    cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='22' height='22' viewBox='0 0 22 22'%3E%3Cpath d='M3 2 L3 17 L7 13 L10 20 L13 18 L10 12 L15 12 Z' fill='%23c9a227' stroke='%23070d1a' stroke-width='1.2' stroke-linejoin='round'/%3E%3C/svg%3E") 3 2, auto !important;
+  }
   input, textarea, select { cursor: text !important; }
-  a, button, .dc, .trow, label { cursor: none !important; }
 }
-#cur-dot {
-  position:fixed; z-index:99999; pointer-events:none;
-  width:10px; height:10px; border-radius:50%;
-  background:#c9a227; box-shadow:0 0 10px rgba(201,162,39,.9);
-  top:0; left:0; transform:translate(-50%,-50%) translateZ(0);
-  transition:width .2s ease,height .2s ease,background .2s;
-  opacity:0;
-}
-#cur-ring {
-  position:fixed; z-index:99998; pointer-events:none;
-  width:34px; height:34px; border-radius:50%;
-  border:1.5px solid rgba(201,162,39,.4);
-  top:0; left:0; transform:translate(-50%,-50%) translateZ(0);
-  opacity:0;
-  transition:opacity .4s;
-}
-#cur-dot.hov  { width:16px; height:16px; background:rgba(201,162,39,.25); box-shadow:0 0 0 2px #c9a227; }
-#cur-dot.clk  { transform:translate(-50%,-50%) scale(.7) !important; }
-#cur-ring.hov { width:44px; height:44px; border-color:rgba(201,162,39,.6); }
 
 /* ════ GLASS DEPTH ════ */
 .trow > td {
@@ -579,23 +564,7 @@ body::before {
 ::view-transition-old(root) { animation:vt-out .18s ease forwards; }
 ::view-transition-new(root) { animation:vt-in  .22s ease forwards; }
 
-/* ════ SPOTLIGHT UPGRADE ════ */
-#spotlight {
-  position:fixed; width:700px; height:700px; border-radius:50%;
-  pointer-events:none; z-index:0; top:0; left:0;
-  background:radial-gradient(circle,rgba(201,162,39,.055) 0%,rgba(201,162,39,.015) 35%,transparent 70%);
-  transform:translate(-50%,-50%) translateZ(0);
-  opacity:0; transition:opacity .5s; mix-blend-mode:screen;
-}
-
-/* ════ CURSOR GLOW ════ */
-#cursor-glow {
-  position:fixed; width:260px; height:260px; border-radius:50%;
-  pointer-events:none; z-index:9998; top:0; left:0;
-  background:radial-gradient(circle,rgba(201,162,39,.09) 0%,transparent 65%);
-  transform:translate(-50%,-50%) translateZ(0);
-  transition:opacity .4s; opacity:0;
-}
+/* spotlight + cursor-glow kaldırıldı */
 
 /* ════ RICH TOOLTIP ════ */
 #rich-tip {
@@ -733,6 +702,27 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   white-space: nowrap;
 }
 
+/* ════ AVATAR ════ */
+.cust-avatar { display:none; }
+.cust-inner  { display:flex; align-items:flex-start; gap:10px; width:100%; }
+
+/* ════ MOBILE NAV BAR ════ */
+#mobile-nav { display:none; }
+
+/* ════ LONG PRESS MENU ════ */
+#lp-menu { display:none; }
+
+/* ════ PTR INDICATOR ════ */
+#ptr-ind {
+  position:fixed; top:-50px; left:50%; transform:translateX(-50%);
+  z-index:600; background:rgba(201,162,39,.14);
+  border:1px solid rgba(201,162,39,.3); color:#c9a227;
+  font-size:12px; font-weight:700; padding:8px 22px; border-radius:20px;
+  font-family:'Inter',sans-serif; opacity:0; pointer-events:none;
+  backdrop-filter:blur(10px); white-space:nowrap;
+  transition:opacity .25s;
+}
+
 /* ═══ MOBILE CARDS — COMPLETE REDESIGN ═══ */
 @media (max-width: 640px) {
   .hdr { padding: 10px 14px; }
@@ -827,6 +817,123 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   .v-vfooter { padding: 12px 20px 20px; }
   .v-print-btn, .v-close-btn { padding: 10px 16px; font-size: 12px; }
   .login-box { padding: 36px 28px 32px; }
+
+  /* ── Safe area & page ── */
+  .page { padding-bottom: calc(100px + env(safe-area-inset-bottom)) !important; }
+
+  /* ── Bottom nav bar ── */
+  #mobile-nav {
+    display:flex; align-items:center; justify-content:space-around;
+    position:fixed; bottom:0; left:0; right:0; z-index:500;
+    background:rgba(4,10,20,.94);
+    backdrop-filter:blur(28px) saturate(160%);
+    -webkit-backdrop-filter:blur(28px) saturate(160%);
+    border-top:1px solid rgba(255,255,255,.06);
+    padding:10px 0 calc(12px + env(safe-area-inset-bottom));
+    box-shadow:0 -4px 32px rgba(0,0,0,.5), 0 -1px 0 rgba(201,162,39,.08);
+  }
+  .mnav-btn {
+    display:flex; flex-direction:column; align-items:center; gap:4px;
+    background:none; border:none; color:#2a4060;
+    font-family:'Inter',sans-serif; font-size:10px; font-weight:700;
+    padding:6px 16px; border-radius:12px; cursor:pointer;
+    letter-spacing:.3px; transition:color .2s, background .15s;
+  }
+  .mnav-btn .ni { font-size:22px; transition:filter .2s; }
+  .mnav-btn.active { color:#c9a227; }
+  .mnav-btn.active .ni { filter:drop-shadow(0 0 7px rgba(201,162,39,.9)); }
+  .mnav-btn:active { background:rgba(201,162,39,.08); color:#c9a227; }
+
+  /* ── Pull to refresh ── */
+  #ptr-ind { display:block; }
+
+  /* ── Hero time ── */
+  .td-time { font-size:44px !important; letter-spacing:-3px !important; }
+
+  /* ── Status progress line ── */
+  .trow::after {
+    content:''; position:absolute; bottom:0; left:0; right:0; height:2px;
+    background:rgba(20,40,70,.5); border-radius:0 0 16px 16px; z-index:3;
+    transition:background .35s;
+  }
+  .trow.yd-karsila::after { background:#38bdf8; box-shadow:0 0 8px rgba(56,189,248,.4); }
+  .trow.yd-aracta::after  { background:#fbbf24; box-shadow:0 0 8px rgba(251,191,36,.4); }
+  .trow.yd-teslim::after  { background:#34d399; opacity:.6; }
+  .trow.next-up::after    { background:#fbbf24; animation:pbPulse 2s ease-in-out infinite; }
+  @keyframes pbPulse { 0%,100%{opacity:1}50%{opacity:.35} }
+
+  /* ── Avatar ── */
+  .cust-avatar {
+    display:flex; align-items:center; justify-content:center;
+    width:38px; height:38px; border-radius:50%; flex-shrink:0;
+    font-size:13px; font-weight:900; color:#fff;
+    border:2px solid rgba(255,255,255,.1);
+  }
+  .cust-inner { display:flex; align-items:flex-start; gap:10px; width:100%; }
+
+  /* ── Stepper bigger ── */
+  .st-track  { padding:11px 8px 10px; margin-top:14px; }
+  .st-dot    { width:14px; height:14px; }
+  .st-label  { font-size:9px; }
+  .st-step   { padding:4px 3px; }
+
+  /* ── Scroll snap ── */
+  html { scroll-snap-type:y proximity; }
+  .trow { scroll-snap-align:start; scroll-margin-top:130px; }
+
+  /* ── Card breathing ── */
+  @keyframes cardBreathe {
+    0%,100% { box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 1px rgba(201,162,39,.08); }
+    50%      { box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(201,162,39,.14); }
+  }
+  .trow { animation:cardBreathe 6s ease-in-out infinite, rowIn .4s cubic-bezier(.16,1,.3,1) both !important; }
+
+  /* ── Long press menu ── */
+  #lp-menu {
+    display:block; position:fixed; inset:0; z-index:10500;
+    pointer-events:none; opacity:0; transition:opacity .22s;
+  }
+  #lp-menu.open { pointer-events:all; opacity:1; }
+  .lp-bg {
+    position:absolute; inset:0;
+    background:rgba(0,0,10,.75); backdrop-filter:blur(5px);
+  }
+  .lp-sheet {
+    position:absolute; bottom:0; left:0; right:0;
+    background:linear-gradient(180deg,#0e1e38,#09142a);
+    border-radius:24px 24px 0 0;
+    padding:8px 16px calc(20px + env(safe-area-inset-bottom));
+    transform:translateY(105%);
+    transition:transform .32s cubic-bezier(.16,1,.3,1);
+    border-top:1px solid rgba(201,162,39,.22);
+    box-shadow:0 -8px 40px rgba(0,0,0,.6);
+  }
+  #lp-menu.open .lp-sheet { transform:none; }
+  .lp-handle {
+    width:38px; height:4px; border-radius:2px;
+    background:rgba(255,255,255,.14); margin:0 auto 14px;
+  }
+  .lp-title {
+    font-family:'Cormorant Garamond',serif; font-size:17px; font-weight:700;
+    color:#e2e8f0; padding:0 4px 12px; border-bottom:1px solid #1a2d48;
+    margin-bottom:6px; letter-spacing:.4px;
+  }
+  .lp-item {
+    display:flex; align-items:center; gap:14px; width:100%;
+    padding:15px 6px; background:none; border:none;
+    color:#64748b; font-size:15px; font-weight:600;
+    font-family:'Inter',sans-serif; text-align:left; cursor:pointer;
+    border-bottom:1px solid rgba(255,255,255,.04); transition:color .15s;
+  }
+  .lp-item:active { color:#e2e8f0; background:rgba(255,255,255,.03); }
+  .lp-item .li { font-size:22px; width:30px; text-align:center; }
+  .lp-cancel {
+    display:block; width:100%; margin-top:12px; padding:15px;
+    background:rgba(239,68,68,.08); border:1px solid rgba(239,68,68,.18);
+    border-radius:14px; color:#f87171; font-size:15px; font-weight:700;
+    font-family:'Inter',sans-serif; cursor:pointer; transition:background .15s;
+  }
+  .lp-cancel:active { background:rgba(239,68,68,.16); }
 }
 @media (max-width: 380px) {
   .page { padding: 12px 8px 60px; }
@@ -1179,10 +1286,6 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 </head>
 <body>
 
-<div id="cur-dot"></div>
-<div id="cur-ring"></div>
-<div id="spotlight"></div>
-<div id="cursor-glow"></div>
 <div id="rich-tip"></div>
 <div class="aurora aurora-1"></div>
 <div class="aurora aurora-2"></div>
@@ -1246,6 +1349,36 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   </div>
 
   <div class="footer">RAMOS NJT VIP TRANSFER &nbsp;·&nbsp; Her 1 dakikada otomatik güncellenir</div>
+</div>
+
+<!-- ═══ BOTTOM NAV ═══ -->
+<div id="mobile-nav">
+  <button class="mnav-btn active" id="mnav-today" onclick="mnavToday()">
+    <span class="ni">📅</span><span>Bugün</span>
+  </button>
+  <button class="mnav-btn" id="mnav-refresh" onclick="mnavRefresh()">
+    <span class="ni">🔄</span><span>Yenile</span>
+  </button>
+  <button class="mnav-btn" id="mnav-add" style="display:none" onclick="openAddModal()">
+    <span class="ni">➕</span><span>Ekle</span>
+  </button>
+  <button class="mnav-btn" id="mnav-print" onclick="mnavPrint()">
+    <span class="ni">🖨</span><span>Yazdır</span>
+  </button>
+</div>
+
+<!-- ═══ PULL TO REFRESH ═══ -->
+<div id="ptr-ind">↓ Yenilemek için çek</div>
+
+<!-- ═══ LONG PRESS MENU ═══ -->
+<div id="lp-menu">
+  <div class="lp-bg" id="lp-bg"></div>
+  <div class="lp-sheet">
+    <div class="lp-handle"></div>
+    <div class="lp-title" id="lp-title">Transfer</div>
+    <div id="lp-items"></div>
+    <button class="lp-cancel" id="lp-cancel">İptal</button>
+  </div>
 </div>
 
 <!-- ═══ TRANSFER EKLE MODAL ═══ -->
@@ -1333,6 +1466,65 @@ var AIRLINE_CLR = {
 function airlineColor(ucusKod){
   var code=(ucusKod||'').replace(/\s/g,'').substring(0,2).toUpperCase();
   return AIRLINE_CLR[code]||null;
+}
+
+/* ════ MOBİL YARDIMCI ════ */
+function haptic(t){
+  if(!('vibrate' in navigator)) return;
+  if(t==='light') navigator.vibrate(8);
+  else if(t==='medium') navigator.vibrate(22);
+  else if(t==='success') navigator.vibrate([8,40,8]);
+}
+function mnavToday(){ haptic('light'); var t=getToday(); if(document.startViewTransition) document.startViewTransition(function(){showDate(t);}); else showDate(t); $('.mnav-btn').removeClass('active'); $('#mnav-today').addClass('active'); }
+function mnavRefresh(){ haptic('light'); _lastDataStr=''; yukle(); }
+function mnavPrint(){ haptic('light'); printList(selectedDate||getToday()); }
+
+function initPullToRefresh(){
+  if(!('ontouchstart' in window)) return;
+  var sy0=0,pulling=false,$ind=$('#ptr-ind');
+  document.addEventListener('touchstart',function(e){sy0=e.touches[0].clientY;},{passive:true});
+  document.addEventListener('touchmove',function(e){
+    if(window.scrollY!==0) return;
+    var dy=e.touches[0].clientY-sy0;
+    if(dy>10){pulling=true;var p=Math.min(dy/90,1);$ind.css({opacity:p,top:(dy*.38-42)+'px'});$ind.text(dy>80?'🔄 Bırak':'↓ Yenilemek için çek');}
+  },{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(!pulling) return;
+    var dy=e.changedTouches[0].clientY-sy0;
+    $ind.css({top:'-50px',opacity:0});
+    if(dy>80){haptic('success');_lastDataStr='';yukle();}
+    pulling=false;sy0=0;
+  });
+}
+
+function initLongPress(){
+  if(!('ontouchstart' in window)) return;
+  var timer,$menu=$('#lp-menu');
+  function closeMenu(){$menu.removeClass('open');}
+  $('#lp-bg,#lp-cancel').on('click',closeMenu);
+  $(document).on('touchstart','.trow',function(e){
+    var $r=$(this);
+    timer=setTimeout(function(){
+      haptic('medium');
+      var tr=$r.data('tarih'),sa=$r.data('saat'),d=null;
+      for(var i=0;i<allData.length;i++){if(allData[i].tarih===tr&&allData[i].saat===sa){d=allData[i];break;}}
+      if(!d) return;
+      $('#lp-title').text(d.musteri||'Transfer');
+      var items=[];
+      if(d.surucuTel) items.push({i:'💬',t:'WhatsApp — Şoför',fn:function(){window.open('https://wa.me/'+d.surucuTel.replace(/\D/g,''));closeMenu();}});
+      if(d.musteriTel&&isYonetici()) items.push({i:'📞',t:'Müşteriyi Ara',fn:function(){window.open('tel:+'+d.musteriTel.replace(/\D/g,''));closeMenu();}});
+      items.push({i:'🎫',t:'Voucher Göster',fn:function(){var idx=null;window.__voucherRows&&window.__voucherRows.forEach(function(x,n){if(x.musteri===d.musteri&&x.saat===d.saat)idx=n;});if(idx!==null)showVoucher(idx);closeMenu();}});
+      items.push({i:'📋',t:'Bilgileri Kopyala',fn:function(){var txt=(d.musteri||'')+' · '+d.saat+' · ✈'+(d.ucus||'')+' · '+(d.nereden||'')+' → '+(d.nereye||'');if(navigator.clipboard)navigator.clipboard.writeText(txt);haptic('success');closeMenu();}});
+      $('#lp-items').html(items.map(function(x,n){return '<button class="lp-item" data-n="'+n+'"><span class="li">'+x.i+'</span>'+x.t+'</button>';}).join(''));
+      $('#lp-items .lp-item').each(function(n){$(this).on('click',function(){items[n].fn();});});
+      $menu.addClass('open');
+    },600);
+  }).on('touchmove touchend touchcancel','.trow',function(){clearTimeout(timer);});
+}
+
+function initMobileNav(){
+  if(!('ontouchstart' in window)) return;
+  if(isYonetici()) $('#mnav-add').show();
 }
 
 /* ════ CUSTOM CURSOR ════ */
@@ -1607,6 +1799,11 @@ function buildRow(d){
   window.__voucherRows.push(d);
 
   var saat=esc(d.saat||'-'), isim=esc(d.musteri||'-');
+  /* Avatar */
+  var _nm=(d.musteri||'').trim();
+  var _ini=_nm.split(/\s+/).map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
+  var _hue=0; for(var _ic=0;_ic<_nm.length;_ic++) _hue=(_hue+_nm.charCodeAt(_ic)*37)%360;
+  var _avBg='hsl('+_hue+',42%,28%)';
   var nereden=esc(d.nereden||'-'), nereye=esc(d.nereye||'-');
   var ucus=esc(d.ucus||''), kisi=esc(d.kisi||''), arac=esc(d.arac||'');
   var ucusUrl = encodeURIComponent((d.ucus||'').replace(/\s/g,''));
@@ -1660,7 +1857,7 @@ function buildRow(d){
   var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':yd==='Araçta'?' yd-aracta':yd==='Teslim Edildi'?' yd-teslim':'');
   return '<tr class="'+trowClass+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
-    +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
+    +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-inner"><div class="cust-avatar" style="background:'+_avBg+'">'+_ini+'</div><div><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></div></div></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
     +'<td class="td-route" data-label="GÜZERGAH">'
       +'<div class="route-vis">'
@@ -2005,6 +2202,7 @@ function updateStatus(tarih, saat, musteri, durum, btn){
     $track.removeClass('loading');
     if(res && res.ok){
       _lastDataStr = '';
+      haptic('success');
       showStatusFeedback(btn);
       /* Stepper optimistik güncelleme */
       var lvl = durum==='Karşılandı'?1:durum==='Araçta'?2:durum==='Teslim Edildi'?3:0;
@@ -2353,9 +2551,11 @@ async function doLogin(){
 }
 
 $(function(){
-  initCustomCursor();
   initMagnetic();
   initParallax();
+  initPullToRefresh();
+  initLongPress();
+  initMobileNav();
   initCursorGlow();
   init3DTilt();
   initRichTooltip();
