@@ -635,17 +635,8 @@ function render(veriler){
     buildDateBar(allData);
     showDate(selectedDate);
   } else {
-    /* Karşılamacı:
-       06:00-23:59 → sadece bugün
-       00:00-05:59 → dün + bugün (gece vardiyası) */
-    var now = new Date();
-    if(now.getHours() < 6){
-      var prev = new Date(now);
-      prev.setDate(now.getDate()-1);
-      showDates([fmtK(prev), fmtK(now)]);
-    } else {
-      showDate(today);
-    }
+    /* Karşılamacı: her zaman sadece bugün */
+    showDate(today);
   }
 }
 
