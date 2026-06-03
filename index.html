@@ -524,20 +524,8 @@ body::before {
   input, textarea, select { cursor: text !important; }
 }
 
-/* ════ GLASS DEPTH ════ */
-.trow > td {
-  position:relative;
-  backdrop-filter:blur(1px);
-}
-.trow > td::before {
-  content:''; position:absolute; inset:0; pointer-events:none;
-  background:linear-gradient(180deg,rgba(255,255,255,.025) 0%,transparent 55%);
-}
-.trow > td::after {
-  content:''; position:absolute; top:0; left:0; right:0; height:1px;
-  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06) 50%,transparent);
-  pointer-events:none;
-}
+/* glass depth kaldırıldı — performans */
+.trow > td { position:relative; }
 
 /* ════ VARIABLE FONT ANIMATION ════ */
 @keyframes wghtPulse {
@@ -666,12 +654,8 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 .trow.next-up > td { background:rgba(251,191,36,.045) !important; }
 .trow.next-up > td:first-child { border-left-color:#fbbf24 !important; }
 
-/* ════ SAAT NEFES ════ */
-@keyframes timeBreathe {
-  0%,100% { transform:scale(1); }
-  50%      { transform:scale(1.013); }
-}
-.td-time { animation:timeBreathe 5s ease-in-out infinite; }
+/* timeBreathe kaldırıldı — performans */
+.td-time { display:block; }
 
 /* ════ BORDER RENK AKIŞI ════ */
 @keyframes borderColorFlow {
@@ -877,16 +861,8 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   .st-label  { font-size:9px; }
   .st-step   { padding:4px 3px; }
 
-  /* ── Scroll snap ── */
-  html { scroll-snap-type:y proximity; }
-  .trow { scroll-snap-align:start; scroll-margin-top:130px; }
-
-  /* ── Card breathing ── */
-  @keyframes cardBreathe {
-    0%,100% { box-shadow:0 4px 20px rgba(0,0,0,.4),0 0 0 1px rgba(201,162,39,.08); }
-    50%      { box-shadow:0 8px 32px rgba(0,0,0,.55),0 0 0 1px rgba(201,162,39,.14); }
-  }
-  .trow { animation:cardBreathe 6s ease-in-out infinite, rowIn .4s cubic-bezier(.16,1,.3,1) both !important; }
+  /* scroll snap kaldırıldı — zıplama sorunu çözüldü */
+  .trow { animation:rowIn .4s cubic-bezier(.16,1,.3,1) both !important; }
 
   /* ── Long press menu ── */
   #lp-menu {
@@ -1552,33 +1528,26 @@ function initCustomCursor(){
 /* ════ MAGNETİK BUTONLAR ════ */
 function initMagnetic(){
   if('ontouchstart' in window) return;
-  var MAX=80,STR=.42;
+  var MAX=75,STR=.38,tick=false;
   $(document).on('mousemove',function(e){
-    $('.mag').each(function(){
-      var r=this.getBoundingClientRect();
-      var cx=r.left+r.width/2,cy=r.top+r.height/2;
-      var dx=e.clientX-cx,dy=e.clientY-cy,dist=Math.sqrt(dx*dx+dy*dy);
-      if(dist<MAX){ var s=(MAX-dist)/MAX;
-        $(this).css({transform:'translate('+(dx*s*STR)+'px,'+(dy*s*STR)+'px)',transition:'transform .1s ease'});
-      } else { $(this).css({transform:'',transition:'transform .4s cubic-bezier(.16,1,.3,1)'}); }
+    if(tick) return; tick=true;
+    requestAnimationFrame(function(){
+      $('.mag').each(function(){
+        var r=this.getBoundingClientRect();
+        var cx=r.left+r.width/2,cy=r.top+r.height/2;
+        var dx=e.clientX-cx,dy=e.clientY-cy,dist=Math.sqrt(dx*dx+dy*dy);
+        if(dist<MAX){ var s=(MAX-dist)/MAX;
+          $(this).css({transform:'translate('+(dx*s*STR)+'px,'+(dy*s*STR)+'px)',transition:'transform .12s ease'});
+        } else { $(this).css({transform:'',transition:'transform .4s cubic-bezier(.16,1,.3,1)'}); }
+      });
+      tick=false;
     });
   });
 }
 
 /* ════ PARALLAX ════ */
 function initParallax(){
-  if('ontouchstart' in window) return;
-  var tick=false;
-  $(window).on('scroll',function(){
-    if(tick) return; tick=true;
-    requestAnimationFrame(function(){
-      var s=window.scrollY;
-      $('.aurora-1').css('margin-top',s*.14+'px');
-      $('.aurora-2').css('margin-top',-s*.09+'px');
-      $('.aurora-3').css('margin-top',s*.07+'px');
-      tick=false;
-    });
-  });
+  /* kaldırıldı — layout thrash yapıyordu */
 }
 
 /* ════ WEBGL THREE.JS ════ */
@@ -1701,9 +1670,9 @@ function initParticles(){
   var ctx=c.getContext('2d'), W, H, pts=[];
   function resize(){ W=c.width=innerWidth; H=c.height=innerHeight; }
   resize(); addEventListener('resize',resize);
-  for(var i=0;i<48;i++) pts.push({
+  for(var i=0;i<28;i++) pts.push({
     x:Math.random()*innerWidth, y:Math.random()*innerHeight,
-    r:Math.random()*1.3+0.3, sp:Math.random()*.38+.07, op:Math.random()*.32+.04
+    r:Math.random()*1.1+0.3, sp:Math.random()*.28+.06, op:Math.random()*.28+.04
   });
   (function draw(){
     ctx.clearRect(0,0,W,H);
@@ -2562,18 +2531,8 @@ $(function(){
   applyTimeTheme();
   setInterval(highlightNextTransfer, 60000);
   setInterval(applyTimeTheme, 60*60*1000);
-  /* Three.js — async yükle */
-  if(!('ontouchstart' in window)){
-    var s3=document.createElement('script');
-    s3.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
-    s3.onload=function(){
-      initParticles && (window._oldParticles=true); /* canvas particles devam */
-      initWebGL();
-    };
-    document.head.appendChild(s3);
-  } else {
-    initParticles();
-  }
+  /* Three.js kaldırıldı — performans. CSS aurora + canvas particles yeterli */
+  initParticles();
 
   $('#l-btn').on('click', doLogin);
   $('#l-user, #l-pass').on('keydown', function(e){ if(e.key==='Enter') doLogin(); });
