@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>RAMOS NJT VIP TRANSFER</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%3C/text%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@600&display=swap" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <style>
 
@@ -13,11 +13,20 @@
 
 body {
   font-family: 'Inter', sans-serif;
-  background: #050c18;
+  background-color: #050c18;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
   color: #e2e8f0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
 }
+
+/* Custom scrollbar */
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: #050c18; }
+::-webkit-scrollbar-thumb { background: #7a5510; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #c9a227; }
+* { scrollbar-width: thin; scrollbar-color: #7a5510 #050c18; }
 
 /* ════════════════════════════════
    LOGIN
@@ -43,7 +52,7 @@ body {
   font-size: 28px; margin: 0 auto 22px;
   box-shadow: 0 10px 30px rgba(201,162,39,.45);
 }
-.login-title { font-size: 18px; font-weight: 800; color: #fff; text-align: center; margin-bottom: 6px; letter-spacing: -.4px; }
+.login-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 22px; font-weight: 700; color: #fff; text-align: center; margin-bottom: 6px; letter-spacing: .4px; }
 .login-sub   { font-size: 12px; color: #334155; text-align: center; margin-bottom: 34px; }
 .field-wrap  { margin-bottom: 12px; }
 .field-wrap label {
@@ -97,7 +106,7 @@ body {
   font-size: 20px; flex-shrink: 0;
   box-shadow: 0 4px 18px rgba(201,162,39,.38);
 }
-.hdr-title { font-size: 16px; font-weight: 900; color: #fff; letter-spacing: -.4px; }
+.hdr-title { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 19px; font-weight: 700; color: #fff; letter-spacing: .5px; }
 .hdr-sub   { font-size: 11px; color: #3d5a7a; margin-top: 2px; font-weight: 500; }
 .hdr-right { display: flex; align-items: center; gap: 12px; }
 .hdr-pill {
@@ -200,7 +209,7 @@ body {
 }
 .sec-head.sh-today { border-left-color: #34d399; background: linear-gradient(90deg,rgba(52,211,153,.08),rgba(79,70,229,.04),transparent); }
 .sec-head.sh-tmrw  { border-left-color: #a78bfa; background: linear-gradient(90deg,rgba(167,139,250,.08),rgba(79,70,229,.04),transparent); }
-.sec-label { font-size: 20px; font-weight: 900; color: #fff; letter-spacing: -.5px; }
+.sec-label { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 700; color: #fff; letter-spacing: .4px; }
 .sec-date  { font-size: 12px; color: #475569; font-weight: 500; }
 .sec-count {
   margin-left: auto;
@@ -375,6 +384,124 @@ a.fl-chip:hover {
 /* keep old empty classes for any missed refs */
 .empty { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ROW SLIDE-UP ANIMATION */
+@keyframes rowIn {
+  from { opacity:0; transform:translateY(14px); }
+  to   { opacity:1; transform:translateY(0); }
+}
+.trow { animation: rowIn .4s cubic-bezier(0.16,1,0.3,1) both; }
+.sk-row { animation: none !important; }
+
+/* LIVE CLOCK */
+.hdr-clock {
+  font-family: 'Roboto Mono', monospace;
+  font-size: 13px; font-weight: 600; color: #c9a227;
+  letter-spacing: 2px; padding: 4px 11px;
+  border: 1px solid rgba(201,162,39,.2);
+  border-radius: 7px; background: rgba(201,162,39,.04);
+  white-space: nowrap;
+}
+
+/* ═══ MOBILE CARDS — COMPLETE REDESIGN ═══ */
+@media (max-width: 640px) {
+  .hdr { padding: 10px 14px; }
+  .hdr-ico { width: 34px; height: 34px; font-size: 17px; }
+  .hdr-title { font-size: 15px; letter-spacing: .3px; }
+  .hdr-clock { font-size: 11px; letter-spacing: 1.5px; padding: 3px 8px; }
+  .hdr-time { display: none; }
+  .date-label { display: none; }
+  .date-bar { top: 57px; padding: 6px 14px 4px; gap: 0; flex-wrap: wrap; overflow-x: visible; }
+  #date-chips { flex: 0 0 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 2px 0 4px; }
+  #date-chips::-webkit-scrollbar { display: none; }
+  .srch-wrap { flex: 0 0 100% !important; max-width: 100% !important; margin: 2px 0 3px !important; }
+  .page { padding: 14px 10px 60px; }
+  .sec-head { padding: 13px 16px; border-radius: 12px 12px 0 0; }
+  .sec-label { font-size: 22px; }
+
+  /* Table → cards */
+  .tbl-wrap { border: none; background: transparent; }
+  table { display: block; border-spacing: 0; padding: 0; }
+  colgroup, thead { display: none; }
+  tbody { display: flex; flex-direction: column; gap: 10px; }
+
+  /* Card wrapper */
+  .trow {
+    display: block; border-radius: 16px; overflow: hidden;
+    border: 1px solid #1a2d48;
+    box-shadow: 0 4px 20px rgba(0,0,0,.35);
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .trow:hover { border-color: rgba(201,162,39,.35); box-shadow: 0 4px 24px rgba(201,162,39,.08); }
+  .trow.yd-karsila { border-color: rgba(56,189,248,.3); }
+  .trow.yd-aracta  { border-color: rgba(251,191,36,.3); }
+  .trow.yd-teslim  { border-color: rgba(52,211,153,.25); }
+
+  /* All cells reset */
+  .trow > td {
+    display: block; background: #090f1e;
+    border: none !important; border-radius: 0 !important;
+    padding: 0; vertical-align: top;
+  }
+
+  /* TIME — Card header */
+  .trow > td:first-child {
+    display: flex !important; align-items: center; justify-content: space-between;
+    background: linear-gradient(135deg, #0d1e38, #0f2040) !important;
+    border-left: 4px solid #c9a227 !important;
+    border-bottom: 1px solid #1a2d48 !important;
+    padding: 13px 16px !important;
+  }
+  .trow.yd-karsila > td:first-child { border-left-color: #38bdf8 !important; }
+  .trow.yd-aracta  > td:first-child { border-left-color: #fbbf24 !important; }
+  .trow.yd-teslim  > td:first-child { border-left-color: #34d399 !important; }
+  .td-time { font-size: 34px; letter-spacing: -2px; }
+  .td-tarih { font-size: 12px; margin-top: 0; text-align: right; }
+
+  /* CUSTOMER */
+  .trow > td.td-cust {
+    padding: 12px 16px !important;
+    border-bottom: 1px solid #0e1f36 !important;
+  }
+
+  /* TRIP */
+  .trow > td.td-trip {
+    padding: 8px 16px 10px !important;
+    border-bottom: 1px solid #0e1f36 !important;
+  }
+
+  /* ROUTE */
+  .trow > td.td-route {
+    padding: 10px 16px !important;
+    border-bottom: 1px solid #0e1f36 !important;
+  }
+  .route-row { white-space: normal; overflow: visible; text-overflow: clip; font-size: 12px; }
+
+  /* DRIVER */
+  .trow > td.td-drv { padding: 12px 16px !important; }
+  .cust-name, .drv-name { white-space: normal; overflow: visible; text-overflow: clip; }
+
+  /* Hide data-label */
+  td::before { display: none; }
+
+  /* Voucher */
+  #voucher-overlay { align-items: flex-end; padding: 0; }
+  #voucher-card { border-radius: 22px 22px 0 0; max-width: 100%; animation: vSlideUp .25s ease; }
+  @keyframes vSlideUp { from{transform:translateY(60px);opacity:0} to{transform:none;opacity:1} }
+  .v-header { padding: 20px 22px 14px; }
+  .v-logo-wrap svg { width: 46px; height: 55px; }
+  .v-co-name { font-size: 15px; } .v-co-sub { font-size: 8px; letter-spacing: 3px; margin-top: 3px; }
+  .v-name-area { min-height: 130px; padding: 22px 20px 26px; }
+  .v-welcome-lbl { font-size: 8px; letter-spacing: 5px; margin-bottom: 10px; }
+  .v-cust-name { font-size: 40px; letter-spacing: -1.5px; }
+  .v-vfooter { padding: 12px 20px 20px; }
+  .v-print-btn, .v-close-btn { padding: 10px 16px; font-size: 12px; }
+  .login-box { padding: 36px 28px 32px; }
+}
+@media (max-width: 380px) {
+  .page { padding: 12px 8px 60px; }
+  .date-bar { padding: 8px 10px; }
+}
 
 /* ADD BTN */
 .add-btn {
@@ -717,88 +844,6 @@ a.fl-chip:hover {
   thead th:last-child,  .trow > td:last-child  { padding-right: 16px; }
 }
 
-/* ═══ MOBILE CARDS ═══ */
-@media (max-width: 640px) {
-  .hdr    { padding: 10px 14px; }
-  .hdr-ico{ width: 34px; height: 34px; font-size: 17px; }
-  .hdr-title { font-size: 13px; }
-  .hdr-time  { display: none; }
-  /* Date bar: chip'ler kendi içinde yatay scroll, search altta ayrı satır */
-  .date-label { display: none; }
-  .date-bar {
-    top: 57px; padding: 6px 14px 4px; gap: 0;
-    flex-wrap: wrap; overflow-x: visible;
-  }
-  #date-chips {
-    flex: 0 0 100%; overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    scrollbar-width: none; padding: 2px 0 4px;
-  }
-  #date-chips::-webkit-scrollbar { display: none; }
-  .srch-wrap { flex: 0 0 100% !important; max-width: 100% !important; margin: 2px 0 3px !important; }
-  .page      { padding: 14px 10px 60px; }
-  .sec-head  { padding: 12px 14px; border-radius: 10px 10px 0 0; }
-  .sec-label { font-size: 16px; }
-
-  .tbl-wrap { border: none; background: transparent; }
-  table     { display: block; border-spacing: 0; padding: 0; }
-  colgroup  { display: none; }
-  thead     { display: none; }
-  tbody     { display: flex; flex-direction: column; gap: 12px; }
-
-  .trow { display: block; border: 1px solid #1a3050; border-radius: 14px; overflow: hidden; transition: border-color .2s; }
-  .trow:hover { border-color: #4f46e5; }
-
-  .trow > td {
-    display: flex; align-items: flex-start; gap: 10px;
-    background: #0b1a2f; border: none !important; border-radius: 0 !important;
-    border-bottom: 1px solid #0d2040 !important; padding: 10px 14px; vertical-align: top;
-  }
-  .trow > td:last-child { border-bottom: none !important; }
-  .trow > td:first-child {
-    display: block !important;
-    background: linear-gradient(90deg, rgba(79,70,229,.2), rgba(79,70,229,.06));
-    border-left: 3px solid #4f46e5 !important;
-    border-bottom: 1px solid #1a3050 !important;
-    padding: 13px 16px !important;
-  }
-  .trow > td:first-child::before { display: none; }
-  .td-time { font-size: 30px; letter-spacing: -1.5px; }
-
-  td::before {
-    content: attr(data-label);
-    font-size: 9px; font-weight: 700; color: #1e3456;
-    text-transform: uppercase; letter-spacing: 1px;
-    min-width: 68px; flex-shrink: 0; padding-top: 2px;
-  }
-  .cust-name, .drv-name { white-space: normal; overflow: visible; text-overflow: clip; }
-  .route-row { white-space: normal; overflow: visible; text-overflow: clip; }
-  .login-box { padding: 36px 28px 32px; }
-
-  /* Voucher — mobilde aşağıdan yükselen panel */
-  #voucher-overlay { align-items: flex-end; padding: 0; }
-  #voucher-card {
-    border-radius: 22px 22px 0 0; max-width: 100%;
-    animation: vSlideUp .25s ease;
-  }
-  @keyframes vSlideUp {
-    from { transform: translateY(60px); opacity: 0; }
-    to   { transform: none; opacity: 1; }
-  }
-  .v-header { padding: 20px 22px 14px; }
-  .v-logo-wrap svg { width: 46px; height: 55px; }
-  .v-co-name { font-size: 15px; }
-  .v-co-sub  { font-size: 8px; letter-spacing: 3px; margin-top: 3px; }
-  .v-name-area { min-height: 130px; padding: 22px 20px 26px; }
-  .v-welcome-lbl { font-size: 8px; letter-spacing: 5px; margin-bottom: 10px; }
-  .v-cust-name { font-size: 40px; letter-spacing: -1.5px; }
-  .v-vfooter { padding: 12px 20px 20px; }
-  .v-print-btn, .v-close-btn { padding: 10px 16px; font-size: 12px; }
-}
-@media (max-width: 380px) {
-  .page { padding: 12px 8px 60px; }
-  .date-bar { padding: 8px 10px; }
-}
 
 </style>
 </head>
@@ -836,6 +881,7 @@ a.fl-chip:hover {
     </div>
     <div class="hdr-right">
       <button class="add-btn" id="add-btn" style="display:none" onclick="openAddModal()">＋ Transfer Ekle</button>
+      <div id="live-clock" class="hdr-clock">00:00:00</div>
       <div class="hdr-pill"><span class="live"></span><span id="cnt">—</span></div>
       <div id="upd" class="hdr-time">Yükleniyor...</div>
       <button class="logout-btn" id="logout-btn">Çıkış</button>
@@ -936,6 +982,27 @@ a.fl-chip:hover {
 </div>
 
 <script>
+/* ════ CANLI SAAT ════ */
+function tickClock(){
+  var n=new Date();
+  var s=('0'+n.getHours()).slice(-2)+':'+('0'+n.getMinutes()).slice(-2)+':'+('0'+n.getSeconds()).slice(-2);
+  var el=document.getElementById('live-clock');
+  if(el) el.textContent=s;
+}
+setInterval(tickClock,1000); tickClock();
+
+/* ════ SAYAÇ ANİMASYONU ════ */
+function animateCount(el,to,suffix){
+  to=parseInt(to)||0;
+  if(to===0){ $(el).text('0 '+suffix); return; }
+  var cur=0, step=Math.ceil(to/18);
+  var t=setInterval(function(){
+    cur=Math.min(cur+step,to);
+    $(el).text(cur+' '+suffix);
+    if(cur>=to) clearInterval(t);
+  },28);
+}
+
 /* ════ AUTH ════ */
 /* Şifreler burada YOK — GAS Script Properties'te SHA-256 hash olarak saklanır.
    Kaynak kodu görüntüleyen kimse şifreyi bulamaz. */
@@ -1028,7 +1095,7 @@ function buildRow(d){
   var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
 
   var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':yd==='Araçta'?' yd-aracta':yd==='Teslim Edildi'?' yd-teslim':'');
-  return '<tr class="'+trowClass+'" style="opacity:0">'
+  return '<tr class="'+trowClass+'">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
@@ -1094,7 +1161,7 @@ function showDate(tarih){
 
   var html = buildOneSec(tarih);
   var count = allData.filter(function(d){ return d.tarih===tarih; }).length;
-  $('#cnt').text(count+' Transfer');
+  animateCount('#cnt', count, 'Transfer');
 
   if(!html){
     if(isLoading){
@@ -1106,8 +1173,7 @@ function showDate(tarih){
   }
 
   $('#page').html(html);
-  var delay=0;
-  $('.trow').each(function(){ $(this).delay(delay).animate({opacity:1},130); delay+=18; });
+  $('.trow').each(function(i){ $(this).css('animation-delay',(i*24)+'ms'); });
 }
 
 /* ════ SHOW DATES (çoklu tarih — karşılamacı gece modu) ════ */
@@ -1135,7 +1201,7 @@ function showDates(tarihler){
     return buildOneSec(tarih, cutoff);
   }).join('');
 
-  $('#cnt').text(visibleCount+' Transfer');
+  animateCount('#cnt', visibleCount, 'Transfer');
 
   if(!html){
     if(isLoading){
@@ -1147,8 +1213,7 @@ function showDates(tarihler){
   }
 
   $('#page').html(html);
-  var delay=0;
-  $('.trow').each(function(){ $(this).delay(delay).animate({opacity:1},130); delay+=18; });
+  $('.trow').each(function(i){ $(this).css('animation-delay',(i*24)+'ms'); });
 }
 
 /* ════ BUILD DATE BAR ════ */
@@ -1720,6 +1785,40 @@ $(function(){
   $('#voucher-overlay').on('click', function(e){ if(e.target===this) $(this).removeClass('open'); });
   /* ESC ile kapat */
   $(document).on('keydown', function(e){ if(e.key==='Escape') $('#voucher-overlay').removeClass('open'); });
+
+  /* ── MOBİL SWIPE → sonraki durum ── */
+  var _sw={};
+  var _NEXT={'':'Karşılandı','Karşılandı':'Araçta','Araçta':'Teslim Edildi','Teslim Edildi':''};
+  $(document).on('touchstart','.trow',function(e){
+    var t=e.originalEvent.touches[0];
+    _sw={el:this,x:t.clientX,y:t.clientY,ok:false};
+  }).on('touchmove','.trow',function(e){
+    if(!_sw.el||_sw.el!==this) return;
+    var dx=e.originalEvent.touches[0].clientX-_sw.x;
+    var dy=e.originalEvent.touches[0].clientY-_sw.y;
+    if(!_sw.ok&&Math.abs(dy)>Math.abs(dx)){_sw.el=null;return;}
+    if(dx<-8){
+      _sw.ok=true; e.preventDefault();
+      $(this).css({transform:'translateX('+Math.max(dx,-100)+'px)',transition:'none'});
+    }
+  }).on('touchend','.trow',function(e){
+    if(!_sw.el||_sw.el!==this) return;
+    var dx=e.originalEvent.changedTouches[0].clientX-_sw.x;
+    var $r=$(this);
+    $r.css('transition','transform .35s cubic-bezier(.16,1,.3,1)').css('transform','');
+    if(dx<-65&&_sw.ok){
+      var $track=$r.find('.st-track');
+      var curStatus=($track.find('.st-step.active').data('d')||'');
+      var nextStatus=_NEXT[curStatus];
+      if(nextStatus){
+        var $ns=$track.find('.st-step[data-d="'+nextStatus+'"]');
+        if($ns.length) setTimeout(function(){
+          updateStatus($ns.data('t'),$ns.data('s'),$ns.data('m'),nextStatus,$ns[0]);
+        },180);
+      }
+    }
+    _sw={};
+  });
 
   $('#logout-btn').on('click', function(){
     localStorage.removeItem('ramos_auth');
