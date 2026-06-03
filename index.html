@@ -485,20 +485,6 @@ body::before {
   .trow > td:first-child { background: linear-gradient(135deg,#0d1e38,#0f2040) !important; }
 }
 
-/* ════ TOP LOADING BAR ════ */
-#topbar {
-  position: fixed; top: 0; left: 0; height: 2px; z-index: 99999;
-  background: linear-gradient(90deg,#a07820,#e8c44a,#c9a227,#e8c44a,#a07820);
-  background-size: 300% 100%;
-  animation: barShimmer 1.4s linear infinite;
-  width: 0; opacity: 0;
-  transition: opacity .3s;
-  pointer-events: none;
-}
-@keyframes barShimmer {
-  0%   { background-position: 100% 0; }
-  100% { background-position: -100% 0; }
-}
 
 /* ════ PAGE FADE TRANSITION ════ */
 #page { transition: opacity .12s ease; }
@@ -995,8 +981,6 @@ body::before {
 </head>
 <body>
 
-<div id="topbar"></div>
-
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen">
   <div class="login-box">
@@ -1130,18 +1114,6 @@ body::before {
 </div>
 
 <script>
-/* ════ TOP LOADING BAR ════ */
-var _barTimer;
-function showBar(){
-  clearTimeout(_barTimer);
-  $('#topbar').stop(true).css({width:'0%',opacity:'1'}).animate({width:'88%'},4000,'linear');
-}
-function hideBar(){
-  clearTimeout(_barTimer);
-  $('#topbar').stop(true).animate({width:'100%'},220,function(){
-    $(this).animate({opacity:0},280,function(){ $(this).css({width:'0%'}); });
-  });
-}
 
 /* ════ HAVAYOlU RENK HARİTASI ════ */
 var AIRLINE_CLR = {
@@ -1746,7 +1718,6 @@ function yukle(){
   /* isLoading ÖNCE true yapılıyor — cache render sırasında da
      "transfer bulunamadı" yerine "yükleniyor" göstermek için */
   isLoading = true;
-  showBar();
 
   if(cacheOk){
     try {
@@ -1768,7 +1739,7 @@ function yukle(){
 
   /* 55 sn içinde cevap gelmezse sıfırla ve yeniden dene */
   var timer = setTimeout(function(){
-    isLoading = false; hideBar();
+    isLoading = false; 
     delete window[cb]; $(s).remove();
     if(allData.length === 0){
       $('#upd').text('⚠ Sunucu uyandırılıyor…');
@@ -1781,7 +1752,7 @@ function yukle(){
 
   s.onerror = function(){
     clearTimeout(timer);
-    isLoading = false; hideBar();
+    isLoading = false; 
     delete window[cb]; $(s).remove();
     if(allData.length === 0){
       $('#upd').text('⚠ Bağlantı hatası — yeniden deneniyor…');
@@ -1797,7 +1768,7 @@ function yukle(){
 
     /* Token geçersiz → çıkış */
     if(data && data.error === 'unauthorized'){
-      hideBar();
+      
       localStorage.removeItem('ramos_auth'); localStorage.removeItem('ramos_token');
       localStorage.removeItem('ramos_rol');  localStorage.removeItem('ramos_login_ts');
       location.reload(); return;
@@ -1806,7 +1777,7 @@ function yukle(){
     /* API boş döndürdüyse ve elimizde veri varsa → ekranı bozma, geçici hata */
     if(!data || !data.length){
       if(allData.length > 0){
-        hideBar();
+        
         $('#upd').text('⚠ Sunucu boş döndü — önbellek korunuyor');
         delete window[cb]; $(s).remove(); return;
       }
@@ -1817,7 +1788,7 @@ function yukle(){
       var _eski = allData.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
       var _yeni = data.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
       if(_eski > 0 && _yeni === 0){
-        hideBar();
+        
         $('#upd').text('⚠ Geçici okuma hatası — veriler korunuyor');
         delete window[cb]; $(s).remove(); return;
       }
@@ -1826,13 +1797,13 @@ function yukle(){
     /* Akıllı polling: veri değişmediyse ekranı yeniden çizme */
     var newStr = JSON.stringify(data);
     if(newStr === _lastDataStr && allData.length > 0){
-      hideBar();
+      
       var st = new Date().toLocaleString('tr-TR',{hour:'2-digit',minute:'2-digit'});
       $('#upd').text('Son güncelleme: '+st);
       delete window[cb]; $(s).remove(); return;
     }
     _lastDataStr = newStr;
-    hideBar();
+    
 
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
