@@ -1,11 +1,21 @@
 
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 
-/* Bugün bölümündeki sayı */
+/* Bugün bölümündeki sayı — header pill gibi */
 .sec-today-cnt {
   margin-left: auto;
-  font-size: 16px; font-weight: 900; color: #6366f1;
-  letter-spacing: -.3px; white-space: nowrap;
+  display: flex; align-items: center; gap: 7px;
+  background: rgba(201,162,39,.08);
+  border: 1px solid rgba(201,162,39,.22);
+  padding: 5px 14px; border-radius: 20px;
+  font-size: 12px; font-weight: 700; color: #e8c44a;
+  white-space: nowrap;
+}
+.sec-today-cnt::before {
+  content: '';
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+  background: #e8c44a; box-shadow: 0 0 7px rgba(232,196,74,.8);
+  animation: blink 2s ease-in-out infinite;
 }
 
 body {
