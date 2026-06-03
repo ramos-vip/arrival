@@ -334,6 +334,77 @@ a.fl-chip:hover {
 .empty-loading .empty-ico { opacity: .5; animation: spin 1.4s linear infinite; display: inline-block; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
+/* ADD BTN */
+.add-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(79,70,229,.12); border: 1px solid rgba(79,70,229,.28);
+  color: #a5b4fc; font-size: 12px; font-weight: 700;
+  padding: 6px 14px; border-radius: 20px; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all .15s; white-space: nowrap;
+}
+.add-btn:hover { background: rgba(79,70,229,.24); border-color: rgba(79,70,229,.5); color: #c7d2fe; }
+
+/* MODAL */
+.modal-ov {
+  position: fixed; inset: 0; z-index: 10001;
+  background: rgba(0,0,10,.85); backdrop-filter: blur(8px);
+  display: none; align-items: center; justify-content: center; padding: 20px;
+}
+.modal-ov.open { display: flex; }
+.modal-box {
+  background: linear-gradient(160deg,#0d1e38,#09142a);
+  border: 1px solid #1a3050; border-radius: 20px;
+  padding: 32px; width: 100%; max-width: 600px;
+  max-height: 90vh; overflow-y: auto;
+  box-shadow: 0 40px 100px rgba(0,0,0,.7);
+  animation: msl .2s ease;
+}
+@keyframes msl { from{opacity:0;transform:scale(.96) translateY(12px)} to{opacity:1;transform:none} }
+.modal-title { font-size: 15px; font-weight: 800; color: #fff; margin-bottom: 22px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fg { display: flex; flex-direction: column; gap: 5px; }
+.fg.full { grid-column: 1/-1; }
+.fg label { font-size: 9px; font-weight: 700; color: #334155; text-transform: uppercase; letter-spacing: 1px; }
+.fg input, .fg select {
+  background: #060e1d; border: 1px solid #1a3050; border-radius: 9px;
+  padding: 9px 12px; font-size: 13px; font-family: 'Inter', sans-serif;
+  color: #e2e8f0; outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.fg input:focus, .fg select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+.fg input::placeholder { color: #243450; }
+.fg select option { background: #0d1e38; }
+.modal-acts { display: flex; gap: 10px; justify-content: flex-end; margin-top: 20px; }
+.btn-ok {
+  background: linear-gradient(135deg,#4f46e5,#7c3aed); border: none;
+  border-radius: 10px; padding: 11px 24px;
+  font-size: 13px; font-weight: 700; color: #fff; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: opacity .15s;
+}
+.btn-ok:hover { opacity: .88; }
+.btn-ok:disabled { opacity: .5; cursor: default; }
+.btn-cx {
+  background: transparent; border: 1px solid rgba(255,255,255,.15);
+  color: #94a3b8; border-radius: 10px; padding: 11px 18px;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  font-family: 'Inter', sans-serif; transition: all .15s;
+}
+.btn-cx:hover { background: rgba(255,255,255,.08); color: #fff; }
+
+/* STATUS BUTTONS */
+.st-wrap { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
+.st-btn {
+  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  border: 1px solid; cursor: pointer; font-family: 'Inter', sans-serif;
+  transition: all .15s; letter-spacing: .3px; background: transparent;
+}
+.st-btn.sb-k { border-color: rgba(56,189,248,.3); color: #38bdf8; }
+.st-btn.sb-k.on, .st-btn.sb-k:hover { background: rgba(56,189,248,.15); border-color: #38bdf8; }
+.st-btn.sb-a { border-color: rgba(251,191,36,.3); color: #fbbf24; }
+.st-btn.sb-a.on, .st-btn.sb-a:hover { background: rgba(251,191,36,.15); border-color: #fbbf24; }
+.st-btn.sb-t { border-color: rgba(52,211,153,.3); color: #34d399; }
+.st-btn.sb-t.on, .st-btn.sb-t:hover { background: rgba(52,211,153,.15); border-color: #34d399; }
+.trow.yd-teslim > td { opacity: .55; }
+
 /* PRINT BTN */
 .print-btn {
   display: inline-flex; align-items: center; gap: 6px;
@@ -690,6 +761,7 @@ a.fl-chip:hover {
       </div>
     </div>
     <div class="hdr-right">
+      <button class="add-btn" id="add-btn" style="display:none" onclick="openAddModal()">＋ Transfer Ekle</button>
       <div class="hdr-pill"><span class="live"></span><span id="cnt">—</span></div>
       <div id="upd" class="hdr-time">Yükleniyor...</div>
       <button class="logout-btn" id="logout-btn">Çıkış</button>
@@ -714,6 +786,32 @@ a.fl-chip:hover {
   </div>
 
   <div class="footer">RAMOS NJT VIP TRANSFER &nbsp;·&nbsp; Her 1 dakikada otomatik güncellenir</div>
+</div>
+
+<!-- ═══ TRANSFER EKLE MODAL ═══ -->
+<div class="modal-ov" id="add-modal">
+  <div class="modal-box">
+    <div class="modal-title">＋ Yeni Transfer Ekle</div>
+    <div class="form-grid">
+      <div class="fg"><label>Tarih *</label><input id="f-tarih" type="text" placeholder="gg.aa.yyyy"></div>
+      <div class="fg"><label>Saat *</label><input id="f-saat" type="text" placeholder="HH:MM"></div>
+      <div class="fg full"><label>Müşteri Adı *</label><input id="f-musteri" type="text" placeholder="Ad Soyad"></div>
+      <div class="fg"><label>Müşteri Tel</label><input id="f-tel" type="text" placeholder="905..."></div>
+      <div class="fg"><label>Uçuş No</label><input id="f-ucus" type="text" placeholder="XQ169"></div>
+      <div class="fg"><label>Kişi Sayısı</label><input id="f-kisi" type="text" placeholder="2"></div>
+      <div class="fg full"><label>Araç</label><input id="f-arac" type="text" placeholder="Ultra VIP Maybach"></div>
+      <div class="fg full"><label>Nereden *</label><input id="f-nereden" type="text" placeholder="Antalya Havalimanı" value="Antalya Havalimanı"></div>
+      <div class="fg full"><label>Nereye *</label><input id="f-nereye" type="text" placeholder="Otel adı veya adres"></div>
+      <div class="fg"><label>Şoför</label><input id="f-surucu" type="text" placeholder="Şoför adı"></div>
+      <div class="fg"><label>Plaka</label><input id="f-plaka" type="text" placeholder="07 AA 001"></div>
+      <div class="fg full"><label>Şoför Tel</label><input id="f-stel" type="text" placeholder="905..."></div>
+    </div>
+    <div id="add-err" style="margin-top:12px;font-size:12px;color:#f87171;min-height:18px"></div>
+    <div class="modal-acts">
+      <button class="btn-cx" onclick="closeAddModal()">İptal</button>
+      <button class="btn-ok" id="add-submit-btn" onclick="submitAddTransfer()">Kaydet →</button>
+    </div>
+  </div>
 </div>
 
 <!-- ═══ VOUCHER OVERLAY ═══ -->
@@ -824,19 +922,31 @@ function buildRow(d){
   /* Karşılamacıda müşteri telefonu gizlenir */
   var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
 
+  /* Operasyon durum butonları */
+  var yd = esc(d.yerel_durum || '');
+  var stHtml = '<div class="st-wrap">'
+    +'<button class="st-btn sb-k'+(d.yerel_durum==='Karşılandı'?' on':'')+'" '
+      +'data-t="'+esc(d.tarih)+'" data-s="'+esc(d.saat)+'" data-m="'+esc(d.musteri)+'" data-d="Karşılandı">📍 Karşılandı</button>'
+    +'<button class="st-btn sb-a'+(d.yerel_durum==='Araçta'?' on':'')+'" '
+      +'data-t="'+esc(d.tarih)+'" data-s="'+esc(d.saat)+'" data-m="'+esc(d.musteri)+'" data-d="Araçta">🚗 Araçta</button>'
+    +'<button class="st-btn sb-t'+(d.yerel_durum==='Teslim Edildi'?' on':'')+'" '
+      +'data-t="'+esc(d.tarih)+'" data-s="'+esc(d.saat)+'" data-m="'+esc(d.musteri)+'" data-d="Teslim Edildi">✅ Teslim</button>'
+    +'</div>';
+
   var drvHtml;
   if(surucu){
     var dbot=(plaka?'<span class="plaka">'+plaka+'</span>':'')+(telLink(d.surucuTel)||'');
-    drvHtml='<div class="drv-name" title="'+surucu+'">'+surucu+'</div>'+(dbot?'<div class="drv-bottom">'+dbot+'</div>':'');
+    drvHtml='<div class="drv-name" title="'+surucu+'">'+surucu+'</div>'+(dbot?'<div class="drv-bottom">'+dbot+'</div>':'')+stHtml;
   } else {
-    drvHtml='<span class="badge-un">⚠ Atanmadı</span>';
+    drvHtml='<span class="badge-un">⚠ Atanmadı</span>'+stHtml;
   }
 
   /* Saatin altına küçük tarih: "29 May" */
   var dateObj = parseTarih(d.tarih||'');
   var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
 
-  return '<tr class="trow" style="opacity:0">'
+  var trowClass = 'trow'+(d.yerel_durum==='Teslim Edildi'?' yd-teslim':'');
+  return '<tr class="'+trowClass+'" style="opacity:0">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
@@ -1024,11 +1134,13 @@ function buildDateBar(data){
 
 /* ════ ROL UYGULA ════ */
 function applyRole(){
-  $('.date-bar').show(); /* her iki rol için arama kutusu görünür */
+  $('.date-bar').show();
   if(isYonetici()){
+    $('#add-btn').show();
     $('.date-label, #date-chips').show();
     $('.srch-wrap').css({'flex':'0 1 340px','max-width':'340px'});
   } else {
+    $('#add-btn').hide();
     /* karşılamacı: tarih seçimi yok, sadece arama */
     $('.date-label, #date-chips').hide();
     $('.srch-wrap').css({'flex':'1','max-width':'100%','margin-left':'0'});
@@ -1086,6 +1198,99 @@ function showVoucher(idx){
   var name = (d.musteri||'').trim().toUpperCase() || 'MİSAFİR';
   $('#v-cust-name').text(name);
   $('#voucher-overlay').addClass('open');
+}
+
+/* ════ TRANSFER EKLE ════ */
+function openAddModal(){
+  $('#add-err').text('');
+  $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+  /* Bugünün tarihini varsayılan yap */
+  if(!$('#f-tarih').val()) $('#f-tarih').val(getToday());
+  $('#add-modal').addClass('open');
+  setTimeout(function(){ $('#f-musteri').focus(); },200);
+}
+function closeAddModal(){ $('#add-modal').removeClass('open'); }
+
+function submitAddTransfer(){
+  var tarih   = $('#f-tarih').val().trim();
+  var saat    = $('#f-saat').val().trim();
+  var musteri = $('#f-musteri').val().trim();
+  var nereden = $('#f-nereden').val().trim();
+  var nereye  = $('#f-nereye').val().trim();
+  if(!tarih||!saat||!musteri||!nereye){
+    $('#add-err').text('❌ Tarih, Saat, Müşteri ve Nereye zorunludur');
+    return;
+  }
+  $('#add-submit-btn').prop('disabled',true).text('Kaydediliyor…');
+  var tok = localStorage.getItem('ramos_token')||'';
+  var cb  = '__add'+Date.now();
+  var s   = document.createElement('script');
+  s.src   = API
+    +'?action=add&tok='+encodeURIComponent(tok)
+    +'&tarih='+encodeURIComponent(tarih)
+    +'&saat='+encodeURIComponent(saat)
+    +'&musteri='+encodeURIComponent(musteri)
+    +'&musteriTel='+encodeURIComponent($('#f-tel').val().trim())
+    +'&ucus='+encodeURIComponent($('#f-ucus').val().trim())
+    +'&kisi='+encodeURIComponent($('#f-kisi').val().trim())
+    +'&arac='+encodeURIComponent($('#f-arac').val().trim())
+    +'&nereden='+encodeURIComponent(nereden)
+    +'&nereye='+encodeURIComponent(nereye)
+    +'&surucu='+encodeURIComponent($('#f-surucu').val().trim())
+    +'&surucuPlaka='+encodeURIComponent($('#f-plaka').val().trim())
+    +'&surucuTel='+encodeURIComponent($('#f-stel').val().trim())
+    +'&cb='+cb;
+  var timer = setTimeout(function(){
+    delete window[cb]; $(s).remove();
+    $('#add-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
+    $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+  }, 20000);
+  window[cb] = function(res){
+    clearTimeout(timer); delete window[cb]; $(s).remove();
+    if(res && res.ok){
+      closeAddModal();
+      /* Formu temizle */
+      $('#f-tarih,#f-saat,#f-musteri,#f-tel,#f-ucus,#f-kisi,#f-arac,#f-nereye,#f-surucu,#f-plaka,#f-stel').val('');
+      _lastDataStr = ''; /* cache'i iptal et — yeni veri çekilsin */
+      yukle();
+    } else {
+      $('#add-err').text('❌ Kayıt başarısız, tekrar dene');
+      $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+    }
+  };
+  $('head').append(s);
+}
+
+/* ════ OPERASYON DURUMU GÜNCELLE ════ */
+function updateStatus(tarih, saat, musteri, durum, btn){
+  var tok = localStorage.getItem('ramos_token')||'';
+  var cb  = '__st'+Date.now();
+  var s   = document.createElement('script');
+  s.src   = API
+    +'?action=status&tok='+encodeURIComponent(tok)
+    +'&tarih='+encodeURIComponent(tarih)
+    +'&saat='+encodeURIComponent(saat)
+    +'&musteri='+encodeURIComponent(musteri)
+    +'&durum='+encodeURIComponent(durum)
+    +'&cb='+cb;
+  $(btn).text('…').prop('disabled',true);
+  var timer = setTimeout(function(){ delete window[cb]; $(s).remove(); }, 15000);
+  window[cb] = function(res){
+    clearTimeout(timer); delete window[cb]; $(s).remove();
+    if(res && res.ok){
+      _lastDataStr = ''; /* bir sonraki polling'de yenile */
+      /* Optimistik güncelleme — butonu aktif göster */
+      var wrap = $(btn).closest('.st-wrap');
+      wrap.find('.st-btn').removeClass('on').prop('disabled',false).text(function(){
+        return $(this).hasClass('sb-k') ? '📍 Karşılandı'
+             : $(this).hasClass('sb-a') ? '🚗 Araçta' : '✅ Teslim';
+      });
+      $(btn).addClass('on').prop('disabled',false);
+    } else {
+      $(btn).prop('disabled',false);
+    }
+  };
+  $('head').append(s);
 }
 
 /* ════ YAZDIR ════ */
@@ -1368,6 +1573,16 @@ $(function(){
   });
   $('#srch-clear').on('click', function(){
     $('#search-input').val('').trigger('input').focus();
+  });
+
+  /* Modal — ESC ve dışa tıklama */
+  $('#add-modal').on('click', function(e){ if(e.target===this) closeAddModal(); });
+  $(document).on('keydown', function(e){ if(e.key==='Escape') closeAddModal(); });
+
+  /* Operasyon durum butonları */
+  $(document).on('click', '.st-btn', function(){
+    var $b = $(this);
+    updateStatus($b.data('t'), $b.data('s'), $b.data('m'), $b.data('d'), this);
   });
 
   /* Voucher butonları */
