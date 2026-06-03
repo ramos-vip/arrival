@@ -390,20 +390,52 @@ a.fl-chip:hover {
 }
 .btn-cx:hover { background: rgba(255,255,255,.08); color: #fff; }
 
-/* STATUS BUTTONS */
-.st-wrap { display: flex; gap: 5px; flex-wrap: wrap; margin-top: 8px; }
-.st-btn {
-  font-size: 10px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
-  border: 1px solid; cursor: pointer; font-family: 'Inter', sans-serif;
-  transition: all .15s; letter-spacing: .3px; background: transparent;
+/* STATUS STEPPER */
+.st-track {
+  display: flex; align-items: flex-start;
+  margin-top: 10px; padding: 8px 8px 7px;
+  background: rgba(0,0,0,.28); border-radius: 10px;
+  border: 1px solid #0d1e36; gap: 0; transition: opacity .2s;
 }
-.st-btn.sb-k { border-color: rgba(56,189,248,.3); color: #38bdf8; }
-.st-btn.sb-k.on, .st-btn.sb-k:hover { background: rgba(56,189,248,.15); border-color: #38bdf8; }
-.st-btn.sb-a { border-color: rgba(251,191,36,.3); color: #fbbf24; }
-.st-btn.sb-a.on, .st-btn.sb-a:hover { background: rgba(251,191,36,.15); border-color: #fbbf24; }
-.st-btn.sb-t { border-color: rgba(52,211,153,.3); color: #34d399; }
-.st-btn.sb-t.on, .st-btn.sb-t:hover { background: rgba(52,211,153,.15); border-color: #34d399; }
-.trow.yd-teslim > td { opacity: .55; }
+.st-track.loading { opacity: .4; pointer-events: none; }
+.st-step {
+  display: flex; flex-direction: column; align-items: center;
+  flex: 1; cursor: pointer; gap: 5px; padding: 3px 2px;
+  border-radius: 6px; transition: background .15s; user-select: none;
+}
+.st-step:hover { background: rgba(255,255,255,.06); }
+.st-dot {
+  width: 12px; height: 12px; border-radius: 50%;
+  border: 2px solid #1e3456; background: #060e1c;
+  transition: all .25s; flex-shrink: 0;
+}
+.st-label {
+  font-size: 8px; font-weight: 700; color: #1e3456;
+  text-transform: uppercase; letter-spacing: .5px;
+  text-align: center; white-space: nowrap; transition: color .25s;
+}
+.st-line {
+  height: 2px; flex: 0 0 12px; background: #0d1e36;
+  margin-top: 8px; border-radius: 1px; transition: background .3s;
+}
+.st-line.done { background: rgba(255,255,255,.22); }
+/* S1 — Karşılandı (blue) */
+.st-step.s1.active .st-dot, .st-step.s1.done .st-dot { background:#38bdf8; border-color:#38bdf8; }
+.st-step.s1.active .st-dot { box-shadow: 0 0 10px rgba(56,189,248,.65); }
+.st-step.s1.active .st-label, .st-step.s1.done .st-label { color:#38bdf8; }
+/* S2 — Araçta (amber) */
+.st-step.s2.active .st-dot, .st-step.s2.done .st-dot { background:#fbbf24; border-color:#fbbf24; }
+.st-step.s2.active .st-dot { box-shadow: 0 0 10px rgba(251,191,36,.65); }
+.st-step.s2.active .st-label, .st-step.s2.done .st-label { color:#fbbf24; }
+/* S3 — Teslim (green) */
+.st-step.s3.active .st-dot, .st-step.s3.done .st-dot { background:#34d399; border-color:#34d399; }
+.st-step.s3.active .st-dot { box-shadow: 0 0 10px rgba(52,211,153,.65); }
+.st-step.s3.active .st-label, .st-step.s3.done .st-label { color:#34d399; }
+/* Satır sol kenar rengi */
+.trow.yd-karsila > td:first-child { border-left-color:#38bdf8 !important; }
+.trow.yd-aracta  > td:first-child { border-left-color:#fbbf24 !important; }
+.trow.yd-teslim  > td:first-child { border-left-color:#34d399 !important; }
+.trow.yd-teslim  > td { opacity:.5; }
 
 /* PRINT BTN */
 .print-btn {
@@ -922,15 +954,23 @@ function buildRow(d){
   /* Karşılamacıda müşteri telefonu gizlenir */
   var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
 
-  /* Operasyon durum butonları */
-  var yd = esc(d.yerel_durum || '');
-  var stHtml = '<div class="st-wrap">'
-    +'<button class="st-btn sb-k'+(d.yerel_durum==='Karşılandı'?' on':'')+'" '
-      +'data-t="'+esc(d.tarih)+'" data-s="'+esc(d.saat)+'" data-m="'+esc(d.musteri)+'" data-d="Karşılandı">📍 Karşılandı</button>'
-    +'<button class="st-btn sb-a'+(d.yerel_durum==='Araçta'?' on':'')+'" '
-      +'data-t="'+esc(d.tarih)+'" data-s="'+esc(d.saat)+'" data-m="'+esc(d.musteri)+'" data-d="Araçta">🚗 Araçta</button>'
-    +'<button class="st-btn sb-t'+(d.yerel_durum==='Teslim Edildi'?' on':'')+'" '
-      +'data-t="'+esc(d.tarih)+'" data-s="'+esc(d.saat)+'" data-m="'+esc(d.musteri)+'" data-d="Teslim Edildi">✅ Teslim</button>'
+  /* Operasyon stepper */
+  var yd    = d.yerel_durum || '';
+  var ydLvl = yd==='Karşılandı'?1:yd==='Araçta'?2:yd==='Teslim Edildi'?3:0;
+  var sc1=ydLvl>1?' done':ydLvl===1?' active':'';
+  var sc2=ydLvl>2?' done':ydLvl===2?' active':'';
+  var sc3=ydLvl===3?' active':'';
+  var lc1=ydLvl>=2?' done':'', lc2=ydLvl>=3?' done':'';
+  var te=esc(d.tarih), se=esc(d.saat), me=esc(d.musteri);
+  var stHtml='<div class="st-track">'
+    +'<div class="st-step s1'+sc1+'" data-t="'+te+'" data-s="'+se+'" data-m="'+me+'" data-d="Karşılandı">'
+      +'<div class="st-dot"></div><div class="st-label">Karşılandı</div></div>'
+    +'<div class="st-line'+lc1+'"></div>'
+    +'<div class="st-step s2'+sc2+'" data-t="'+te+'" data-s="'+se+'" data-m="'+me+'" data-d="Araçta">'
+      +'<div class="st-dot"></div><div class="st-label">Araçta</div></div>'
+    +'<div class="st-line'+lc2+'"></div>'
+    +'<div class="st-step s3'+sc3+'" data-t="'+te+'" data-s="'+se+'" data-m="'+me+'" data-d="Teslim Edildi">'
+      +'<div class="st-dot"></div><div class="st-label">Teslim</div></div>'
     +'</div>';
 
   var drvHtml;
@@ -945,7 +985,7 @@ function buildRow(d){
   var dateObj = parseTarih(d.tarih||'');
   var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
 
-  var trowClass = 'trow'+(d.yerel_durum==='Teslim Edildi'?' yd-teslim':'');
+  var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':yd==='Araçta'?' yd-aracta':yd==='Teslim Edildi'?' yd-teslim':'');
   return '<tr class="'+trowClass+'" style="opacity:0">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
@@ -1263,31 +1303,40 @@ function submitAddTransfer(){
 
 /* ════ OPERASYON DURUMU GÜNCELLE ════ */
 function updateStatus(tarih, saat, musteri, durum, btn){
-  var tok = localStorage.getItem('ramos_token')||'';
-  var cb  = '__st'+Date.now();
-  var s   = document.createElement('script');
-  s.src   = API
+  var tok    = localStorage.getItem('ramos_token')||'';
+  var cb     = '__st'+Date.now();
+  var s      = document.createElement('script');
+  var $track = $(btn).closest('.st-track');
+  s.src = API
     +'?action=status&tok='+encodeURIComponent(tok)
     +'&tarih='+encodeURIComponent(tarih)
     +'&saat='+encodeURIComponent(saat)
     +'&musteri='+encodeURIComponent(musteri)
     +'&durum='+encodeURIComponent(durum)
     +'&cb='+cb;
-  $(btn).text('…').prop('disabled',true);
-  var timer = setTimeout(function(){ delete window[cb]; $(s).remove(); }, 15000);
+  $track.addClass('loading');
+  var timer = setTimeout(function(){
+    $track.removeClass('loading'); delete window[cb]; $(s).remove();
+  }, 15000);
   window[cb] = function(res){
     clearTimeout(timer); delete window[cb]; $(s).remove();
+    $track.removeClass('loading');
     if(res && res.ok){
-      _lastDataStr = ''; /* bir sonraki polling'de yenile */
-      /* Optimistik güncelleme — butonu aktif göster */
-      var wrap = $(btn).closest('.st-wrap');
-      wrap.find('.st-btn').removeClass('on').prop('disabled',false).text(function(){
-        return $(this).hasClass('sb-k') ? '📍 Karşılandı'
-             : $(this).hasClass('sb-a') ? '🚗 Araçta' : '✅ Teslim';
+      _lastDataStr = '';
+      /* Stepper optimistik güncelleme */
+      var lvl = durum==='Karşılandı'?1:durum==='Araçta'?2:durum==='Teslim Edildi'?3:0;
+      $track.find('.st-step').each(function(i){
+        var n=i+1;
+        $(this).removeClass('done active').addClass(n<lvl?'done':n===lvl?'active':'');
       });
-      $(btn).addClass('on').prop('disabled',false);
-    } else {
-      $(btn).prop('disabled',false);
+      $track.find('.st-line').each(function(i){
+        $(this).toggleClass('done', i+1 < lvl);
+      });
+      var $row = $track.closest('.trow');
+      $row.removeClass('yd-karsila yd-aracta yd-teslim');
+      if(durum==='Karşılandı')      $row.addClass('yd-karsila');
+      else if(durum==='Araçta')     $row.addClass('yd-aracta');
+      else if(durum==='Teslim Edildi') $row.addClass('yd-teslim');
     }
   };
   $('head').append(s);
@@ -1579,8 +1628,8 @@ $(function(){
   $('#add-modal').on('click', function(e){ if(e.target===this) closeAddModal(); });
   $(document).on('keydown', function(e){ if(e.key==='Escape') closeAddModal(); });
 
-  /* Operasyon durum butonları */
-  $(document).on('click', '.st-btn', function(){
+  /* Operasyon stepper */
+  $(document).on('click', '.st-step', function(){
     var $b = $(this);
     updateStatus($b.data('t'), $b.data('s'), $b.data('m'), $b.data('d'), this);
   });
