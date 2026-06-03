@@ -223,13 +223,16 @@ body {
 /* TABLE WRAPPER */
 .tbl-wrap {
   border: 1px solid #111f36; border-radius: 0 0 12px 12px;
-  background: #060d1a; overflow: hidden;
+  background: #060d1a; overflow: clip; /* clip allows sticky thead */
 }
 
 /* TABLE */
 table {
   width: 100%; border-collapse: separate; border-spacing: 0 2px;
   padding: 6px 8px 8px;
+  /* 2px gap between rows shows this gradient = gradient divider effect */
+  background: linear-gradient(90deg,
+    transparent 0%, rgba(20,50,85,.6) 10%, rgba(20,50,85,.6) 90%, transparent 100%);
 }
 col.c-time  { width: 105px; }
 col.c-cust  { width: 225px; }
@@ -237,13 +240,25 @@ col.c-trip  { width: 160px; }
 col.c-route { width: 190px; }
 col.c-drv   { width: 240px; }
 
-/* THEAD */
+/* THEAD — sticky */
+thead {
+  position: sticky; top: 111px; z-index: 5;
+}
 thead th {
   padding: 11px 18px 12px;
   font-size: 10px; font-weight: 700; color: #2a4a6a;
   text-transform: uppercase; letter-spacing: 1.2px;
   text-align: left; white-space: nowrap;
+  background: linear-gradient(180deg, #0c1930, #091524);
   border-bottom: 1px solid #0d1e36;
+  backdrop-filter: blur(10px);
+}
+.th-ico { font-size: 11px; margin-right: 5px; opacity: .55; }
+
+/* ZEBRA STRIPING (dark) */
+.trow:nth-child(even) > td { background: #0b1120 !important; }
+.trow:nth-child(even) > td:first-child {
+  background: linear-gradient(90deg, rgba(201,162,39,.025) 0%, transparent 35%), #0b1120 !important;
 }
 thead th:first-child { padding-left: 22px; }
 thead th:last-child  { padding-right: 22px; }
@@ -309,15 +324,25 @@ a.fl-chip:hover {
 }
 .td-meta { font-size: 12px; color: #3d5a7a; display: flex; align-items: center; gap: 5px; font-weight: 500; }
 
-/* ROUTE */
-.route-row {
-  display: flex; align-items: flex-start; gap: 8px;
-  font-size: 13px; font-weight: 600; line-height: 1.5;
+/* ROUTE — dotted line visualization */
+.route-vis { display: flex; flex-direction: column; gap: 2px; }
+.rv-row { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.rv-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.rv-from-dot { background: #34d399; box-shadow: 0 0 5px rgba(52,211,153,.55); }
+.rv-to-dot   { background: #a78bfa; box-shadow: 0 0 5px rgba(167,139,250,.55); }
+.rv-dashes {
+  width: 1px; height: 18px; margin-left: 3.5px; flex-shrink: 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    #2a4868 0px, #2a4868 3px, transparent 3px, transparent 7px
+  );
+}
+.rv-text {
+  font-size: 13px; font-weight: 600; line-height: 1.3;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.route-from { color: #34d399; margin-bottom: 5px; }
+.route-from { color: #34d399; }
 .route-to   { color: #a78bfa; }
-.rt-icon    { font-size: 11px; flex-shrink: 0; margin-top: 1px; opacity: .6; }
 
 /* DRIVER */
 .drv-name {
@@ -1252,8 +1277,11 @@ function buildRow(d){
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
     +'<td class="td-route" data-label="GÜZERGAH">'
-      +'<div class="route-row route-from"><span class="rt-icon">↑</span>'+nereden+'</div>'
-      +'<div class="route-row route-to"><span class="rt-icon">↓</span>'+nereye+'</div>'
+      +'<div class="route-vis">'
+        +'<div class="rv-row"><span class="rv-dot rv-from-dot"></span><span class="rv-text route-from">'+nereden+'</span></div>'
+        +'<div class="rv-dashes"></div>'
+        +'<div class="rv-row"><span class="rv-dot rv-to-dot"></span><span class="rv-text route-to">'+nereye+'</span></div>'
+      +'</div>'
     +'</td>'
     +'<td class="td-drv"   data-label="ŞOFÖR">'+drvHtml+'</td>'
     +'</tr>';
@@ -1298,7 +1326,13 @@ function buildOneSec(tarih, afterDt){
     +'</div>'
     +'<div class="tbl-wrap"><table>'
       +'<colgroup><col class="c-time"><col class="c-cust"><col class="c-trip"><col class="c-route"><col class="c-drv"></colgroup>'
-      +'<thead><tr><th>Saat</th><th>Müşteri</th><th>Uçuş / Araç</th><th>Güzergah</th><th>Şoför</th></tr></thead>'
+      +'<thead><tr>'
+        +'<th><span class="th-ico">🕐</span>Saat</th>'
+        +'<th><span class="th-ico">👤</span>Müşteri</th>'
+        +'<th><span class="th-ico">✈</span>Uçuş / Araç</th>'
+        +'<th><span class="th-ico">📍</span>Güzergah</th>'
+        +'<th><span class="th-ico">🚗</span>Şoför</th>'
+      +'</tr></thead>'
       +'<tbody>'+liste.map(buildRow).join('')+'</tbody>'
     +'</table></div></div>';
 }
@@ -1734,10 +1768,8 @@ function yukle(){
 
   /* 55 sn içinde cevap gelmezse sıfırla ve yeniden dene */
   var timer = setTimeout(function(){
-    isLoading = false;
-    delete window[cb];
-    $(s).remove();
-    /* Veri hiç gelmemişse → 10 sn sonra otomatik tekrar dene */
+    isLoading = false; hideBar();
+    delete window[cb]; $(s).remove();
     if(allData.length === 0){
       $('#upd').text('⚠ Sunucu uyandırılıyor…');
       $('#page').html(buildSkeleton(4));
@@ -1749,10 +1781,8 @@ function yukle(){
 
   s.onerror = function(){
     clearTimeout(timer);
-    isLoading = false;
-    delete window[cb];
-    $(s).remove();
-    /* Veri hiç gelmemişse → 10 sn sonra otomatik tekrar dene */
+    isLoading = false; hideBar();
+    delete window[cb]; $(s).remove();
     if(allData.length === 0){
       $('#upd').text('⚠ Bağlantı hatası — yeniden deneniyor…');
       setTimeout(yukle, 10000);
@@ -1765,29 +1795,29 @@ function yukle(){
     clearTimeout(timer);
     isLoading = false;
 
-    /* Token geçersiz → şifre değişti veya oturum süresi doldu → çıkış */
+    /* Token geçersiz → çıkış */
     if(data && data.error === 'unauthorized'){
-      localStorage.removeItem('ramos_auth');
-      localStorage.removeItem('ramos_token');
-      localStorage.removeItem('ramos_rol');
-      localStorage.removeItem('ramos_login_ts');
+      hideBar();
+      localStorage.removeItem('ramos_auth'); localStorage.removeItem('ramos_token');
+      localStorage.removeItem('ramos_rol');  localStorage.removeItem('ramos_login_ts');
       location.reload(); return;
     }
 
     /* API boş döndürdüyse ve elimizde veri varsa → ekranı bozma, geçici hata */
     if(!data || !data.length){
       if(allData.length > 0){
+        hideBar();
         $('#upd').text('⚠ Sunucu boş döndü — önbellek korunuyor');
         delete window[cb]; $(s).remove(); return;
       }
     }
 
-    /* Kısmi okuma koruması: sheet yazılırken okunmuş olabilir.
-       Seçili tarihin verisi sıfıra düştüyse ama elimizde veri varsa koru. */
+    /* Kısmi okuma koruması */
     if(data && data.length && selectedDate && allData.length > 0){
       var _eski = allData.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
       var _yeni = data.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
       if(_eski > 0 && _yeni === 0){
+        hideBar();
         $('#upd').text('⚠ Geçici okuma hatası — veriler korunuyor');
         delete window[cb]; $(s).remove(); return;
       }
@@ -1796,6 +1826,7 @@ function yukle(){
     /* Akıllı polling: veri değişmediyse ekranı yeniden çizme */
     var newStr = JSON.stringify(data);
     if(newStr === _lastDataStr && allData.length > 0){
+      hideBar();
       var st = new Date().toLocaleString('tr-TR',{hour:'2-digit',minute:'2-digit'});
       $('#upd').text('Son güncelleme: '+st);
       delete window[cb]; $(s).remove(); return;
