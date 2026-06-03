@@ -257,9 +257,6 @@ thead th {
 
 /* ZEBRA STRIPING (dark) */
 .trow:nth-child(even) > td { background: #0b1120 !important; }
-.trow:nth-child(even) > td:first-child {
-  background: linear-gradient(90deg, rgba(201,162,39,.025) 0%, transparent 35%), #0b1120 !important;
-}
 thead th:first-child { padding-left: 22px; }
 thead th:last-child  { padding-right: 22px; }
 
@@ -434,9 +431,8 @@ body::before {
 .trow:hover > td { background: #0d1525 !important; }
 
 /* ════ GRADIENT BORDER (desktop) ════ */
-.trow > td:first-child {
-  background: linear-gradient(90deg, rgba(201,162,39,.04) 0%, transparent 35%), #090f1e;
-}
+.trow > td:first-child { background: #090f1e; }
+.trow:nth-child(even) > td:first-child { background: #0b1120 !important; }
 
 /* ════ ANIMATED SECTION BORDER ════ */
 .sec-head {
@@ -631,7 +627,7 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   0%,100% { transform:scale(1); }
   50%      { transform:scale(1.013); }
 }
-.td-time { animation:timeBreathe 5s ease-in-out infinite; display:inline-block; }
+.td-time { animation:timeBreathe 5s ease-in-out infinite; }
 
 /* ════ BORDER RENK AKIŞI ════ */
 @keyframes borderColorFlow {
@@ -706,9 +702,9 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   /* TIME — Card header */
   .trow > td:first-child {
     display: flex !important; align-items: center; justify-content: space-between;
-    background: linear-gradient(135deg, #0d1e38, #0f2040) !important;
+    background: #090f1e !important;
     border-left: 4px solid #c9a227 !important;
-    border-bottom: 1px solid #1a2d48 !important;
+    border-bottom: 1px solid #0e1f36 !important;
     padding: 13px 16px !important;
   }
   .trow.yd-karsila > td:first-child { border-left-color: #38bdf8 !important; }
