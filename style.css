@@ -19,10 +19,16 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Plus Jakarta Sans', 'Inter', sans-serif;
   background-color: #050c18;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.035'/%3E%3C/svg%3E");
-  background-size: 200px 200px;
+  background-image:
+    radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(201,162,39,.13) 0%, transparent 62%),
+    radial-gradient(ellipse 70% 65% at 100% 0%,  rgba(30,58,138,.14)  0%, transparent 60%),
+    radial-gradient(ellipse 60% 75% at 100% 100%,rgba(109,40,217,.1)  0%, transparent 58%),
+    radial-gradient(ellipse 75% 55% at 0% 100%,  rgba(8,145,178,.08)  0%, transparent 60%),
+    radial-gradient(ellipse 40% 40% at 50% 50%,  rgba(201,162,39,.05) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  background-size: auto, auto, auto, auto, auto, 200px 200px;
   color: #e2e8f0;
   min-height: 100vh;
   -webkit-font-smoothing: antialiased;
@@ -284,8 +290,9 @@ thead th:last-child  { padding-right: 22px; }
 
 /* TIME */
 .td-time {
-  font-size: 38px; font-weight: 900; color: #fff;
-  letter-spacing: -2.5px; line-height: 1;
+  font-family: 'Oswald', sans-serif;
+  font-size: 38px; font-weight: 700; color: #fff;
+  letter-spacing: -1px; line-height: 1;
   font-variant-numeric: tabular-nums; white-space: nowrap;
 }
 .td-tarih {
@@ -296,6 +303,7 @@ thead th:last-child  { padding-right: 22px; }
 
 /* CUSTOMER */
 .cust-name {
+  font-family: 'Plus Jakarta Sans', sans-serif;
   font-size: 15px; font-weight: 800; color: #f0f4ff;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 6px;
   letter-spacing: -.2px;
@@ -356,7 +364,7 @@ a.fl-chip:hover {
 }
 .drv-bottom { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; }
 .plaka {
-  font-family: 'Roboto Mono', monospace;
+  font-family: 'JetBrains Mono', 'Roboto Mono', monospace;
   font-size: 10px; font-weight: 600; color: #3d5a7a;
   background: #060e1c; border: 1px solid #0d1e36;
   padding: 2px 8px; border-radius: 4px; letter-spacing: 1.5px; white-space: nowrap;
@@ -576,44 +584,23 @@ body::before {
 .login-logo-svg { animation:logoGlow 3.2s ease-in-out infinite; }
 .hdr-ico { padding:3px !important; }
 
-/* ════ SAAT BAZLI TEMA ════ */
-body.theme-morning .aurora-1 { background:radial-gradient(ellipse,#f5d060 0%,#e8a820 35%,transparent 70%); opacity:.09; }
-body.theme-morning .aurora-3 { background:radial-gradient(ellipse,#fb923c 0%,#ea580c 35%,transparent 70%); }
-body.theme-noon    .aurora-1 { background:radial-gradient(ellipse,#3b82f6 0%,#1d4ed8 35%,transparent 70%); }
-body.theme-noon    .aurora-2 { background:radial-gradient(ellipse,#06b6d4 0%,#0891b2 35%,transparent 70%); }
-body.theme-noon    .aurora-3 { background:radial-gradient(ellipse,#10b981 0%,#059669 35%,transparent 70%); }
-
-/* ════ BODY GRADIENT SHIFT ════ */
-@keyframes bodyShift {
-  0%   { background-color:#050c18; }
-  50%  { background-color:#040b15; }
-  100% { background-color:#060e1d; }
+/* ════ SAAT BAZLI TEMA — mesh renk tonu ════ */
+body.theme-morning { background-image:
+  radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(245,200,60,.16) 0%,transparent 62%),
+  radial-gradient(ellipse 70% 65% at 100% 0%,  rgba(251,146,60,.12) 0%,transparent 60%),
+  radial-gradient(ellipse 60% 75% at 100% 100%,rgba(201,162,39,.09) 0%,transparent 58%),
+  radial-gradient(ellipse 75% 55% at 0% 100%,  rgba(250,204,21,.07) 0%,transparent 60%),
+  radial-gradient(ellipse 40% 40% at 50% 50%,  rgba(245,200,60,.05) 0%,transparent 55%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
-body { animation: bodyShift 28s ease-in-out infinite alternate; }
-
-/* ════ AURORA ════ */
-.aurora { position:fixed; border-radius:50%; filter:blur(70px); pointer-events:none; z-index:0; will-change:transform; }
-.aurora-1 {
-  width:700px; height:420px; opacity:.075;
-  background:radial-gradient(ellipse, #c9a227 0%, #b8870f 35%, transparent 70%);
-  top:-160px; left:-220px;
-  animation: au1 22s ease-in-out infinite alternate;
+body.theme-noon { background-image:
+  radial-gradient(ellipse 80% 60% at 0% 0%,   rgba(59,130,246,.14) 0%,transparent 62%),
+  radial-gradient(ellipse 70% 65% at 100% 0%,  rgba(6,182,212,.12)  0%,transparent 60%),
+  radial-gradient(ellipse 60% 75% at 100% 100%,rgba(16,185,129,.09) 0%,transparent 58%),
+  radial-gradient(ellipse 75% 55% at 0% 100%,  rgba(99,102,241,.08) 0%,transparent 60%),
+  radial-gradient(ellipse 40% 40% at 50% 50%,  rgba(59,130,246,.04) 0%,transparent 55%),
+  url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
 }
-.aurora-2 {
-  width:580px; height:580px; opacity:.06;
-  background:radial-gradient(ellipse, #1e3a8a 0%, #3b82f6 35%, transparent 70%);
-  bottom:-160px; right:-160px;
-  animation: au2 28s ease-in-out infinite alternate;
-}
-.aurora-3 {
-  width:420px; height:340px; opacity:.05;
-  background:radial-gradient(ellipse, #7c3aed 0%, #6366f1 35%, transparent 70%);
-  top:38%; left:42%;
-  animation: au3 17s ease-in-out infinite alternate;
-}
-@keyframes au1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(130px,100px) scale(1.28)} }
-@keyframes au2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-100px,-80px) scale(1.22)} }
-@keyframes au3 { 0%{transform:translate(0,0) scale(1) rotate(0deg)} 100%{transform:translate(90px,-55px) scale(1.12) rotate(22deg)} }
 
 /* ════ IŞIK SÜPÜRMESİ ════ */
 @keyframes lightSweep {
