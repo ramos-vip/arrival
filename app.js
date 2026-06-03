@@ -635,8 +635,17 @@ function render(veriler){
     buildDateBar(allData);
     showDate(selectedDate);
   } else {
-    /* Karşılamacı: her zaman sadece bugün */
-    showDate(today);
+    /* Karşılamacı:
+       00:00 - 02:00 → dün + bugün (geç inen uçaklar için)
+       02:00 - 23:59 → sadece bugün */
+    var _now = new Date();
+    if(_now.getHours() < 2){
+      var _prev = new Date(_now);
+      _prev.setDate(_now.getDate()-1);
+      showDates([fmtK(_prev), fmtK(_now)]);
+    } else {
+      showDate(today);
+    }
   }
 }
 
