@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
 <title>RAMOS NJT VIP TRANSFER</title>
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%E2%9C%88%3C/text%3E%3C/svg%3E">
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Inter:wght@400;500;600;700;800;900&family=Roboto+Mono:wght@600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300..700;1,300..700&family=Inter:wght@100..900&family=Roboto+Mono:wght@400..700&display=swap" rel="stylesheet">
 <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
 <style>
 
@@ -512,6 +512,81 @@ body::before {
   50%      { transform: translateX(12px) translateY(-10px) rotate(8deg); opacity:.1; }
 }
 .ep-ico { animation: planeDrift 5s ease-in-out infinite !important; }
+
+/* ════ CUSTOM CURSOR ════ */
+@media (hover: hover) {
+  body { cursor: none !important; }
+  input, textarea, select { cursor: text !important; }
+  a, button, .dc, .trow, label { cursor: none !important; }
+}
+#cur-dot {
+  position:fixed; z-index:99999; pointer-events:none;
+  width:10px; height:10px; border-radius:50%;
+  background:#c9a227; box-shadow:0 0 10px rgba(201,162,39,.9);
+  top:0; left:0; transform:translate(-50%,-50%) translateZ(0);
+  transition:width .2s ease,height .2s ease,background .2s;
+  opacity:0;
+}
+#cur-ring {
+  position:fixed; z-index:99998; pointer-events:none;
+  width:34px; height:34px; border-radius:50%;
+  border:1.5px solid rgba(201,162,39,.4);
+  top:0; left:0; transform:translate(-50%,-50%) translateZ(0);
+  opacity:0;
+  transition:opacity .4s;
+}
+#cur-dot.hov  { width:16px; height:16px; background:rgba(201,162,39,.25); box-shadow:0 0 0 2px #c9a227; }
+#cur-dot.clk  { transform:translate(-50%,-50%) scale(.7) !important; }
+#cur-ring.hov { width:44px; height:44px; border-color:rgba(201,162,39,.6); }
+
+/* ════ GLASS DEPTH ════ */
+.trow > td {
+  position:relative;
+  backdrop-filter:blur(1px);
+}
+.trow > td::before {
+  content:''; position:absolute; inset:0; pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.025) 0%,transparent 55%);
+}
+.trow > td::after {
+  content:''; position:absolute; top:0; left:0; right:0; height:1px;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.06) 50%,transparent);
+  pointer-events:none;
+}
+
+/* ════ VARIABLE FONT ANIMATION ════ */
+@keyframes wghtPulse {
+  0%,100% { font-variation-settings:'wght' 350; opacity:.92; letter-spacing:.6px; }
+  50%      { font-variation-settings:'wght' 700; opacity:1;   letter-spacing:.3px; }
+}
+.sec-label { animation:wghtPulse 9s ease-in-out infinite; }
+
+/* ════ SCROLL-DRIVEN ANIMATIONS ════ */
+@supports (animation-timeline: scroll()) {
+  .trow {
+    animation:rowIn linear both, timeBreathe 5s ease-in-out infinite;
+    animation-timeline:view(), auto;
+    animation-range:entry 0% entry 25%, auto;
+  }
+}
+
+/* ════ MAGNETIC ════ */
+.mag { transition:transform .3s cubic-bezier(.16,1,.3,1) !important; display:inline-flex; }
+
+/* ════ VIEW TRANSITIONS ════ */
+@keyframes vt-out { to   { opacity:0; transform:translateY(-8px); } }
+@keyframes vt-in  { from { opacity:0; transform:translateY(10px); } }
+::view-transition-old(root) { animation:vt-out .18s ease forwards; }
+::view-transition-new(root) { animation:vt-in  .22s ease forwards; }
+
+/* ════ SPOTLIGHT UPGRADE ════ */
+#spotlight {
+  position:fixed; width:700px; height:700px; border-radius:50%;
+  pointer-events:none; z-index:0; top:0; left:0;
+  background:radial-gradient(circle,rgba(201,162,39,.055) 0%,rgba(201,162,39,.015) 35%,transparent 70%);
+  transform:translate(-50%,-50%) translateZ(0);
+  opacity:0; transition:opacity .5s; mix-blend-mode:screen;
+}
 
 /* ════ CURSOR GLOW ════ */
 #cursor-glow {
@@ -1104,6 +1179,9 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 </head>
 <body>
 
+<div id="cur-dot"></div>
+<div id="cur-ring"></div>
+<div id="spotlight"></div>
 <div id="cursor-glow"></div>
 <div id="rich-tip"></div>
 <div class="aurora aurora-1"></div>
@@ -1142,7 +1220,7 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
       </div>
     </div>
     <div class="hdr-right">
-      <button class="add-btn" id="add-btn" style="display:none" onclick="openAddModal()">＋ Transfer Ekle</button>
+      <button class="add-btn mag" id="add-btn" style="display:none" onclick="openAddModal()">＋ Transfer Ekle</button>
       <div id="live-clock" class="hdr-clock">00:00:00</div>
       <div class="hdr-pill"><span class="live"></span><span id="cnt">—</span></div>
       <div id="upd" class="hdr-time">Yükleniyor...</div>
@@ -1255,6 +1333,99 @@ var AIRLINE_CLR = {
 function airlineColor(ucusKod){
   var code=(ucusKod||'').replace(/\s/g,'').substring(0,2).toUpperCase();
   return AIRLINE_CLR[code]||null;
+}
+
+/* ════ CUSTOM CURSOR ════ */
+function initCustomCursor(){
+  if('ontouchstart' in window) return;
+  var $d=$('#cur-dot'),$r=$('#cur-ring'),$sl=$('#spotlight');
+  var rx=0,ry=0,tx=0,ty=0;
+  $d.css('opacity',1); $r.css('opacity',1);
+  $(document).on('mousemove',function(e){
+    tx=e.clientX; ty=e.clientY;
+    $d.css('transform','translate('+tx+'px,'+ty+'px) translate(-50%,-50%)');
+    $sl.css({transform:'translate('+tx+'px,'+ty+'px) translate(-50%,-50%)',opacity:1});
+  }).on('mouseenter','button,.trow,.dc,a,.vchr-btn,.st-step',function(){
+    $d.addClass('hov'); $r.addClass('hov');
+  }).on('mouseleave','button,.trow,.dc,a,.vchr-btn,.st-step',function(){
+    $d.removeClass('hov'); $r.removeClass('hov');
+  }).on('mousedown',function(){$d.addClass('clk');}).on('mouseup',function(){$d.removeClass('clk');});
+  (function loop(){
+    rx+=(tx-rx)*.12; ry+=(ty-ry)*.12;
+    $r.css('transform','translate('+rx+'px,'+ry+'px) translate(-50%,-50%)');
+    requestAnimationFrame(loop);
+  })();
+}
+
+/* ════ MAGNETİK BUTONLAR ════ */
+function initMagnetic(){
+  if('ontouchstart' in window) return;
+  var MAX=80,STR=.42;
+  $(document).on('mousemove',function(e){
+    $('.mag').each(function(){
+      var r=this.getBoundingClientRect();
+      var cx=r.left+r.width/2,cy=r.top+r.height/2;
+      var dx=e.clientX-cx,dy=e.clientY-cy,dist=Math.sqrt(dx*dx+dy*dy);
+      if(dist<MAX){ var s=(MAX-dist)/MAX;
+        $(this).css({transform:'translate('+(dx*s*STR)+'px,'+(dy*s*STR)+'px)',transition:'transform .1s ease'});
+      } else { $(this).css({transform:'',transition:'transform .4s cubic-bezier(.16,1,.3,1)'}); }
+    });
+  });
+}
+
+/* ════ PARALLAX ════ */
+function initParallax(){
+  if('ontouchstart' in window) return;
+  var tick=false;
+  $(window).on('scroll',function(){
+    if(tick) return; tick=true;
+    requestAnimationFrame(function(){
+      var s=window.scrollY;
+      $('.aurora-1').css('margin-top',s*.14+'px');
+      $('.aurora-2').css('margin-top',-s*.09+'px');
+      $('.aurora-3').css('margin-top',s*.07+'px');
+      tick=false;
+    });
+  });
+}
+
+/* ════ WEBGL THREE.JS ════ */
+function initWebGL(){
+  if(typeof THREE==='undefined'||'ontouchstart' in window) return;
+  var old=document.querySelector('canvas[style*="fixed"]'); if(old) old.remove();
+  var canvas=document.createElement('canvas');
+  canvas.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none';
+  document.body.insertBefore(canvas,document.body.firstChild);
+  var W=innerWidth,H=innerHeight;
+  var scene=new THREE.Scene(),cam=new THREE.PerspectiveCamera(60,W/H,.1,100);
+  cam.position.z=6;
+  var ren=new THREE.WebGLRenderer({canvas:canvas,alpha:true,antialias:false});
+  ren.setSize(W,H); ren.setPixelRatio(Math.min(devicePixelRatio,2)); ren.setClearColor(0,0);
+  var N=80,pos=new Float32Array(N*3),vel=[];
+  for(var i=0;i<N;i++){
+    pos[i*3]=(Math.random()-.5)*22; pos[i*3+1]=(Math.random()-.5)*14; pos[i*3+2]=(Math.random()-.5)*4;
+    vel.push(Math.random()*.012+.003);
+  }
+  var geo=new THREE.BufferGeometry(); geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  scene.add(new THREE.Points(geo,new THREE.PointsMaterial({size:.038,color:0xc9a227,transparent:true,opacity:.48,sizeAttenuation:true})));
+  var aMat=new THREE.ShaderMaterial({uniforms:{t:{value:0}},
+    vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'uniform float t;varying vec2 v;void main(){'
+      +'float w=sin(v.x*5.+t*.35)*.5+.5,w2=sin(v.x*7.-t*.2+1.8)*.5+.5;'
+      +'float m=sin(v.y*3.14159)*pow(v.y*(1.-v.y)*4.,.6);'
+      +'vec3 g=vec3(.79,.635,.155),b=vec3(.1,.18,.45),p=vec3(.28,.14,.52);'
+      +'vec3 c=mix(b,g,w*.5)*m*.09+mix(p,b,w2)*m*.05;gl_FragColor=vec4(c,m*.14);}',
+    transparent:true,blending:THREE.AdditiveBlending,depthWrite:false});
+  var am=new THREE.Mesh(new THREE.PlaneGeometry(32,16,32,32),aMat);
+  am.position.z=-2; scene.add(am);
+  addEventListener('resize',function(){W=innerWidth;H=innerHeight;cam.aspect=W/H;cam.updateProjectionMatrix();ren.setSize(W,H);});
+  var clk=new THREE.Clock();
+  (function anim(){requestAnimationFrame(anim);
+    aMat.uniforms.t.value=clk.getElapsedTime();
+    var p=geo.attributes.position.array;
+    for(var i=0;i<N;i++){p[i*3+1]+=vel[i];if(p[i*3+1]>7)p[i*3+1]=-7;}
+    geo.attributes.position.needsUpdate=true; ren.render(scene,cam);
+  })();
 }
 
 /* ════ CURSOR GLOW ════ */
@@ -1676,8 +1847,10 @@ function buildDateBar(data){
   $('#date-chips').html(html);
 
   $('#date-chips').off('click').on('click','.dc',function(){
-    var t=$(this).data('date');
-    if(t) showDate(t);
+    var t=$(this).data('date'); if(!t) return;
+    if(document.startViewTransition){
+      document.startViewTransition(function(){showDate(t);});
+    } else { showDate(t); }
   });
 }
 
@@ -2180,13 +2353,27 @@ async function doLogin(){
 }
 
 $(function(){
-  initParticles();
+  initCustomCursor();
+  initMagnetic();
+  initParallax();
   initCursorGlow();
   init3DTilt();
   initRichTooltip();
   applyTimeTheme();
   setInterval(highlightNextTransfer, 60000);
-  setInterval(applyTimeTheme, 60 * 60 * 1000); /* saatte bir tema güncelle */
+  setInterval(applyTimeTheme, 60*60*1000);
+  /* Three.js — async yükle */
+  if(!('ontouchstart' in window)){
+    var s3=document.createElement('script');
+    s3.src='https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js';
+    s3.onload=function(){
+      initParticles && (window._oldParticles=true); /* canvas particles devam */
+      initWebGL();
+    };
+    document.head.appendChild(s3);
+  } else {
+    initParticles();
+  }
 
   $('#l-btn').on('click', doLogin);
   $('#l-user, #l-pass').on('keydown', function(e){ if(e.key==='Enter') doLogin(); });
