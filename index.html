@@ -517,6 +517,80 @@ body::before {
 }
 .ep-ico { animation: planeDrift 5s ease-in-out infinite !important; }
 
+/* ════ BODY GRADIENT SHIFT ════ */
+@keyframes bodyShift {
+  0%   { background-color:#050c18; }
+  50%  { background-color:#040b15; }
+  100% { background-color:#060e1d; }
+}
+body { animation: bodyShift 28s ease-in-out infinite alternate; }
+
+/* ════ AURORA ════ */
+.aurora { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; z-index:0; }
+.aurora-1 {
+  width:700px; height:420px; opacity:.075;
+  background:radial-gradient(ellipse, #c9a227 0%, #b8870f 35%, transparent 70%);
+  top:-160px; left:-220px;
+  animation: au1 22s ease-in-out infinite alternate;
+}
+.aurora-2 {
+  width:580px; height:580px; opacity:.06;
+  background:radial-gradient(ellipse, #1e3a8a 0%, #3b82f6 35%, transparent 70%);
+  bottom:-160px; right:-160px;
+  animation: au2 28s ease-in-out infinite alternate;
+}
+.aurora-3 {
+  width:420px; height:340px; opacity:.05;
+  background:radial-gradient(ellipse, #7c3aed 0%, #6366f1 35%, transparent 70%);
+  top:38%; left:42%;
+  animation: au3 17s ease-in-out infinite alternate;
+}
+@keyframes au1 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(130px,100px) scale(1.28)} }
+@keyframes au2 { 0%{transform:translate(0,0) scale(1)} 100%{transform:translate(-100px,-80px) scale(1.22)} }
+@keyframes au3 { 0%{transform:translate(0,0) scale(1) rotate(0deg)} 100%{transform:translate(90px,-55px) scale(1.12) rotate(22deg)} }
+
+/* ════ IŞIK SÜPÜRMESİ ════ */
+@keyframes lightSweep {
+  0%,100% { transform:skewX(-12deg) translateX(-200%); opacity:0; }
+  8%       { opacity:1; }
+  28%      { transform:skewX(-12deg) translateX(700%); opacity:1; }
+  33%      { transform:skewX(-12deg) translateX(700%); opacity:0; }
+}
+#light-sweep {
+  position:fixed; top:0; left:0; width:16%; height:100vh;
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.013),transparent);
+  pointer-events:none; z-index:1;
+  animation:lightSweep 11s ease-in-out infinite;
+  animation-delay:5s;
+}
+
+/* ════ SONRAKI TRANSFER VURGULA ════ */
+@keyframes nextPulse {
+  0%,100% { box-shadow:none; }
+  50%      { box-shadow:0 0 32px rgba(251,191,36,.2), 0 0 0 1px rgba(251,191,36,.14); }
+}
+.trow.next-up { animation: nextPulse 2.8s ease-in-out infinite, rowIn .4s cubic-bezier(.16,1,.3,1) both !important; }
+.trow.next-up > td { background:rgba(251,191,36,.045) !important; }
+.trow.next-up > td:first-child { border-left-color:#fbbf24 !important; }
+
+/* ════ SAAT NEFES ════ */
+@keyframes timeBreathe {
+  0%,100% { transform:scale(1); }
+  50%      { transform:scale(1.013); }
+}
+.td-time { animation:timeBreathe 5s ease-in-out infinite; display:inline-block; }
+
+/* ════ BORDER RENK AKIŞI ════ */
+@keyframes borderColorFlow {
+  0%   { background:#c9a227; box-shadow:0 0 8px rgba(201,162,39,.55); }
+  38%  { background:#34d399; box-shadow:0 0 18px rgba(52,211,153,.65); }
+  68%  { background:#6366f1; box-shadow:0 0 18px rgba(99,102,241,.65); }
+  100% { background:#c9a227; box-shadow:0 0 8px rgba(201,162,39,.55); }
+}
+.sec-head:not(.sh-today):not(.sh-tmrw)::before {
+  animation:borderColorFlow 12s ease-in-out infinite !important;
+}
+
 /* ROW SLIDE-UP ANIMATION */
 @keyframes rowIn {
   from { opacity:0; transform:translateY(14px); }
@@ -981,6 +1055,11 @@ body::before {
 </head>
 <body>
 
+<div class="aurora aurora-1"></div>
+<div class="aurora aurora-2"></div>
+<div class="aurora aurora-3"></div>
+<div id="light-sweep"></div>
+
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen">
   <div class="login-box">
@@ -1127,6 +1206,46 @@ function airlineColor(ucusKod){
   return AIRLINE_CLR[code]||null;
 }
 
+/* ════ PARTİKÜLLER ════ */
+function initParticles(){
+  var c=document.createElement('canvas');
+  c.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none';
+  document.body.insertBefore(c,document.body.firstChild);
+  var ctx=c.getContext('2d'), W, H, pts=[];
+  function resize(){ W=c.width=innerWidth; H=c.height=innerHeight; }
+  resize(); addEventListener('resize',resize);
+  for(var i=0;i<48;i++) pts.push({
+    x:Math.random()*innerWidth, y:Math.random()*innerHeight,
+    r:Math.random()*1.3+0.3, sp:Math.random()*.38+.07, op:Math.random()*.32+.04
+  });
+  (function draw(){
+    ctx.clearRect(0,0,W,H);
+    pts.forEach(function(p){
+      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+      ctx.fillStyle='rgba(201,162,39,'+p.op+')'; ctx.fill();
+      p.y-=p.sp; if(p.y<-4){p.y=H+4;p.x=Math.random()*W;}
+    });
+    requestAnimationFrame(draw);
+  })();
+}
+
+/* ════ SONRAKI TRANSFER VURGULA ════ */
+function highlightNextTransfer(){
+  $('.trow').removeClass('next-up');
+  if(!allData.length) return;
+  var now=new Date(), todayStr=fmtK(now);
+  var nowM=now.getHours()*60+now.getMinutes();
+  var upcoming=allData.filter(function(d){
+    if(d.tarih!==todayStr) return false;
+    var p=(d.saat||'00:00').split(':');
+    return (+p[0])*60+(+p[1])>=nowM;
+  }).sort(function(a,b){ return a.saat.localeCompare(b.saat); });
+  if(upcoming.length){
+    var n=upcoming[0];
+    $('.trow[data-tarih="'+n.tarih+'"][data-saat="'+n.saat+'"]').first().addClass('next-up');
+  }
+}
+
 /* ════ CANLI SAAT ════ */
 function tickClock(){
   var n=new Date();
@@ -1244,7 +1363,7 @@ function buildRow(d){
   var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
 
   var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':yd==='Araçta'?' yd-aracta':yd==='Teslim Edildi'?' yd-teslim':'');
-  return '<tr class="'+trowClass+'">'
+  return '<tr class="'+trowClass+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
@@ -1332,6 +1451,7 @@ function showDate(tarih){
 
   $('#page').css('opacity',0).html(html).animate({opacity:1},180);
   $('.trow').each(function(i){ $(this).css('animation-delay',(i*24)+'ms'); });
+  setTimeout(highlightNextTransfer, 200);
 }
 
 /* ════ SHOW DATES (çoklu tarih — karşılamacı gece modu) ════ */
@@ -1372,6 +1492,7 @@ function showDates(tarihler){
 
   $('#page').css('opacity',0).html(html).animate({opacity:1},180);
   $('.trow').each(function(i){ $(this).css('animation-delay',(i*24)+'ms'); });
+  setTimeout(highlightNextTransfer, 200);
 }
 
 /* ════ BUILD DATE BAR ════ */
@@ -1900,6 +2021,9 @@ async function doLogin(){
 }
 
 $(function(){
+  initParticles();
+  setInterval(highlightNextTransfer, 60000); /* her dakika güncelle */
+
   $('#l-btn').on('click', doLogin);
   $('#l-user, #l-pass').on('keydown', function(e){ if(e.key==='Enter') doLogin(); });
 
