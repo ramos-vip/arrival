@@ -489,26 +489,7 @@ body::before {
 /* ════ PAGE FADE TRANSITION ════ */
 #page { transition: opacity .12s ease; }
 
-/* ════ LOGIN SCREEN ANIMATION ════ */
-#login-screen { overflow: hidden; }
-#login-screen::before {
-  content: '';
-  position: absolute; width: 500px; height: 500px; border-radius: 50%;
-  background: radial-gradient(circle,rgba(201,162,39,.07) 0%,transparent 70%);
-  top: -150px; right: -100px; pointer-events: none;
-  animation: orbDrift 9s ease-in-out infinite;
-}
-#login-screen::after {
-  content: '';
-  position: absolute; width: 350px; height: 350px; border-radius: 50%;
-  background: radial-gradient(circle,rgba(99,102,241,.07) 0%,transparent 70%);
-  bottom: -80px; left: -60px; pointer-events: none;
-  animation: orbDrift 12s ease-in-out infinite reverse;
-}
-@keyframes orbDrift {
-  0%,100% { transform: translateY(0) scale(1); }
-  50%      { transform: translateY(-40px) scale(1.12); }
-}
+/* login screen orb animasyonları kaldırıldı — lag yapıyordu */
 
 /* ════ EMPTY STATE PLANE ANIMATION ════ */
 @keyframes planeDrift {
@@ -608,7 +589,7 @@ body.theme-noon    .aurora-3 { background:radial-gradient(ellipse,#10b981 0%,#05
 body { animation: bodyShift 28s ease-in-out infinite alternate; }
 
 /* ════ AURORA ════ */
-.aurora { position:fixed; border-radius:50%; filter:blur(100px); pointer-events:none; z-index:0; }
+.aurora { position:fixed; border-radius:50%; filter:blur(70px); pointer-events:none; z-index:0; will-change:transform; }
 .aurora-1 {
   width:700px; height:420px; opacity:.075;
   background:radial-gradient(ellipse, #c9a227 0%, #b8870f 35%, transparent 70%);
@@ -656,7 +637,6 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
 .trow.next-up > td:first-child { border-left-color:#fbbf24 !important; }
 
 /* timeBreathe kaldırıldı — performans */
-.td-time { display:block; }
 
 /* ════ BORDER RENK AKIŞI ════ */
 @keyframes borderColorFlow {
@@ -713,8 +693,10 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   .hdr { padding: 10px 14px; gap: 8px; }
   .hdr-brand { flex: 1; min-width: 0; overflow: hidden; }
   .hdr-ico { width: 32px; height: 32px; font-size: 16px; flex-shrink: 0; }
-  .hdr-title { font-size: 13px; letter-spacing: .3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .hdr-sub, .hdr-clock, .hdr-time { display: none !important; }
+  .hdr-title { font-size: 13px; letter-spacing: .3px; white-space: nowrap; }
+  .hdr-xtra  { display: none; }
+  .hdr-sub   { display: block !important; font-size: 9px; color: #3d5a7a; margin-top: 1px; font-weight: 600; letter-spacing: .3px; white-space: nowrap; }
+  .hdr-clock, .hdr-time { display: none !important; }
   .hdr-right { flex-shrink: 0; gap: 8px; }
   .date-label { display: none; }
   .date-bar { top: 57px; padding: 6px 14px 4px; gap: 0; flex-wrap: wrap; overflow-x: visible; }
@@ -1296,8 +1278,8 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
     <div class="hdr-brand">
       <div class="hdr-ico"><svg class="hdr-logo-svg" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="26" height="31"><defs><linearGradient id="gh" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#f0d060"/><stop offset="50%" stop-color="#c9a227"/><stop offset="100%" stop-color="#8a6010"/></linearGradient></defs><path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="url(#gh)"/><path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#07091a"/><text x="50" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="54" font-weight="bold" fill="url(#gh)">R</text></svg></div>
       <div>
-        <div class="hdr-title">RAMOS NJT VIP TRANSFER</div>
-        <div class="hdr-sub">Arrival Transfer Paneli</div>
+        <div class="hdr-title">RAMOS NJT VIP<span class="hdr-xtra"> TRANSFER</span></div>
+        <div class="hdr-sub">Arrival Transfer</div>
       </div>
     </div>
     <div class="hdr-right">
@@ -1669,20 +1651,23 @@ function initParticles(){
   var c=document.createElement('canvas');
   c.style.cssText='position:fixed;inset:0;z-index:0;pointer-events:none';
   document.body.insertBefore(c,document.body.firstChild);
-  var ctx=c.getContext('2d'), W, H, pts=[];
+  var ctx=c.getContext('2d'), W, H, pts=[], _paused=true;
   function resize(){ W=c.width=innerWidth; H=c.height=innerHeight; }
   resize(); addEventListener('resize',resize);
   for(var i=0;i<28;i++) pts.push({
     x:Math.random()*innerWidth, y:Math.random()*innerHeight,
     r:Math.random()*1.1+0.3, sp:Math.random()*.28+.06, op:Math.random()*.28+.04
   });
+  window._ptPause=function(v){_paused=v;};
   (function draw(){
-    ctx.clearRect(0,0,W,H);
-    pts.forEach(function(p){
-      ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
-      ctx.fillStyle='rgba(201,162,39,'+p.op+')'; ctx.fill();
-      p.y-=p.sp; if(p.y<-4){p.y=H+4;p.x=Math.random()*W;}
-    });
+    if(!_paused){
+      ctx.clearRect(0,0,W,H);
+      pts.forEach(function(p){
+        ctx.beginPath(); ctx.arc(p.x,p.y,p.r,0,Math.PI*2);
+        ctx.fillStyle='rgba(201,162,39,'+p.op+')'; ctx.fill();
+        p.y-=p.sp; if(p.y<-4){p.y=H+4;p.x=Math.random()*W;}
+      });
+    }
     requestAnimationFrame(draw);
   })();
 }
@@ -2503,6 +2488,7 @@ async function doLogin(){
       localStorage.setItem('ramos_rol',      result.rol);
       localStorage.setItem('ramos_login_ts', String(Date.now()));
       $('#login-screen').fadeOut(280, function(){
+        window._ptPause && window._ptPause(false); /* particle animasyonu başlat */
         $('#app').fadeIn(220);
         applyRole();
         yukle();
@@ -2621,6 +2607,7 @@ $(function(){
   });
 
   if(localStorage.getItem('ramos_auth')==='ok'){
+    window._ptPause && window._ptPause(false);
     if(!checkSession()){ return; } /* süresi dolmuşsa giriş ekranına */
     $('#login-screen').hide();
     $('#app').show();
