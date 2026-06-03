@@ -1,6 +1,13 @@
 
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 
+/* Bugün bölümündeki sayı */
+.sec-today-cnt {
+  margin-left: auto;
+  font-size: 16px; font-weight: 900; color: #6366f1;
+  letter-spacing: -.3px; white-space: nowrap;
+}
+
 body {
   font-family: 'Inter', sans-serif;
   background-color: #050c18;
@@ -684,6 +691,11 @@ body { animation: bodyShift 28s ease-in-out infinite alternate; }
   .hdr-sub   { display: block !important; font-size: 9px; color: #3d5a7a; margin-top: 1px; font-weight: 600; letter-spacing: .3px; white-space: nowrap; }
   .hdr-clock, .hdr-time { display: none !important; }
   .hdr-right { flex-shrink: 0; gap: 8px; }
+  /* Header'daki Ekle butonu mobilde gizle — alt nav'da var */
+  #add-btn { display: none !important; }
+  /* Alt nav tek buton — ortalı */
+  #mobile-nav { justify-content: center; }
+  #mobile-nav .mnav-btn { padding: 6px 40px; font-size: 12px; }
   .date-label { display: none; }
   .date-bar { top: 57px; padding: 6px 14px 4px; gap: 0; flex-wrap: wrap; overflow-x: visible; }
   #date-chips { flex: 0 0 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; scrollbar-width: none; padding: 2px 0 4px; }

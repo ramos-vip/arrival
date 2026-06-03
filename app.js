@@ -444,7 +444,10 @@ function buildOneSec(tarih, afterDt){
     +'<div class="sec-head '+shClass+'">'
       +'<span class="sec-label">'+emoji+' '+gun+'</span>'
       +'<span class="sec-date">'+fmtU(dateObj)+'</span>'
-      +'<button class="print-btn" style="margin-left:auto" onclick="printList(\''+tarih+'\')">🖨 Yazdır</button>'
+      +(tarih===getToday()
+        ? '<span class="sec-today-cnt">'+liste.length+' Transfer</span>'
+          +'<button class="print-btn" onclick="printList(\''+tarih+'\')">🖨 Yazdır</button>'
+        : '')
     +'</div>'
     +'<div class="tbl-wrap"><table>'
       +'<colgroup><col class="c-time"><col class="c-cust"><col class="c-trip"><col class="c-route"><col class="c-drv"></colgroup>'
