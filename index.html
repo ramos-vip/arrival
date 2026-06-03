@@ -92,9 +92,11 @@ body {
 /* HEADER */
 .hdr {
   position: sticky; top: 0; z-index: 100;
-  background: rgba(7,17,31,.97);
-  backdrop-filter: blur(20px);
-  border-bottom: 1px solid #0d1e36;
+  background: rgba(4,10,20,.72);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  border-bottom: 1px solid rgba(255,255,255,.05);
+  box-shadow: 0 1px 0 rgba(201,162,39,.08), 0 4px 24px rgba(0,0,0,.3);
   padding: 12px 28px;
   display: flex; align-items: center; justify-content: space-between;
 }
@@ -135,9 +137,10 @@ body {
 ════════════════════════════════ */
 .date-bar {
   position: sticky; top: 65px; z-index: 90;
-  background: rgba(7,17,31,.98);
-  backdrop-filter: blur(16px);
-  border-bottom: 1px solid #0d1e36;
+  background: rgba(4,10,20,.65);
+  backdrop-filter: blur(22px) saturate(150%);
+  -webkit-backdrop-filter: blur(22px) saturate(150%);
+  border-bottom: 1px solid rgba(255,255,255,.04);
   padding: 10px 22px;
   display: flex; align-items: center; gap: 7px;
   overflow-x: auto;
@@ -384,6 +387,124 @@ a.fl-chip:hover {
 /* keep old empty classes for any missed refs */
 .empty { display: none; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+/* ════ DOT GRID ════ */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image: radial-gradient(circle, rgba(201,162,39,.045) 1px, transparent 1px);
+  background-size: 30px 30px;
+}
+
+/* ════ HOVER LIFT ════ */
+.trow {
+  transition: transform .22s cubic-bezier(.16,1,.3,1), box-shadow .22s ease;
+  position: relative;
+}
+.trow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(201,162,39,.1);
+  z-index: 2;
+}
+.trow:hover > td { background: #0d1525 !important; }
+
+/* ════ GRADIENT BORDER (desktop) ════ */
+.trow > td:first-child {
+  background: linear-gradient(90deg, rgba(201,162,39,.04) 0%, transparent 35%), #090f1e;
+}
+
+/* ════ ANIMATED SECTION BORDER ════ */
+.sec-head {
+  position: relative;
+  border-left: none !important;
+  padding-left: 30px;
+}
+.sec-head::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0; width: 4px;
+  border-radius: 12px 0 0 0;
+  background: #c9a227;
+  animation: borderGlow 2.8s ease-in-out infinite;
+}
+.sec-head.sh-today::before { background: #34d399; animation-name: borderGlowGreen; }
+.sec-head.sh-tmrw::before  { background: #a78bfa; animation-name: borderGlowPurple; }
+@keyframes borderGlow {
+  0%,100% { opacity:1; box-shadow:0 0 8px rgba(201,162,39,.5); }
+  50%      { opacity:.75; box-shadow:0 0 22px rgba(201,162,39,1),0 0 40px rgba(201,162,39,.4); }
+}
+@keyframes borderGlowGreen {
+  0%,100% { opacity:1; box-shadow:0 0 8px rgba(52,211,153,.5); }
+  50%      { opacity:.75; box-shadow:0 0 22px rgba(52,211,153,1),0 0 40px rgba(52,211,153,.4); }
+}
+@keyframes borderGlowPurple {
+  0%,100% { opacity:1; box-shadow:0 0 8px rgba(167,139,250,.5); }
+  50%      { opacity:.75; box-shadow:0 0 22px rgba(167,139,250,1),0 0 40px rgba(167,139,250,.4); }
+}
+
+/* ════ GRADIENT BORDER (mobile card) ════ */
+@media (max-width: 640px) {
+  .trow {
+    background:
+      linear-gradient(#090f1e,#090f1e) padding-box,
+      linear-gradient(135deg,rgba(201,162,39,.3),rgba(99,102,241,.2),rgba(201,162,39,.15)) border-box;
+    border: 1px solid transparent !important;
+  }
+  .trow:hover {
+    background:
+      linear-gradient(#0d1828,#0d1828) padding-box,
+      linear-gradient(135deg,rgba(201,162,39,.55),rgba(99,102,241,.4)) border-box;
+    transform: none;
+    box-shadow: 0 6px 24px rgba(0,0,0,.5);
+  }
+  .trow > td:first-child { background: linear-gradient(135deg,#0d1e38,#0f2040) !important; }
+}
+
+/* ════ TOP LOADING BAR ════ */
+#topbar {
+  position: fixed; top: 0; left: 0; height: 2px; z-index: 99999;
+  background: linear-gradient(90deg,#a07820,#e8c44a,#c9a227,#e8c44a,#a07820);
+  background-size: 300% 100%;
+  animation: barShimmer 1.4s linear infinite;
+  width: 0; opacity: 0;
+  transition: opacity .3s;
+  pointer-events: none;
+}
+@keyframes barShimmer {
+  0%   { background-position: 100% 0; }
+  100% { background-position: -100% 0; }
+}
+
+/* ════ PAGE FADE TRANSITION ════ */
+#page { transition: opacity .12s ease; }
+
+/* ════ LOGIN SCREEN ANIMATION ════ */
+#login-screen { overflow: hidden; }
+#login-screen::before {
+  content: '';
+  position: absolute; width: 500px; height: 500px; border-radius: 50%;
+  background: radial-gradient(circle,rgba(201,162,39,.07) 0%,transparent 70%);
+  top: -150px; right: -100px; pointer-events: none;
+  animation: orbDrift 9s ease-in-out infinite;
+}
+#login-screen::after {
+  content: '';
+  position: absolute; width: 350px; height: 350px; border-radius: 50%;
+  background: radial-gradient(circle,rgba(99,102,241,.07) 0%,transparent 70%);
+  bottom: -80px; left: -60px; pointer-events: none;
+  animation: orbDrift 12s ease-in-out infinite reverse;
+}
+@keyframes orbDrift {
+  0%,100% { transform: translateY(0) scale(1); }
+  50%      { transform: translateY(-40px) scale(1.12); }
+}
+
+/* ════ EMPTY STATE PLANE ANIMATION ════ */
+@keyframes planeDrift {
+  0%,100% { transform: translateX(-12px) translateY(6px) rotate(-6deg); opacity:.055; }
+  50%      { transform: translateX(12px) translateY(-10px) rotate(8deg); opacity:.1; }
+}
+.ep-ico { animation: planeDrift 5s ease-in-out infinite !important; }
 
 /* ROW SLIDE-UP ANIMATION */
 @keyframes rowIn {
@@ -849,6 +970,8 @@ a.fl-chip:hover {
 </head>
 <body>
 
+<div id="topbar"></div>
+
 <!-- ═══ LOGIN ═══ -->
 <div id="login-screen">
   <div class="login-box">
@@ -982,6 +1105,31 @@ a.fl-chip:hover {
 </div>
 
 <script>
+/* ════ TOP LOADING BAR ════ */
+var _barTimer;
+function showBar(){
+  clearTimeout(_barTimer);
+  $('#topbar').stop(true).css({width:'0%',opacity:'1'}).animate({width:'88%'},4000,'linear');
+}
+function hideBar(){
+  clearTimeout(_barTimer);
+  $('#topbar').stop(true).animate({width:'100%'},220,function(){
+    $(this).animate({opacity:0},280,function(){ $(this).css({width:'0%'}); });
+  });
+}
+
+/* ════ HAVAYOlU RENK HARİTASI ════ */
+var AIRLINE_CLR = {
+  TK:'#C8102E',PC:'#FF6200',XQ:'#0057A8',SU:'#003893',W6:'#C60C30',
+  XC:'#CC2200',U2:'#FF6600',FR:'#073590',VY:'#F9C900',ZF:'#00AEEF',
+  UT:'#005BAA',EK:'#C60C30',QR:'#5C0632',LH:'#05164D',AJ:'#1B3D6F',
+  DY:'#D81939',KL:'#009BDE',BA:'#075AAA',AF:'#002157',IB:'#CC0000'
+};
+function airlineColor(ucusKod){
+  var code=(ucusKod||'').replace(/\s/g,'').substring(0,2).toUpperCase();
+  return AIRLINE_CLR[code]||null;
+}
+
 /* ════ CANLI SAAT ════ */
 function tickClock(){
   var n=new Date();
@@ -1054,7 +1202,11 @@ function buildRow(d){
   var surucu=esc(d.surucu||''), plaka=esc(d.surucuPlaka||'');
 
   var tripHtml='';
-  if(ucus&&ucus!=='-') tripHtml+='<a class="fl-chip" href="https://www.google.com/search?q='+ucusUrl+'+flight" target="_blank" rel="noopener">✈ '+ucus+'</a>';
+  if(ucus&&ucus!=='-'){
+    var aClr=airlineColor(d.ucus||'');
+    var chipStyle=aClr?'background:'+aClr+'22;border-color:'+aClr+'55;color:'+aClr+'':'';
+    tripHtml+='<a class="fl-chip" style="'+chipStyle+'" href="https://www.google.com/search?q='+ucusUrl+'+flight" target="_blank" rel="noopener">✈ '+ucus+'</a>';
+  }
   var parts=[];
   if(kisi) parts.push('👤 '+kisi);
   if(arac&&arac!=='-') parts.push(arac);
@@ -1172,7 +1324,7 @@ function showDate(tarih){
     return;
   }
 
-  $('#page').html(html);
+  $('#page').css('opacity',0).html(html).animate({opacity:1},180);
   $('.trow').each(function(i){ $(this).css('animation-delay',(i*24)+'ms'); });
 }
 
@@ -1212,7 +1364,7 @@ function showDates(tarihler){
     return;
   }
 
-  $('#page').html(html);
+  $('#page').css('opacity',0).html(html).animate({opacity:1},180);
   $('.trow').each(function(i){ $(this).css('animation-delay',(i*24)+'ms'); });
 }
 
@@ -1560,6 +1712,7 @@ function yukle(){
   /* isLoading ÖNCE true yapılıyor — cache render sırasında da
      "transfer bulunamadı" yerine "yükleniyor" göstermek için */
   isLoading = true;
+  showBar();
 
   if(cacheOk){
     try {
@@ -1648,6 +1801,7 @@ function yukle(){
       delete window[cb]; $(s).remove(); return;
     }
     _lastDataStr = newStr;
+    hideBar();
 
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
