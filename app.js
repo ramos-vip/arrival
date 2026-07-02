@@ -278,7 +278,7 @@ function getRole(){ return localStorage.getItem('ramos_rol')||'karsilama'; }
 function isYonetici(){ return getRole()==='yonetici'; }
 
 /* ════ API ════ */
-var API = 'https://script.google.com/macros/s/AKfycbzJflnLJr_9C6ppfFMNNb8WlfJljsQl74C7ro9iICPm_COHGI32zKFMG5N-1K-OPKsFEg/exec';
+var API_BASE = 'https://ramosnjttransfer.com/api';
 var MO  = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 var GUN = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 var GUN_K = ['Paz','Pts','Sal','Çar','Per','Cum','Cmt'];
@@ -578,7 +578,7 @@ function applyRole(){
     $('.date-label, #date-chips').show();
     $('.srch-wrap').css({'flex':'0 1 340px','max-width':'340px'});
   } else {
-    $('#add-btn').hide();
+    $('#add-btn, #mnav-add').hide();
     /* karşılamacı: tarih seçimi yok, sadece arama */
     $('.date-label, #date-chips').hide();
     $('.srch-wrap').css({'flex':'1','max-width':'100%','margin-left':'0'});
@@ -661,30 +661,29 @@ function submitAddTransfer(){
   }
   $('#add-submit-btn').prop('disabled',true).text('Kaydediliyor…');
   var tok = localStorage.getItem('ramos_token')||'';
-  var cb  = '__add'+Date.now();
-  var s   = document.createElement('script');
-  s.src   = API
-    +'?action=add&tok='+encodeURIComponent(tok)
-    +'&tarih='+encodeURIComponent(tarih)
-    +'&saat='+encodeURIComponent(saat)
-    +'&musteri='+encodeURIComponent(musteri)
-    +'&musteriTel='+encodeURIComponent($('#f-tel').val().trim())
-    +'&ucus='+encodeURIComponent($('#f-ucus').val().trim())
-    +'&kisi='+encodeURIComponent($('#f-kisi').val().trim())
-    +'&arac='+encodeURIComponent($('#f-arac').val().trim())
-    +'&nereden='+encodeURIComponent(nereden)
-    +'&nereye='+encodeURIComponent(nereye)
-    +'&surucu='+encodeURIComponent($('#f-surucu').val().trim())
-    +'&surucuPlaka='+encodeURIComponent($('#f-plaka').val().trim())
-    +'&surucuTel='+encodeURIComponent($('#f-stel').val().trim())
-    +'&cb='+cb;
-  var timer = setTimeout(function(){
-    delete window[cb]; $(s).remove();
-    $('#add-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
-    $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
-  }, 20000);
-  window[cb] = function(res){
-    clearTimeout(timer); delete window[cb]; $(s).remove();
+
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 20000);
+
+  fetch(API_BASE + '/panel_add.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+    body: JSON.stringify({
+      tarih: tarih, saat: saat, musteri: musteri,
+      musteriTel:  $('#f-tel').val().trim(),
+      ucus:        $('#f-ucus').val().trim(),
+      kisi:        $('#f-kisi').val().trim(),
+      arac:        $('#f-arac').val().trim(),
+      nereden:     nereden,
+      nereye:      nereye,
+      surucu:      $('#f-surucu').val().trim(),
+      surucuPlaka: $('#f-plaka').val().trim(),
+      surucuTel:   $('#f-stel').val().trim()
+    }),
+    signal: ctrl ? ctrl.signal : undefined
+  }).then(function(r){ return r.json().catch(function(){ return null; }); })
+  .then(function(res){
+    clearTimeout(timer);
     if(res && res.ok){
       closeAddModal();
       /* Formu temizle */
@@ -692,32 +691,33 @@ function submitAddTransfer(){
       _lastDataStr = ''; /* cache'i iptal et — yeni veri çekilsin */
       yukle();
     } else {
-      $('#add-err').text('❌ Kayıt başarısız, tekrar dene');
+      $('#add-err').text('❌ ' + ((res && res.error) || 'Kayıt başarısız, tekrar dene'));
       $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
     }
-  };
-  $('head').append(s);
+  }).catch(function(){
+    clearTimeout(timer);
+    $('#add-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
+    $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+  });
 }
 
 /* ════ OPERASYON DURUMU GÜNCELLE ════ */
 function updateStatus(tarih, saat, musteri, durum, btn){
   var tok    = localStorage.getItem('ramos_token')||'';
-  var cb     = '__st'+Date.now();
-  var s      = document.createElement('script');
   var $track = $(btn).closest('.st-track');
-  s.src = API
-    +'?action=status&tok='+encodeURIComponent(tok)
-    +'&tarih='+encodeURIComponent(tarih)
-    +'&saat='+encodeURIComponent(saat)
-    +'&musteri='+encodeURIComponent(musteri)
-    +'&durum='+encodeURIComponent(durum)
-    +'&cb='+cb;
   $track.addClass('loading');
-  var timer = setTimeout(function(){
-    $track.removeClass('loading'); delete window[cb]; $(s).remove();
-  }, 15000);
-  window[cb] = function(res){
-    clearTimeout(timer); delete window[cb]; $(s).remove();
+
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 15000);
+
+  fetch(API_BASE + '/panel_status.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+    body: JSON.stringify({ tarih: tarih, saat: saat, musteri: musteri, durum: durum }),
+    signal: ctrl ? ctrl.signal : undefined
+  }).then(function(r){ return r.json().catch(function(){ return null; }); })
+  .then(function(res){
+    clearTimeout(timer);
     $track.removeClass('loading');
     if(res && res.ok){
       _lastDataStr = '';
@@ -738,8 +738,10 @@ function updateStatus(tarih, saat, musteri, durum, btn){
       else if(durum==='Araçta')     $row.addClass('yd-aracta');
       else if(durum==='Teslim Edildi') $row.addClass('yd-teslim');
     }
-  };
-  $('head').append(s);
+  }).catch(function(){
+    clearTimeout(timer);
+    $track.removeClass('loading');
+  });
 }
 
 /* ════ SKELETON ════ */
@@ -902,15 +904,13 @@ function yukle(){
     $('#cnt').text('— Transfer');
   }
 
-  var cb   = '__r' + Date.now();
-  var s    = document.createElement('script');
   var _tok = localStorage.getItem('ramos_token') || '';
-  s.src    = API + '?tok=' + encodeURIComponent(_tok) + '&cb=' + cb + '&t=' + Date.now();
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
 
   /* 55 sn içinde cevap gelmezse sıfırla ve yeniden dene */
   var timer = setTimeout(function(){
-    isLoading = false; 
-    delete window[cb]; $(s).remove();
+    if(ctrl) ctrl.abort();
+    isLoading = false;
     if(allData.length === 0){
       $('#upd').text('⚠ Sunucu uyandırılıyor…');
       $('#page').html(buildSkeleton(4));
@@ -920,36 +920,28 @@ function yukle(){
     }
   }, 55000);
 
-  s.onerror = function(){
-    clearTimeout(timer);
-    isLoading = false; 
-    delete window[cb]; $(s).remove();
-    if(allData.length === 0){
-      $('#upd').text('⚠ Bağlantı hatası — yeniden deneniyor…');
-      setTimeout(yukle, 10000);
-    } else {
-      $('#upd').text('⚠ Bağlantı hatası');
-    }
-  };
-
-  window[cb] = function(data){
-    clearTimeout(timer);
-    isLoading = false;
-
-    /* Token geçersiz → çıkış */
-    if(data && data.error === 'unauthorized'){
-      
+  fetch(API_BASE + '/panel_feed.php', {
+    headers: { 'Authorization': 'Bearer ' + _tok },
+    signal: ctrl ? ctrl.signal : undefined
+  }).then(function(r){
+    if(r.status === 401){
+      clearTimeout(timer); isLoading = false;
       localStorage.removeItem('ramos_auth'); localStorage.removeItem('ramos_token');
       localStorage.removeItem('ramos_rol');  localStorage.removeItem('ramos_login_ts');
-      location.reload(); return;
+      location.reload();
+      throw { handled: true };
     }
+    if(!r.ok) throw new Error('http_' + r.status);
+    return r.json();
+  }).then(function(data){
+    clearTimeout(timer);
+    isLoading = false;
 
     /* API boş döndürdüyse ve elimizde veri varsa → ekranı bozma, geçici hata */
     if(!data || !data.length){
       if(allData.length > 0){
-        
         $('#upd').text('⚠ Sunucu boş döndü — önbellek korunuyor');
-        delete window[cb]; $(s).remove(); return;
+        return;
       }
     }
 
@@ -958,33 +950,36 @@ function yukle(){
       var _eski = allData.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
       var _yeni = data.filter(function(d){ return (d.tarih||'').trim()===selectedDate; }).length;
       if(_eski > 0 && _yeni === 0){
-        
         $('#upd').text('⚠ Geçici okuma hatası — veriler korunuyor');
-        delete window[cb]; $(s).remove(); return;
+        return;
       }
     }
 
     /* Akıllı polling: veri değişmediyse ekranı yeniden çizme */
     var newStr = JSON.stringify(data);
     if(newStr === _lastDataStr && allData.length > 0){
-      
       var st = new Date().toLocaleString('tr-TR',{hour:'2-digit',minute:'2-digit'});
       $('#upd').text('Son güncelleme: '+st);
-      delete window[cb]; $(s).remove(); return;
+      return;
     }
     _lastDataStr = newStr;
-    
 
     try {
       localStorage.setItem('ramos_cache',    JSON.stringify(data));
       localStorage.setItem('ramos_cache_ts', String(Date.now()));
     } catch(e){}
     render(data);
-    delete window[cb];
-    $(s).remove();
-  };
-
-  $('head').append(s);
+  }).catch(function(err){
+    clearTimeout(timer);
+    if(err && err.handled) return;
+    isLoading = false;
+    if(allData.length === 0){
+      $('#upd').text('⚠ Bağlantı hatası — yeniden deneniyor…');
+      setTimeout(yukle, 10000);
+    } else {
+      $('#upd').text('⚠ Bağlantı hatası');
+    }
+  });
 }
 
 /* ════ SESSION ════ */
@@ -1014,60 +1009,51 @@ async function doLogin(){
   _loginBusy = true;
   $('#l-btn').prop('disabled', true).text('Giriş yapılıyor…');
 
-  /* Şifreyi SHA-256 ile hashle — düz metin hiçbir yerde saklanmaz/gönderilmez */
-  var hashHex;
+  var ctrl = ('AbortController' in window) ? new AbortController() : null;
+  var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 20000);
+
+  var result = null, netError = false;
   try {
-    var buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(p));
-    hashHex = Array.from(new Uint8Array(buf)).map(function(b){
-      var h = b.toString(16); return h.length < 2 ? '0'+h : h;
-    }).join('');
+    var res = await fetch(API_BASE + '/panel_login.php', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ user: u, pass: p }),
+      signal: ctrl ? ctrl.signal : undefined
+    });
+    clearTimeout(timer);
+    result = await res.json();
   } catch(ex) {
-    _loginBusy = false;
-    $('#l-btn').prop('disabled', false).text('Giriş Yap →');
-    $('#l-err').text('❌ Tarayıcı hatası');
+    clearTimeout(timer);
+    netError = true;
+  }
+
+  _loginBusy = false;
+  $('#l-btn').prop('disabled', false).text('Giriş Yap →');
+
+  if(netError){
+    $('#l-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
+    setTimeout(function(){ $('#l-err').text(''); }, 3000);
     return;
   }
 
-  /* JSONP ile GAS'a gönder */
-  var cb = '__lg' + Date.now();
-  var s  = document.createElement('script');
-  s.src  = API + '?action=login&user=' + encodeURIComponent(u)
-         + '&h=' + hashHex + '&cb=' + cb;
-
-  var timer = setTimeout(function(){
-    _loginBusy = false;
-    delete window[cb]; $(s).remove();
-    $('#l-btn').prop('disabled', false).text('Giriş Yap →');
-    $('#l-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
+  if(result && result.ok){
+    localStorage.setItem('ramos_auth',     'ok');
+    localStorage.setItem('ramos_token',    result.token);
+    localStorage.setItem('ramos_rol',      result.rol);
+    localStorage.setItem('ramos_login_ts', String(Date.now()));
+    $('#login-screen').fadeOut(280, function(){
+      window._ptPause && window._ptPause(false); /* particle animasyonu başlat */
+      $('#app').fadeIn(220);
+      applyRole();
+      yukle();
+      setInterval(yukle, 30000);
+      setInterval(checkSession, 60000);
+    });
+  } else {
+    $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
+    $('#l-pass').val('').focus();
     setTimeout(function(){ $('#l-err').text(''); }, 3000);
-  }, 20000);
-
-  window[cb] = function(result){
-    clearTimeout(timer);
-    delete window[cb]; $(s).remove();
-    if(result && result.ok){
-      localStorage.setItem('ramos_auth',     'ok');
-      localStorage.setItem('ramos_token',    result.token);
-      localStorage.setItem('ramos_rol',      result.rol);
-      localStorage.setItem('ramos_login_ts', String(Date.now()));
-      $('#login-screen').fadeOut(280, function(){
-        window._ptPause && window._ptPause(false); /* particle animasyonu başlat */
-        $('#app').fadeIn(220);
-        applyRole();
-        yukle();
-        setInterval(yukle, 30000);
-        setInterval(checkSession, 60000);
-      });
-    } else {
-      _loginBusy = false;
-      $('#l-btn').prop('disabled', false).text('Giriş Yap →');
-      $('#l-err').text('❌ Kullanıcı adı veya şifre hatalı');
-      $('#l-pass').val('').focus();
-      setTimeout(function(){ $('#l-err').text(''); }, 3000);
-    }
-  };
-
-  $('head').append(s);
+  }
 }
 
 $(function(){
