@@ -468,16 +468,15 @@ function showDate(tarih){
 /* ════ SHOW DATES (çoklu tarih — karşılamacı gece modu) ════ */
 function showDates(tarihler){
   window.__voucherRows = [];
-  /* DÜN bölümü için: sadece son 2 saat içindeki transferleri göster.
+  /* DÜN bölümü için: sadece saat 21:00'dan sonraki transferleri göster (sabit saat, kaymaz).
      Eğer hiç transfer yoksa DÜN başlığı da çıkmaz. */
-  var now = new Date();
-  var twoHoursAgo = new Date(now.getTime() - 2 * 60 * 60 * 1000);
-
   var visibleCount = 0;
   var html = tarihler.map(function(tarih, i){
-    var cutoff = (i === 0 && tarihler.length > 1) ? twoHoursAgo : null;
-    /* Görünen transfer sayısını aynı filtreden geçirerek say */
     var dateObjC = parseTarih(tarih);
+    var cutoff = (i === 0 && tarihler.length > 1 && dateObjC)
+      ? new Date(dateObjC.getFullYear(), dateObjC.getMonth(), dateObjC.getDate(), 21, 0, 0)
+      : null;
+    /* Görünen transfer sayısını aynı filtreden geçirerek say */
     allData.forEach(function(d){
       if(d.tarih !== tarih) return;
       if(cutoff && dateObjC){
@@ -616,10 +615,10 @@ function render(veriler){
     showDate(selectedDate);
   } else {
     /* Karşılamacı:
-       00:00 - 02:00 → dün + bugün (geç inen uçaklar için)
-       02:00 - 23:59 → sadece bugün */
+       00:00 - 05:00 → dün + bugün (geç inen uçaklar için)
+       05:00 - 23:59 → sadece bugün */
     var _now = new Date();
-    if(_now.getHours() < 2){
+    if(_now.getHours() < 5){
       var _prev = new Date(_now);
       _prev.setDate(_now.getDate()-1);
       showDates([fmtK(_prev), fmtK(_now)]);
