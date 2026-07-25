@@ -660,17 +660,18 @@ function render(veriler){
   enrichFlightStatuses();
 }
 
-/* ════ CANLI UÇUŞ DURUMU (DHMI) ════
+/* ════ CANLI UÇUŞ DURUMU (AYT + FlightRadar24) ════
    Ayrı Cloudflare Worker'a sorar, VPS'e hiç dokunmaz.
    Worker deploy edilmediyse / erişilemezse sessizce hiçbir şey göstermez. */
 function enrichFlightStatuses(){
   if(!FLIGHT_STATUS_API || FLIGHT_STATUS_API.indexOf('YOUR-SUBDOMAIN') > -1) return;
 
   /* SADECE BUGÜN — panel dün+14 gün ileriyi birden tutuyor (75+ farklı uçuş
-     kodu olabiliyor), ama DHMI zaten sadece "şu an havada olanı" biliyor;
-     geçmiş/gelecek günlerin uçuşlarını sormanın anlamı yok. Ayrıca Cloudflare
-     Worker'ların ücretsiz planında istek başına ~50 alt-istek sınırı var —
-     çok fazla kod tek seferde gönderilirse Worker o sınırı aşıp çöküyordu. */
+     kodu olabiliyor), ama canlı kaynaklar zaten sadece bugünü/yakın zamanı
+     biliyor; geçmiş/gelecek günlerin uçuşlarını sormanın anlamı yok. Ayrıca
+     Cloudflare Worker'ların ücretsiz planında istek başına ~50 alt-istek
+     sınırı var ve FlightRadar24'ün kredi maliyeti var — çok fazla kod tek
+     seferde gönderilirse hem o sınır aşılır hem gereksiz kredi harcanır. */
   var today = getToday();
   var codes = {};
   allData.forEach(function(d){
@@ -742,7 +743,7 @@ function showFlightPopup(ucus, tarih, saat){
   var googleUrl = 'https://www.google.com/search?q='+encodeURIComponent((ucus||'').replace(/\s/g,''))+'+flight';
 
   if(!det || !det.ucusDurum){
-    /* Canlı DHMI verisi yok (henüz radara girmemiş / zaten inmiş) —
+    /* Canlı uçuş verisi yok (henüz takibe girmemiş / hiçbir kaynakta bulunamadı) —
        Google'a atmıyoruz, elimizdeki rezervasyon bilgisiyle sade bir kart gösteriyoruz. */
     var html0 = '<div class="fl-popup">'
       +'<div class="flp-hero" style="background:linear-gradient(135deg,#132139,#0a1424)">'
@@ -759,7 +760,7 @@ function showFlightPopup(ucus, tarih, saat){
             +'<div class="flp-route-line"><span class="flp-route-plane">✈</span></div>'
             +'<div class="flp-route-end flp-route-to"><div class="flp-city" style="max-width:110px;white-space:normal;">'+esc(d.nereye||'')+'</div></div>'
           +'</div>' : '')
-        +'<div class="flp-empty-msg">Bu uçuş henüz DHMI radarına girmedi (kalkmamış olabilir ya da zaten inip takipten düşmüş olabilir). Kalkışa yaklaşınca burada canlı durum görünecek.</div>'
+        +'<div class="flp-empty-msg">Bu uçuş henüz canlı takibe girmedi (kalkmamış olabilir ya da hiçbir kaynakta bulunamadı). Kalkışa yaklaşınca burada canlı durum görünecek.</div>'
       +'</div>'
     +'</div>';
     openFlPopup(html0);
@@ -800,12 +801,11 @@ function showFlightPopup(ucus, tarih, saat){
   }
 
   /* ── SAATLER: planlanan / tahmini / gerçek ──
-     AYT (havalimanının kendi verisi) kaynaklıysa "İndi" bilgisi zaten gerçek
-     yer hizmeti kaydı — direkt güveniriz. DHMI kaynaklıysa "gerçek iniş" alanı
-     bazen uçak hâlâ havadayken bile hesaplanmış bir değerle doluyor, bu yüzden
-     irtifaya bakarak ayrıca doğrularız, körü körüne "İndi" demeyiz. */
+     AYT (havalimanının kendi verisi) ve FlightRadar24 (flight-summary) ikisi de
+     onaylı/gerçek kayıt — "İndi" bilgisi için direkt güveniriz, ayrıca doğrulama
+     gerekmez (DHMI'nin aksine, bu ikisi tahmini değil gerçekleşmiş olayı verir). */
   function fmtSaat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
-  var gercektenIndi = det.kaynak==='ayt'
+  var gercektenIndi = (det.kaynak==='ayt' || det.kaynak==='fr24')
     ? !!det.gercekVaris
     : (det.gercekVaris && typeof det.irtifa === 'number' && det.irtifa < 500);
   var timeCards = [];
