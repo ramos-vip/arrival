@@ -260,14 +260,25 @@ async function fetchFr24Summary(entries, env) {
 }
 
 /* codes: [{code, expectedMin}] — AYT tek seferde çekilip hepsiyle eşleştirilir;
-   AYT'de olmayanlar için FR24'e (yine tek/az sayıda toplu istekle) gidilir. */
+   AYT'de olmayanlar için FR24'e (yine tek/az sayıda toplu istekle) gidilir.
+
+   ÖNEMLİ: iki ayrı önbellek katmanı var, birbirine KARIŞTIRILMAMALI:
+   1) Genel SONUÇ önbelleği (cacheKeys) — HER ZAMAN kısa TTL. Bunun amacı
+      sadece art arda gelen client anketlerinde AYT+FR24'ü tekrar tekrar
+      çalıştırmamak; bir uçuşun kaynağını (ayt/fr24) SAATLERCE kilitlememeli,
+      yoksa AYT sonradan o uçuşu gösterse bile (ör. "Bagaj Bantta" durumuna
+      geçtiğinde) biz hâlâ eski FR24 cevabını ("İndi") döndürmeye devam ederiz.
+   2) FR24 "inmiş" onayı için AYRI ve uzun TTL'li bir önbellek — SADECE FR24'ün
+      pahalı flight-summary çağrısını tekrarlamamak için kullanılır. AYT
+      kontrolünü asla engellemez; AYT her döngüde yeniden denenir ve varsa
+      her zaman önceliklidir. */
 async function resolveCodes(entries, cache, origin, env) {
   const result = {};
   const uncached = [];
   const cacheKeys = {};
 
   for (const entry of entries) {
-    const key = new Request(origin + '/cache/' + normalizeCode(entry.code));
+    const key = new Request(origin + '/cache/v2/' + normalizeCode(entry.code));
     cacheKeys[entry.code] = key;
     const hit = await cache.match(key);
     if (hit) {
@@ -280,9 +291,21 @@ async function resolveCodes(entries, cache, origin, env) {
   if (uncached.length) {
     const aytRows = await fetchAytArrivals().catch(() => []);
     const aytByCode = new Map();
-    aytRows.forEach((r) => { if (!aytByCode.has(r.code)) aytByCode.set(r.code, r); });
+    aytRows.forEach((r) => { const k = normalizeCode(r.code); if (!aytByCode.has(k)) aytByCode.set(k, r); });
 
-    const needFr24 = uncached.filter((e) => !aytByCode.has(normalizeCode(e.code)));
+    /* AYT'de olmayanlar için: daha önce FR24'ten "inmiş" onayı alıp ayrı
+       önbellekte sakladıysak tekrar sormayız; almadıysak taze sorgularız. */
+    const needFr24 = [];
+    const fr24LandedCache = new Map();
+    for (const entry of uncached) {
+      const norm = normalizeCode(entry.code);
+      if (aytByCode.has(norm)) continue;
+      const landedKey = new Request(origin + '/fr24landed/v2/' + norm);
+      const hit = await cache.match(landedKey);
+      if (hit) fr24LandedCache.set(norm, await hit.json());
+      else needFr24.push(entry);
+    }
+
     let fr24ByCode = new Map();
     try { fr24ByCode = await fetchFr24Summary(needFr24, env); } catch (e) { fr24ByCode = new Map(); }
 
@@ -290,31 +313,42 @@ async function resolveCodes(entries, cache, origin, env) {
        (Promise.all reject edip TÜM toplu isteği etkileyerek) bozmasın. */
     await Promise.all(uncached.map(async (entry) => {
       const code = entry.code;
+      const norm = normalizeCode(code);
       let value = { ucusDurum: null };
+      let rawFr24Rec = null;
 
       try {
-        const aytRow = aytByCode.get(normalizeCode(code));
+        const aytRow = aytByCode.get(norm);
         if (aytRow) {
           value = buildResultFromAyt(aytRow);
         } else {
-          const rec = fr24ByCode.get(normalizeCode(code));
-          if (rec) value = buildResultFromFr24(rec, entry.expectedMin);
+          rawFr24Rec = fr24ByCode.get(norm) || fr24LandedCache.get(norm) || null;
+          if (rawFr24Rec) value = buildResultFromFr24(rawFr24Rec, entry.expectedMin);
         }
       } catch (e) { /* değer null kalır, diğer kodları etkilemez */ }
 
       result[code] = value;
-      /* İnmiş FR24 sonuçları artık değişmeyeceği için çok uzun süre
-         önbelleklenir (kredi tasarrufu); AYT ve henüz inmemiş/bulunamamış
-         sonuçlar kısa TTL ile tazelenir. */
-      const ttl = value.kaynak === 'fr24'
-        ? (value.gercekVaris ? FR24_LANDED_TTL : FR24_ACTIVE_TTL)
-        : CACHE_TTL;
+
+      /* Genel sonuç HER ZAMAN kısa TTL ile önbelleklenir — AYT bir dahaki
+         döngüde mutlaka yeniden kontrol edilsin diye. */
       try {
         const resp = new Response(JSON.stringify(value), {
-          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + ttl },
+          headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + (value.kaynak === 'ayt' ? CACHE_TTL : FR24_ACTIVE_TTL) },
         });
         await cache.put(cacheKeys[code], resp);
       } catch (e) { /* cache yazılamazsa da sonuç yine döner, sadece önbelleklenmez */ }
+
+      /* FR24'ün İNMİŞ onayı ayrı ve uzun TTL'li önbellekte saklanır — sadece
+         FR24 çağrısını tekrarlamamak için; AYT kontrolünü etkilemez. */
+      if (value.kaynak === 'fr24' && value.gercekVaris && rawFr24Rec) {
+        try {
+          const landedKey = new Request(origin + '/fr24landed/v2/' + norm);
+          const resp2 = new Response(JSON.stringify(rawFr24Rec), {
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + FR24_LANDED_TTL },
+          });
+          await cache.put(landedKey, resp2);
+        } catch (e) { /* önbelleklenemezse bir dahaki döngüde FR24'e tekrar sorar, sorun değil */ }
+      }
     }));
   }
 
