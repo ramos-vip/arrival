@@ -600,9 +600,23 @@ function applyRole(){
 
 /* ════ RENDER ════ */
 function render(veriler){
+  /* Önceki çekilen uçuş durumu bilgisini (yerel_durum gibi kalıcı alanlardan farklı
+     olarak sunucudan gelmiyor) sakla — yenilenince silinmesin, enrichFlightStatuses
+     zaten tazesini bulunca üzerine yazacak. */
+  var eskiUcusVerisi = {};
+  allData.forEach(function(d){
+    if(d._flightDetail) eskiUcusVerisi[d.tarih+'|'+d.saat+'|'+d.ucus] = {
+      ucusDurum: d.ucusDurum, ucusDurumMetin: d.ucusDurumMetin,
+      ucusGecikmeDk: d.ucusGecikmeDk, _flightDetail: d._flightDetail
+    };
+  });
+
   /* Tüm tarihleri trim'le — boşluk/karakter farkı olmasın */
   allData = (veriler||[]).map(function(d){
-    return $.extend({}, d, { tarih: String(d.tarih||'').trim() });
+    var yeni = $.extend({}, d, { tarih: String(d.tarih||'').trim() });
+    var eski = eskiUcusVerisi[yeni.tarih+'|'+yeni.saat+'|'+yeni.ucus];
+    if(eski) $.extend(yeni, eski);
+    return yeni;
   });
 
   var today    = getToday();
@@ -686,6 +700,19 @@ function updateFlightBadgeInDom(d){
 }
 
 /* ════ UÇUŞ DETAY POPUP ════ */
+function openFlPopup(html){
+  var $ov = $('#fl-popup-overlay');
+  if(!$ov.length){
+    $ov = $('<div id="fl-popup-overlay"></div>').appendTo('body');
+    $ov.on('click', function(e){ if(e.target===this) $ov.removeClass('open'); });
+  }
+  $ov.html(html);
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ $ov.addClass('open'); });
+  });
+  $('#fl-popup-close').on('click', function(){ $ov.removeClass('open'); });
+}
+
 function showFlightPopup(ucus, tarih, saat){
   var d = null;
   for(var i=0;i<allData.length;i++){
@@ -695,7 +722,7 @@ function showFlightPopup(ucus, tarih, saat){
   var googleUrl = 'https://www.google.com/search?q='+encodeURIComponent((ucus||'').replace(/\s/g,''))+'+flight';
 
   if(!det || !det.ucusDurum){
-    /* Canlı veri yok — doğrudan Google'a düş */
+    /* Canlı veri yok — Google'a düş */
     window.open(googleUrl, '_blank', 'noopener');
     return;
   }
@@ -772,17 +799,7 @@ function showFlightPopup(ucus, tarih, saat){
     +'</div>'
     +'</div>';
 
-  var $ov = $('#fl-popup-overlay');
-  if(!$ov.length){
-    $ov = $('<div id="fl-popup-overlay"></div>').appendTo('body');
-    $ov.on('click', function(e){ if(e.target===this) $ov.removeClass('open'); });
-  }
-  $ov.html(html);
-  /* Fade + scale animasyonu: önce class'sız ekle, bir sonraki frame'de 'open' ekle */
-  requestAnimationFrame(function(){
-    requestAnimationFrame(function(){ $ov.addClass('open'); });
-  });
-  $('#fl-popup-close').on('click', function(){ $ov.removeClass('open'); });
+  openFlPopup(html);
 }
 
 /* Enlem/boylam -> OSM tile x/y (slippy map standardı) */
