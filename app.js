@@ -663,13 +663,16 @@ function render(veriler){
 function enrichFlightStatuses(){
   if(!FLIGHT_STATUS_API || FLIGHT_STATUS_API.indexOf('YOUR-SUBDOMAIN') > -1) return;
 
-  /* Her uçuş koduna beklenen saati de ekliyoruz — bazı havayolları (örn.
-     SunExpress/XQ) DHMI'de gerçek uçuş numarasıyla değil farklı bir çağrı
-     koduyla göründüğü için, kod eşleşmezse Worker saat bazlı eşleştirmeyi
-     dener (code@HH:MM formatı). Kod başına tek giriş — aynı kod birden fazla
-     satırda geçse bile (Worker sonucu tüm eşleşen satırlara uygulanıyor zaten). */
+  /* SADECE BUGÜN — panel dün+14 gün ileriyi birden tutuyor (75+ farklı uçuş
+     kodu olabiliyor), ama DHMI zaten sadece "şu an havada olanı" biliyor;
+     geçmiş/gelecek günlerin uçuşlarını sormanın anlamı yok. Ayrıca Cloudflare
+     Worker'ların ücretsiz planında istek başına ~50 alt-istek sınırı var —
+     çok fazla kod tek seferde gönderilirse Worker o sınırı aşıp çöküyordu. */
+  var today = getToday();
   var codes = {};
-  allData.forEach(function(d){ if(d.ucus && d.ucus!=='-' && !codes[d.ucus]) codes[d.ucus] = d.saat||''; });
+  allData.forEach(function(d){
+    if(d.tarih===today && d.ucus && d.ucus!=='-' && !codes[d.ucus]) codes[d.ucus] = d.saat||'';
+  });
   var codeList = Object.keys(codes).map(function(ucus){ return ucus+'@'+codes[ucus]; });
   if(!codeList.length) return;
 
