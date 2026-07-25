@@ -279,6 +279,9 @@ function isYonetici(){ return getRole()==='yonetici'; }
 
 /* ════ API ════ */
 var API_BASE = 'https://ramosnjttransfer.com/api';
+/* Canlı uçuş durumu — bağımsız Cloudflare Worker, VPS'e dokunmaz.
+   Worker deploy edilince gerçek URL buraya yazılacak. */
+var FLIGHT_STATUS_API = 'https://silent-math-b4a9.ramosviptransfer.workers.dev';
 var MO  = ['Ocak','Şubat','Mart','Nisan','Mayıs','Haziran','Temmuz','Ağustos','Eylül','Ekim','Kasım','Aralık'];
 var GUN = ['Pazar','Pazartesi','Salı','Çarşamba','Perşembe','Cuma','Cumartesi'];
 var GUN_K = ['Paz','Pts','Sal','Çar','Per','Cum','Cmt'];
@@ -329,12 +332,21 @@ function buildRow(d){
   if(ucus&&ucus!=='-'){
     var aClr=airlineColor(d.ucus||'');
     var chipStyle=aClr?'background:'+aClr+'22;border-color:'+aClr+'55;color:'+aClr+'':'';
-    tripHtml+='<a class="fl-chip" style="'+chipStyle+'" href="https://www.google.com/search?q='+ucusUrl+'+flight" target="_blank" rel="noopener">✈ '+ucus+'</a>';
+    /* Canlı uçuş durumu (DHMI) — veri gelene kadar d.ucusDurum boş olduğu için hiçbir şey görünmez */
+    var flDot='';
+    if(d.ucusDurum){
+      var flDotClr = d.ucusDurum==='gecikti' ? '#fbbf24' : d.ucusDurum==='indi' ? '#4ade80' : '#c9a84c';
+      flDot='<span class="fl-dot" style="background:'+flDotClr+'" title="'+esc(d.ucusDurumMetin||'')+'"></span>';
+    }
+    tripHtml+='<a class="fl-chip" style="'+chipStyle+'" href="https://www.google.com/search?q='+ucusUrl+'+flight" target="_blank" rel="noopener">'+flDot+'✈ '+ucus+'</a>';
   }
   var parts=[];
   if(kisi) parts.push('👤 '+kisi);
   if(arac&&arac!=='-') parts.push(arac);
   if(parts.length) tripHtml+='<div class="td-meta">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
+  if(d.ucusGecikmeDk && +d.ucusGecikmeDk>0){
+    tripHtml+='<div class="fl-delay">⏱ '+esc(d.ucusGecikmeDk)+' dk gecikti</div>';
+  }
 
   /* Karşılamacıda müşteri telefonu gizlenir */
   var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
@@ -625,6 +637,51 @@ function render(veriler){
     } else {
       showDate(today);
     }
+  }
+
+  enrichFlightStatuses();
+}
+
+/* ════ CANLI UÇUŞ DURUMU (DHMI) ════
+   Ayrı Cloudflare Worker'a sorar, VPS'e hiç dokunmaz.
+   Worker deploy edilmediyse / erişilemezse sessizce hiçbir şey göstermez. */
+function enrichFlightStatuses(){
+  if(!FLIGHT_STATUS_API || FLIGHT_STATUS_API.indexOf('YOUR-SUBDOMAIN') > -1) return;
+
+  var codes = {};
+  allData.forEach(function(d){ if(d.ucus && d.ucus!=='-') codes[d.ucus] = true; });
+
+  Object.keys(codes).forEach(function(code){
+    fetch(FLIGHT_STATUS_API + '?code=' + encodeURIComponent(code))
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(res){
+        if(!res || !res.ucusDurum) return;
+        allData.forEach(function(d){
+          if(d.ucus === code){
+            d.ucusDurum      = res.ucusDurum;
+            d.ucusDurumMetin = res.ucusDurumMetin || '';
+            d.ucusGecikmeDk  = res.ucusGecikmeDk || 0;
+            updateFlightBadgeInDom(d);
+          }
+        });
+      })
+      .catch(function(){});
+  });
+}
+
+function updateFlightBadgeInDom(d){
+  var $row = $('.trow[data-tarih="'+d.tarih+'"][data-saat="'+d.saat+'"]');
+  if(!$row.length) return;
+  var $chip = $row.find('.fl-chip');
+  if(!$chip.length) return;
+
+  $chip.find('.fl-dot').remove();
+  var clr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
+  $chip.prepend('<span class="fl-dot" style="background:'+clr+'" title="'+esc(d.ucusDurumMetin||'')+'"></span>');
+
+  $row.find('.fl-delay').remove();
+  if(d.ucusGecikmeDk > 0){
+    $row.find('.td-trip').append('<div class="fl-delay">⏱ '+esc(d.ucusGecikmeDk)+' dk gecikti</div>');
   }
 }
 

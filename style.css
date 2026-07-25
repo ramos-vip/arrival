@@ -335,6 +335,15 @@ a.fl-chip:hover {
   border-color: rgba(99,102,241,.6); color: #c7d2fe;
 }
 .td-meta { font-size: 12px; color: #3d5a7a; display: flex; align-items: center; gap: 5px; font-weight: 500; }
+.fl-dot {
+  width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+}
+.fl-delay {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(251,191,36,.1); border-left: 3px solid #fbbf24;
+  border-radius: 0 6px 6px 0; color: #fcd34d;
+  font-size: 11px; font-weight: 600; padding: 4px 9px; margin-top: 4px;
+}
 
 /* ROUTE — dotted line visualization */
 .route-vis { display: flex; flex-direction: column; gap: 2px; }
