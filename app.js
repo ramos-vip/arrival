@@ -665,24 +665,30 @@ function enrichFlightStatuses(){
 
   var codes = {};
   allData.forEach(function(d){ if(d.ucus && d.ucus!=='-') codes[d.ucus] = true; });
+  var codeList = Object.keys(codes);
+  if(!codeList.length) return;
 
-  Object.keys(codes).forEach(function(code){
-    fetch(FLIGHT_STATUS_API + '?code=' + encodeURIComponent(code))
-      .then(function(r){ return r.ok ? r.json() : null; })
-      .then(function(res){
+  /* Tek istekte tüm uçuşları sorar (N+1 yerine) — Worker tarafında
+     "/api/flight/all" bir kere çekilip hepsiyle eşleştiriliyor. */
+  fetch(FLIGHT_STATUS_API + '?codes=' + encodeURIComponent(codeList.join(',')))
+    .then(function(r){ return r.ok ? r.json() : null; })
+    .then(function(results){
+      if(!results) return;
+      Object.keys(results).forEach(function(code){
+        var res = results[code];
         if(!res || !res.ucusDurum) return;
         allData.forEach(function(d){
           if(d.ucus === code){
             d.ucusDurum      = res.ucusDurum;
             d.ucusDurumMetin = res.ucusDurumMetin || '';
             d.ucusGecikmeDk  = res.ucusGecikmeDk || 0;
-            d._flightDetail  = res; /* popup için tüm detay (kapı, terminal, saatler vb) */
+            d._flightDetail  = res; /* popup için tüm detay (kapı, terminal, saatler, rota vb) */
             updateFlightBadgeInDom(d);
           }
         });
-      })
-      .catch(function(){});
-  });
+      });
+    })
+    .catch(function(){});
 }
 
 function updateFlightBadgeInDom(d){
@@ -722,8 +728,27 @@ function showFlightPopup(ucus, tarih, saat){
   var googleUrl = 'https://www.google.com/search?q='+encodeURIComponent((ucus||'').replace(/\s/g,''))+'+flight';
 
   if(!det || !det.ucusDurum){
-    /* Canlı veri yok — Google'a düş */
-    window.open(googleUrl, '_blank', 'noopener');
+    /* Canlı DHMI verisi yok (henüz radara girmemiş / zaten inmiş) —
+       Google'a atmıyoruz, elimizdeki rezervasyon bilgisiyle sade bir kart gösteriyoruz. */
+    var html0 = '<div class="fl-popup">'
+      +'<div class="flp-hero" style="background:linear-gradient(135deg,#132139,#0a1424)">'
+        +'<div class="flp-close" id="fl-popup-close">✕</div>'
+        +'<div class="flp-hero-bottom">'
+          +'<div class="flp-logo flp-logo-ph">✈</div>'
+          +'<div><div class="flp-code">'+esc(ucus)+'</div>'
+          +'<div class="flp-airline">'+esc(tarih)+' · '+esc(saat)+'</div></div>'
+        +'</div>'
+      +'</div>'
+      +'<div class="flp-body">'
+        +(d ? '<div class="flp-route">'
+            +'<div class="flp-route-end"><div class="flp-city" style="max-width:110px;white-space:normal;">'+esc(d.nereden||'')+'</div></div>'
+            +'<div class="flp-route-line"><span class="flp-route-plane">✈</span></div>'
+            +'<div class="flp-route-end flp-route-to"><div class="flp-city" style="max-width:110px;white-space:normal;">'+esc(d.nereye||'')+'</div></div>'
+          +'</div>' : '')
+        +'<div class="flp-empty-msg">Bu uçuş henüz DHMI radarına girmedi (kalkmamış olabilir ya da zaten inip takipten düşmüş olabilir). Kalkışa yaklaşınca burada canlı durum görünecek.</div>'
+      +'</div>'
+    +'</div>';
+    openFlPopup(html0);
     return;
   }
 
@@ -739,7 +764,9 @@ function showFlightPopup(ucus, tarih, saat){
   var heroStyle = det.ucakFoto
     ? 'background-image:linear-gradient(180deg,rgba(6,13,26,.15),rgba(13,22,38,.96)),url('+det.ucakFoto+')'
     : 'background:linear-gradient(135deg,#132139,#0a1424)';
+  var anons = ucus + ', ' + (det.varisSehir||'Antalya') + '\'ya ' + (det.ucusDurum==='gecikti' ? (det.ucusGecikmeDk+' dakika gecikmeli iniyor.') : 'zamanında iniyor.');
   var heroHtml = '<div class="flp-hero" style="'+heroStyle+'">'
+    +'<div class="flp-speak" id="fl-popup-speak" title="Sesli oku" data-anons="'+esc(anons)+'">🔊</div>'
     +'<div class="flp-close" id="fl-popup-close">✕</div>'
     +'<div class="flp-hero-bottom">'
       +(det.havayoluLogo?'<img class="flp-logo" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo flp-logo-ph">✈</div>')
@@ -782,13 +809,27 @@ function showFlightPopup(ucus, tarih, saat){
     return '<div class="flp-chip"><div class="flp-chip-lbl">'+esc(c[0])+'</div><div class="flp-chip-val">'+esc(c[1])+'</div></div>';
   }).join('')+'</div>' : '';
 
-  /* ── HARİTA ── */
+  /* ── HARİTA: uçağın son konumu + uçtuğu rotanın izi ── */
   var mapHtml = '';
   if(det.lat != null && det.lon != null){
-    var tile = latLonToTile(det.lat, det.lon, 6);
+    var mapZoom = 6;
+    var tile = latLonToTile(det.lat, det.lon, mapZoom);
     var alt = det.irtifa ? '<div class="flp-map-alt">'+Math.round(det.irtifa).toLocaleString('tr-TR')+' ft</div>' : '';
+
+    var trailSvg = '';
+    if(Array.isArray(det.rota) && det.rota.length > 1){
+      var pts = det.rota.map(function(p){
+        var px = latLonToPixel(p[0], p[1], mapZoom, tile.x, tile.y);
+        return px.x.toFixed(1)+','+px.y.toFixed(1);
+      }).join(' ');
+      trailSvg = '<svg class="flp-map-trail" viewBox="0 0 256 256" preserveAspectRatio="none">'
+        +'<polyline points="'+pts+'" fill="none" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>'
+        +'</svg>';
+    }
+
     mapHtml = '<div class="flp-map">'
-      +'<img src="https://tile.openstreetmap.org/6/'+tile.x+'/'+tile.y+'.png" alt="">'
+      +'<img src="https://tile.openstreetmap.org/'+mapZoom+'/'+tile.x+'/'+tile.y+'.png" alt="">'
+      +trailSvg
       +'<div class="flp-map-pin">✈</div>'+alt
       +'</div>';
   }
@@ -814,6 +855,15 @@ function latLonToTile(lat, lon, zoom){
   var latRad = lat * Math.PI / 180;
   var y = Math.floor((1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n);
   return { x: x, y: y };
+}
+
+/* Enlem/boylam -> belirli bir tile'ın içindeki piksel konumu (rota izi çizmek için) */
+function latLonToPixel(lat, lon, zoom, tileX, tileY){
+  var n = Math.pow(2, zoom);
+  var x = (lon + 180) / 360 * n;
+  var latRad = lat * Math.PI / 180;
+  var y = (1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n;
+  return { x: (x - tileX) * 256, y: (y - tileY) * 256 };
 }
 
 /* ════ VOUCHER ════ */
@@ -1243,6 +1293,11 @@ async function doLogin(){
   }
 }
 
+/* Offline-first: internet kesilse bile sayfa açılabilsin diye app shell'i önbelleğe alır */
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('sw.js').catch(function(){});
+}
+
 $(function(){
   initMagnetic();
   initParallax();
@@ -1293,6 +1348,18 @@ $(function(){
     e.stopPropagation();
     var $c = $(this);
     showFlightPopup($c.data('ucus'), $c.data('tarih'), $c.data('saat'));
+  });
+
+  /* Sesli anons — Web Speech API, tarayıcı yerleşik, ücretsiz */
+  $(document).on('click', '.flp-speak', function(e){
+    e.stopPropagation();
+    if(!('speechSynthesis' in window)) return;
+    var metin = $(this).data('anons');
+    if(!metin) return;
+    window.speechSynthesis.cancel();
+    var u = new SpeechSynthesisUtterance(metin);
+    u.lang = 'tr-TR';
+    window.speechSynthesis.speak(u);
   });
 
   /* Voucher butonları */
