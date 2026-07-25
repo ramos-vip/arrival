@@ -794,11 +794,14 @@ function showFlightPopup(ucus, tarih, saat){
   }
 
   /* ── SAATLER: planlanan / tahmini / gerçek ──
-     DHMI'nin "gerçek iniş" alanı bazen uçak hâlâ havadayken (yüksek irtifada)
-     bile hesaplanmış bir değerle doluyor — bu yüzden gerçekten inip inmediğini
-     irtifaya bakarak ayrıca doğruluyoruz, körü körüne "İndi" demiyoruz. */
+     AYT (havalimanının kendi verisi) kaynaklıysa "İndi" bilgisi zaten gerçek
+     yer hizmeti kaydı — direkt güveniriz. DHMI kaynaklıysa "gerçek iniş" alanı
+     bazen uçak hâlâ havadayken bile hesaplanmış bir değerle doluyor, bu yüzden
+     irtifaya bakarak ayrıca doğrularız, körü körüne "İndi" demeyiz. */
   function fmtSaat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
-  var gercektenIndi = det.gercekVaris && typeof det.irtifa === 'number' && det.irtifa < 500;
+  var gercektenIndi = det.kaynak==='ayt'
+    ? !!det.gercekVaris
+    : (det.gercekVaris && typeof det.irtifa === 'number' && det.irtifa < 500);
   var timeCards = [];
   if(det.planlananVaris) timeCards.push(['Planlanan', fmtSaat(det.planlananVaris), '#8f9bb0']);
   if(gercektenIndi)         timeCards.push(['İndi', fmtSaat(det.gercekVaris), '#4ade80']);
