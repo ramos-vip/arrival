@@ -702,48 +702,74 @@ function showFlightPopup(ucus, tarih, saat){
 
   /* Gecikme şiddetine göre renk kademesi */
   var dk = det.ucusGecikmeDk || 0;
-  var statusClr, statusBg;
-  if(det.ucusDurum!=='gecikti'){ statusClr='#4ade80'; statusBg='rgba(74,222,128,.15)'; }
-  else if(dk >= 45){ statusClr='#f87171'; statusBg='rgba(248,113,113,.15)'; }
-  else if(dk >= 15){ statusClr='#fb923c'; statusBg='rgba(251,146,60,.15)'; }
-  else { statusClr='#fbbf24'; statusBg='rgba(251,191,36,.15)'; }
+  var statusClr;
+  if(det.ucusDurum!=='gecikti')      statusClr='#4ade80';
+  else if(dk >= 45)                  statusClr='#f87171';
+  else if(dk >= 15)                  statusClr='#fb923c';
+  else                               statusClr='#fbbf24';
 
-  var rows = [];
-  if(det.terminal)      rows.push(['🏢','Terminal', det.terminal]);
-  if(det.kapi)          rows.push(['🚪','Kapı', det.kapi]);
-  if(det.bagajBandi)    rows.push(['🛅','Bagaj bandı', det.bagajBandi]);
-  if(det.planlananVaris) rows.push(['🕐','Planlanan iniş', det.planlananVaris.split(' ')[1]||det.planlananVaris]);
-  if(det.tahminiVaris)   rows.push(['🕐','Tahmini iniş', det.tahminiVaris.split(' ')[1]||det.tahminiVaris]);
-  if(det.gercekVaris)    rows.push(['✅','Gerçek iniş', det.gercekVaris.split(' ')[1]||det.gercekVaris]);
+  /* ── HERO: uçak fotosu (varsa) + üzerine kod/havayolu ── */
+  var heroStyle = det.ucakFoto
+    ? 'background-image:linear-gradient(180deg,rgba(6,13,26,.15),rgba(13,22,38,.96)),url('+det.ucakFoto+')'
+    : 'background:linear-gradient(135deg,#132139,#0a1424)';
+  var heroHtml = '<div class="flp-hero" style="'+heroStyle+'">'
+    +'<div class="flp-close" id="fl-popup-close">✕</div>'
+    +'<div class="flp-hero-bottom">'
+      +(det.havayoluLogo?'<img class="flp-logo" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo flp-logo-ph">✈</div>')
+      +'<div><div class="flp-code">'+esc(ucus)+'</div>'
+      +'<div class="flp-airline">'+esc(det.havayolu||'Uçuş')+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div></div>'
+      +'<div class="flp-status" style="color:'+statusClr+';border-color:'+statusClr+'55;background:'+statusClr+'1a">'+esc(det.ucusDurumMetin||'')+'</div>'
+    +'</div></div>';
 
-  var rowsHtml = rows.map(function(r){
-    return '<div class="fl-popup-row"><span>'+r[0]+' '+esc(r[1])+'</span><span>'+esc(r[2])+'</span></div>';
-  }).join('');
+  /* ── ROTA: kalkış → varış ── */
+  var routeHtml = '';
+  if(det.kalkisSehir || det.varisSehir){
+    routeHtml = '<div class="flp-route">'
+      +'<div class="flp-route-end"><div class="flp-iata">'+esc(det.kalkisIata||'—')+'</div><div class="flp-city">'+esc(det.kalkisSehir||'')+'</div></div>'
+      +'<div class="flp-route-line"><span class="flp-route-plane">✈</span></div>'
+      +'<div class="flp-route-end flp-route-to"><div class="flp-iata">'+esc(det.varisIata||'AYT')+'</div><div class="flp-city">'+esc(det.varisSehir||'Antalya')+'</div></div>'
+      +'</div>';
+  }
 
-  var headHtml = '<div class="fl-popup-head">'
-    +(det.havayoluLogo?'<img class="fl-popup-logo" src="'+det.havayoluLogo+'" alt="">':'')
-    +'<div class="fl-popup-code-wrap"><div class="fl-popup-code">✈ '+esc(ucus)+'</div>'
-    +(det.havayolu?'<div class="fl-popup-airline">'+esc(det.havayolu)+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div>':'')
-    +'</div><div class="fl-popup-close" id="fl-popup-close">✕</div></div>';
+  /* ── SAATLER: planlanan / tahmini / gerçek ── */
+  function saat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
+  var timeCards = [];
+  if(det.planlananVaris) timeCards.push(['Planlanan', saat(det.planlananVaris), '#8f9bb0']);
+  if(det.gercekVaris)    timeCards.push(['İndi', saat(det.gercekVaris), '#4ade80']);
+  else if(det.tahminiVaris) timeCards.push(['Tahmini', saat(det.tahminiVaris), statusClr]);
+  var timeHtml = timeCards.length ? '<div class="flp-times">'+timeCards.map(function(t){
+    return '<div class="flp-time"><div class="flp-time-lbl">'+esc(t[0])+'</div><div class="flp-time-val" style="color:'+t[2]+'">'+esc(t[1])+'</div></div>';
+  }).join('')+'</div>' : '';
 
-  var photoHtml = det.ucakFoto ? '<img class="fl-popup-photo" src="'+det.ucakFoto+'" alt="">' : '';
+  /* ── CHIP'LER: terminal / kapı / bagaj ── */
+  var chips = [];
+  if(det.terminal)   chips.push(['Terminal', det.terminal]);
+  if(det.kapi)       chips.push(['Kapı', det.kapi]);
+  if(det.bagajBandi) chips.push(['Bagaj', det.bagajBandi]);
+  var chipHtml = chips.length ? '<div class="flp-chips">'+chips.map(function(c){
+    return '<div class="flp-chip"><div class="flp-chip-lbl">'+esc(c[0])+'</div><div class="flp-chip-val">'+esc(c[1])+'</div></div>';
+  }).join('')+'</div>' : '';
 
+  /* ── HARİTA ── */
   var mapHtml = '';
   if(det.lat != null && det.lon != null){
     var tile = latLonToTile(det.lat, det.lon, 6);
-    mapHtml = '<div class="fl-popup-map">'
+    var alt = det.irtifa ? '<div class="flp-map-alt">'+Math.round(det.irtifa).toLocaleString('tr-TR')+' ft</div>' : '';
+    mapHtml = '<div class="flp-map">'
       +'<img src="https://tile.openstreetmap.org/6/'+tile.x+'/'+tile.y+'.png" alt="">'
-      +'<div class="fl-popup-map-pin">✈</div>'
-      +'</div><div class="fl-popup-map-attr">© OpenStreetMap</div>';
+      +'<div class="flp-map-pin">✈</div>'+alt
+      +'</div>';
   }
 
   var html = '<div class="fl-popup">'
-    +headHtml
-    +photoHtml
-    +'<div class="fl-popup-status" style="background:'+statusBg+';color:'+statusClr+'">'+esc(det.ucusDurumMetin||'')+'</div>'
-    +rowsHtml
-    +mapHtml
-    +'<a class="fl-popup-google" href="'+googleUrl+'" target="_blank" rel="noopener">Google\'da ara →</a>'
+    +heroHtml
+    +'<div class="flp-body">'
+      +routeHtml
+      +timeHtml
+      +chipHtml
+      +mapHtml
+      +'<a class="fl-popup-google" href="'+googleUrl+'" target="_blank" rel="noopener">Google\'da ara →</a>'
+    +'</div>'
     +'</div>';
 
   var $ov = $('#fl-popup-overlay');
