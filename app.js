@@ -332,12 +332,15 @@ function buildRow(d){
   if(ucus&&ucus!=='-'){
     var aClr=airlineColor(d.ucus||'');
     var chipStyle=aClr?'background:'+aClr+'22;border-color:'+aClr+'55;color:'+aClr+'':'';
-    /* Canlı uçuş durumu (DHMI) — veri gelene kadar d.ucusDurum boş olduğu için hiçbir şey görünmez */
+    /* Canlı uçuş durumu — veri gelene kadar d.ucusDurum boş olduğu için hiçbir şey görünmez.
+       AYT (havalimanı) kaynaklıysa gerçek durum yazısını (İndi/Son Bagaj/Bagaj Bantta vb.)
+       gösteriyoruz, yoksa sadece gecikme dakikasını. */
     var flDot='', flInfo='';
     if(d.ucusDurum){
       var flDotClr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
       flDot='<span class="fl-dot" style="background:'+flDotClr+'"></span>';
-      if(d.ucusGecikmeDk>0) flInfo='<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
+      if(d.aytDurum) flInfo='<span class="fl-info">'+esc(d.aytDurum)+'</span>';
+      else if(d.ucusGecikmeDk>0) flInfo='<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
     }
     tripHtml+='<span class="fl-chip" style="'+chipStyle+'" data-ucus="'+ucus+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'" data-google-url="https://www.google.com/search?q='+ucusUrl+'+flight">'+flDot+'✈ '+ucus+flInfo+'</span>';
   }
@@ -690,6 +693,7 @@ function enrichFlightStatuses(){
             d.ucusDurum      = res.ucusDurum;
             d.ucusDurumMetin = res.ucusDurumMetin || '';
             d.ucusGecikmeDk  = res.ucusGecikmeDk || 0;
+            d.aytDurum       = res.aytDurum || ''; /* İndi/Son Bagaj/Bagaj Bantta vb. — satırdaki etikette gösterilir */
             d._flightDetail  = res; /* popup için tüm detay (kapı, terminal, saatler, rota vb) */
             updateFlightBadgeInDom(d);
           }
@@ -708,7 +712,9 @@ function updateFlightBadgeInDom(d){
   $chip.find('.fl-dot, .fl-info').remove();
   var clr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
   $chip.prepend('<span class="fl-dot" style="background:'+clr+'"></span>');
-  if(d.ucusGecikmeDk > 0){
+  if(d.aytDurum){
+    $chip.append('<span class="fl-info">'+esc(d.aytDurum)+'</span>');
+  } else if(d.ucusGecikmeDk > 0){
     $chip.append('<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>');
   }
 }
@@ -1440,5 +1446,3 @@ $(function(){
     setTimeout(function(){ $('#l-user').focus(); },200);
   }
 });
-
-
