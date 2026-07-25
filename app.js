@@ -705,14 +705,13 @@ function enrichFlightStatuses(){
 /* Satırdaki uçuş rozetinde gösterilecek metni belirler:
    1) AYT (havalimanı) kaynaklıysa kendi durum yazısı — Bekleniyor/Rötar/İndi/
       Bagaj Bantta/Son Bagaj gibi gerçek yer hizmeti durumları sırayla gelir.
-   2) FR24 kaynaklıysa ve uçuş gerçekten inmişse "İndi" (gecikme varsa dahil) —
-      FR24'te bagaj bandı bilgisi yok, o yüzden sadece inip inmediğini söyler.
-      Havadayken satırda gereksiz "Havada" gürültüsü olmasın diye gösterilmez.
+   2) FR24 kaynaklıysa "Havada" / "İndi" / "İndi · X dk gecikti" — FR24'te bagaj
+      bandı bilgisi yok, o yüzden sadece havada mı indi mi onu söyler.
    3) Hiçbiri yoksa sadece gecikme dakikası, o da varsa. */
 function flChipLabel(d){
   if(d.aytDurum) return '<span class="fl-info">'+esc(d.aytDurum)+'</span>';
   var det = d._flightDetail;
-  if(det && det.kaynak==='fr24' && det.gercekVaris) return '<span class="fl-info">'+esc(d.ucusDurumMetin||'İndi')+'</span>';
+  if(det && det.kaynak==='fr24' && d.ucusDurumMetin) return '<span class="fl-info">'+esc(d.ucusDurumMetin)+'</span>';
   if(d.ucusGecikmeDk > 0) return '<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
   return '';
 }
