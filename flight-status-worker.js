@@ -36,6 +36,7 @@ const FR24_BATCH_SIZE = 15; // flight-summary "flights" parametresi tek seferde 
 const CACHE_TTL = 90; // AYT (ücretsiz) sonuçları için — kaynağa gereğinden fazla istek gitmesin
 const FR24_ACTIVE_TTL = 180; // henüz inmemiş/bulunamamış FR24 sonucu — 3 dakikada bir tazele
 const FR24_LANDED_TTL = 21600; // inmiş uçuş artık değişmez — 6 saat önbellekte kalsın (kredi tasarrufu)
+const AYT_STICKY_TTL = 43200; // AYT bir uçuşu listeden düşürse bile son gerçek durumunu (ör. Belt Kapandı) 12 saat "yapışkan" tutar
 
 const MAX_BATCH_ENTRIES = 40; // Cloudflare Worker'ın alt-istek sınırını (50) aşmamak için tek istekte üst sınır
 
@@ -262,16 +263,18 @@ async function fetchFr24Summary(entries, env) {
 /* codes: [{code, expectedMin}] — AYT tek seferde çekilip hepsiyle eşleştirilir;
    AYT'de olmayanlar için FR24'e (yine tek/az sayıda toplu istekle) gidilir.
 
-   ÖNEMLİ: iki ayrı önbellek katmanı var, birbirine KARIŞTIRILMAMALI:
+   ÖNEMLİ: üç ayrı önbellek katmanı var, birbirine KARIŞTIRILMAMALI:
    1) Genel SONUÇ önbelleği (cacheKeys) — HER ZAMAN kısa TTL. Bunun amacı
       sadece art arda gelen client anketlerinde AYT+FR24'ü tekrar tekrar
-      çalıştırmamak; bir uçuşun kaynağını (ayt/fr24) SAATLERCE kilitlememeli,
-      yoksa AYT sonradan o uçuşu gösterse bile (ör. "Bagaj Bantta" durumuna
-      geçtiğinde) biz hâlâ eski FR24 cevabını ("İndi") döndürmeye devam ederiz.
-   2) FR24 "inmiş" onayı için AYRI ve uzun TTL'li bir önbellek — SADECE FR24'ün
-      pahalı flight-summary çağrısını tekrarlamamak için kullanılır. AYT
-      kontrolünü asla engellemez; AYT her döngüde yeniden denenir ve varsa
-      her zaman önceliklidir. */
+      çalıştırmamak; bir uçuşun kaynağını (ayt/fr24) SAATLERCE kilitlememeli.
+   2) AYT "yapışkan son durum" önbelleği — uzun TTL. AYT bir uçuşu rolling
+      window'dan düşürdüğünde (uçuş süreci bitip listeden kalktığında) son
+      gerçek durumunu (ör. "Belt Kapandı") kaybetmeyelim diye; taze AYT satırı
+      geldikçe üzerine yazılır, AYT sessiz kaldığında bu kullanılır — asla
+      FR24'ün daha kaba cevabına GERİ DÜŞMEYİZ.
+   3) FR24 "inmiş" onayı için AYRI ve uzun TTL'li bir önbellek — SADECE FR24'ün
+      pahalı flight-summary çağrısını tekrarlamamak için kullanılır; AYT (taze
+      veya yapışkan) her zaman önceliklidir. */
 async function resolveCodes(entries, cache, origin, env) {
   const result = {};
   const uncached = [];
@@ -293,13 +296,18 @@ async function resolveCodes(entries, cache, origin, env) {
     const aytByCode = new Map();
     aytRows.forEach((r) => { const k = normalizeCode(r.code); if (!aytByCode.has(k)) aytByCode.set(k, r); });
 
-    /* AYT'de olmayanlar için: daha önce FR24'ten "inmiş" onayı alıp ayrı
-       önbellekte sakladıysak tekrar sormayız; almadıysak taze sorgularız. */
+    /* AYT'de taze olarak olmayanlar için önce "yapışkan" son bilinen AYT
+       durumuna bakılır, sonra FR24'ün inmiş-onay önbelleğine, en son da
+       taze FR24 sorgusuna gidilir. */
     const needFr24 = [];
+    const aytStickyHit = new Map();
     const fr24LandedCache = new Map();
     for (const entry of uncached) {
       const norm = normalizeCode(entry.code);
       if (aytByCode.has(norm)) continue;
+      const stickyKey = new Request(origin + '/aytsticky/v2/' + norm);
+      const stickyHit = await cache.match(stickyKey);
+      if (stickyHit) { aytStickyHit.set(norm, await stickyHit.json()); continue; }
       const landedKey = new Request(origin + '/fr24landed/v2/' + norm);
       const hit = await cache.match(landedKey);
       if (hit) fr24LandedCache.set(norm, await hit.json());
@@ -316,11 +324,14 @@ async function resolveCodes(entries, cache, origin, env) {
       const norm = normalizeCode(code);
       let value = { ucusDurum: null };
       let rawFr24Rec = null;
+      let freshAytRow = null;
 
       try {
-        const aytRow = aytByCode.get(norm);
-        if (aytRow) {
-          value = buildResultFromAyt(aytRow);
+        freshAytRow = aytByCode.get(norm);
+        if (freshAytRow) {
+          value = buildResultFromAyt(freshAytRow);
+        } else if (aytStickyHit.has(norm)) {
+          value = aytStickyHit.get(norm); // AYT listeden düşmüş ama son gerçek durumu korunuyor
         } else {
           rawFr24Rec = fr24ByCode.get(norm) || fr24LandedCache.get(norm) || null;
           if (rawFr24Rec) value = buildResultFromFr24(rawFr24Rec, entry.expectedMin);
@@ -338,15 +349,28 @@ async function resolveCodes(entries, cache, origin, env) {
         await cache.put(cacheKeys[code], resp);
       } catch (e) { /* cache yazılamazsa da sonuç yine döner, sadece önbelleklenmez */ }
 
+      /* Taze bir AYT satırı görüldüyse "yapışkan" önbelleğe de yazılır — AYT
+         bu uçuşu sonradan listeden düşürse bile son gerçek durumu uzun süre
+         (AYT_STICKY_TTL) saklanır, FR24'ün daha kaba cevabına dönülmez. */
+      if (freshAytRow) {
+        try {
+          const stickyKey = new Request(origin + '/aytsticky/v2/' + norm);
+          const resp2 = new Response(JSON.stringify(value), {
+            headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
+          });
+          await cache.put(stickyKey, resp2);
+        } catch (e) { /* önbelleklenemezse bir dahaki döngüde tekrar taze AYT'den denenir */ }
+      }
+
       /* FR24'ün İNMİŞ onayı ayrı ve uzun TTL'li önbellekte saklanır — sadece
          FR24 çağrısını tekrarlamamak için; AYT kontrolünü etkilemez. */
       if (value.kaynak === 'fr24' && value.gercekVaris && rawFr24Rec) {
         try {
           const landedKey = new Request(origin + '/fr24landed/v2/' + norm);
-          const resp2 = new Response(JSON.stringify(rawFr24Rec), {
+          const resp3 = new Response(JSON.stringify(rawFr24Rec), {
             headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + FR24_LANDED_TTL },
           });
-          await cache.put(landedKey, resp2);
+          await cache.put(landedKey, resp3);
         } catch (e) { /* önbelleklenemezse bir dahaki döngüde FR24'e tekrar sorar, sorun değil */ }
       }
     }));
