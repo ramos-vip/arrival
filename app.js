@@ -759,11 +759,11 @@ function showFlightPopup(ucus, tarih, saat){
   }
 
   /* ── SAATLER: planlanan / tahmini / gerçek ── */
-  function saat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
+  function fmtSaat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
   var timeCards = [];
-  if(det.planlananVaris) timeCards.push(['Planlanan', saat(det.planlananVaris), '#8f9bb0']);
-  if(det.gercekVaris)    timeCards.push(['İndi', saat(det.gercekVaris), '#4ade80']);
-  else if(det.tahminiVaris) timeCards.push(['Tahmini', saat(det.tahminiVaris), statusClr]);
+  if(det.planlananVaris) timeCards.push(['Planlanan', fmtSaat(det.planlananVaris), '#8f9bb0']);
+  if(det.gercekVaris)    timeCards.push(['İndi', fmtSaat(det.gercekVaris), '#4ade80']);
+  else if(det.tahminiVaris) timeCards.push(['Tahmini', fmtSaat(det.tahminiVaris), statusClr]);
   var timeHtml = timeCards.length ? '<div class="flp-times">'+timeCards.map(function(t){
     return '<div class="flp-time"><div class="flp-time-lbl">'+esc(t[0])+'</div><div class="flp-time-val" style="color:'+t[2]+'">'+esc(t[1])+'</div></div>';
   }).join('')+'</div>' : '';
