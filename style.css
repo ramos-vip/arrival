@@ -344,22 +344,35 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
 #fl-popup-overlay {
   display: none; position: fixed; inset: 0; z-index: 400;
   background: rgba(2,6,16,.72); align-items: center; justify-content: center;
+  opacity: 0; transition: opacity .22s ease;
 }
-#fl-popup-overlay.open { display: flex; }
+#fl-popup-overlay.open { display: flex; opacity: 1; }
 .fl-popup {
   background: #0d1626; border: 1px solid rgba(201,168,76,.28);
-  border-radius: 14px; padding: 20px 22px; width: 300px; max-width: 90vw;
+  border-radius: 16px; padding: 18px 20px; width: 300px; max-width: 90vw;
+  max-height: 88vh; overflow-y: auto;
   color: #e9e6dc; font-family: 'Inter', sans-serif;
+  transform: scale(.92) translateY(8px); opacity: 0;
+  transition: transform .26s cubic-bezier(.16,1,.3,1), opacity .26s ease;
 }
-.fl-popup-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
-.fl-popup-code { font-size: 16px; font-weight: 800; letter-spacing: .3px; }
-.fl-popup-close { cursor: pointer; color: #6f7c91; font-size: 18px; line-height: 1; }
-.fl-popup-airline { font-size: 12px; color: #8f9bb0; margin-bottom: 14px; }
-.fl-popup-row { display: flex; justify-content: space-between; font-size: 12.5px; padding: 6px 0; border-top: 1px solid rgba(201,168,76,.1); }
-.fl-popup-row span:first-child { color: #8f9bb0; }
-.fl-popup-row span:last-child { font-weight: 600; }
-.fl-popup-status { display:inline-block; font-size:11px; font-weight:700; padding:3px 10px; border-radius:20px; margin-bottom:12px; }
-.fl-popup-google { display: block; text-align: center; margin-top: 16px; font-size: 11.5px; color: #6f7c91; text-decoration: none; }
+#fl-popup-overlay.open .fl-popup { transform: scale(1) translateY(0); opacity: 1; }
+.fl-popup-head { display: flex; align-items: center; gap: 11px; margin-bottom: 14px; }
+.fl-popup-logo { width: 36px; height: 36px; object-fit: contain; border-radius: 8px; background: #fff; padding: 3px; flex-shrink: 0; }
+.fl-popup-code-wrap { flex: 1; min-width: 0; }
+.fl-popup-code { font-size: 17px; font-weight: 800; letter-spacing: .3px; }
+.fl-popup-close { cursor: pointer; color: #6f7c91; font-size: 19px; line-height: 1; flex-shrink: 0; padding: 2px 4px; }
+.fl-popup-close:hover { color: #e9e6dc; }
+.fl-popup-airline { font-size: 11.5px; color: #8f9bb0; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fl-popup-photo { width: 100%; height: 112px; object-fit: cover; border-radius: 11px; margin-bottom: 14px; background: #060d1a; }
+.fl-popup-status { display: inline-block; font-size: 12px; font-weight: 700; padding: 5px 14px; border-radius: 20px; margin-bottom: 6px; letter-spacing: .2px; }
+.fl-popup-row { display: flex; justify-content: space-between; align-items: center; font-size: 13px; padding: 9px 0; border-top: 1px solid rgba(201,168,76,.1); }
+.fl-popup-row span:first-child { color: #9aa5b8; display: flex; align-items: center; gap: 7px; }
+.fl-popup-row span:last-child { font-weight: 700; color: #f1efe8; letter-spacing: .2px; }
+.fl-popup-map { position: relative; height: 132px; border-radius: 11px; overflow: hidden; margin-top: 14px; background: #060d1a; }
+.fl-popup-map img { width: 100%; height: 100%; object-fit: cover; opacity: .82; }
+.fl-popup-map-pin { position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%); font-size: 24px; filter: drop-shadow(0 2px 5px rgba(0,0,0,.7)); }
+.fl-popup-map-attr { font-size: 9px; color: #4a5568; text-align: right; margin-top: 4px; }
+.fl-popup-google { display: block; text-align: center; margin-top: 16px; padding-top: 13px; border-top: 1px solid rgba(201,168,76,.1); font-size: 12px; color: #6f7c91; text-decoration: none; }
 .fl-popup-google:hover { color: #a5b4fc; }
 
 /* ROUTE — dotted line visualization */

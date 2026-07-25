@@ -700,28 +700,49 @@ function showFlightPopup(ucus, tarih, saat){
     return;
   }
 
-  var statusClr = det.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
-  var statusBg  = det.ucusDurum==='gecikti' ? 'rgba(251,191,36,.15)' : 'rgba(74,222,128,.15)';
+  /* Gecikme şiddetine göre renk kademesi */
+  var dk = det.ucusGecikmeDk || 0;
+  var statusClr, statusBg;
+  if(det.ucusDurum!=='gecikti'){ statusClr='#4ade80'; statusBg='rgba(74,222,128,.15)'; }
+  else if(dk >= 45){ statusClr='#f87171'; statusBg='rgba(248,113,113,.15)'; }
+  else if(dk >= 15){ statusClr='#fb923c'; statusBg='rgba(251,146,60,.15)'; }
+  else { statusClr='#fbbf24'; statusBg='rgba(251,191,36,.15)'; }
 
   var rows = [];
-  if(det.havayolu)      rows.push(['Havayolu', det.havayolu]);
-  if(det.ucakTipi)      rows.push(['Uçak tipi', det.ucakTipi]);
-  if(det.terminal)      rows.push(['Terminal', det.terminal]);
-  if(det.kapi)          rows.push(['Kapı', det.kapi]);
-  if(det.bagajBandi)    rows.push(['Bagaj bandı', det.bagajBandi]);
-  if(det.planlananVaris) rows.push(['Planlanan iniş', det.planlananVaris.split(' ')[1]||det.planlananVaris]);
-  if(det.tahminiVaris)   rows.push(['Tahmini iniş', det.tahminiVaris.split(' ')[1]||det.tahminiVaris]);
-  if(det.gercekVaris)    rows.push(['Gerçek iniş', det.gercekVaris.split(' ')[1]||det.gercekVaris]);
+  if(det.terminal)      rows.push(['🏢','Terminal', det.terminal]);
+  if(det.kapi)          rows.push(['🚪','Kapı', det.kapi]);
+  if(det.bagajBandi)    rows.push(['🛅','Bagaj bandı', det.bagajBandi]);
+  if(det.planlananVaris) rows.push(['🕐','Planlanan iniş', det.planlananVaris.split(' ')[1]||det.planlananVaris]);
+  if(det.tahminiVaris)   rows.push(['🕐','Tahmini iniş', det.tahminiVaris.split(' ')[1]||det.tahminiVaris]);
+  if(det.gercekVaris)    rows.push(['✅','Gerçek iniş', det.gercekVaris.split(' ')[1]||det.gercekVaris]);
 
   var rowsHtml = rows.map(function(r){
-    return '<div class="fl-popup-row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>';
+    return '<div class="fl-popup-row"><span>'+r[0]+' '+esc(r[1])+'</span><span>'+esc(r[2])+'</span></div>';
   }).join('');
 
+  var headHtml = '<div class="fl-popup-head">'
+    +(det.havayoluLogo?'<img class="fl-popup-logo" src="'+det.havayoluLogo+'" alt="">':'')
+    +'<div class="fl-popup-code-wrap"><div class="fl-popup-code">✈ '+esc(ucus)+'</div>'
+    +(det.havayolu?'<div class="fl-popup-airline">'+esc(det.havayolu)+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div>':'')
+    +'</div><div class="fl-popup-close" id="fl-popup-close">✕</div></div>';
+
+  var photoHtml = det.ucakFoto ? '<img class="fl-popup-photo" src="'+det.ucakFoto+'" alt="">' : '';
+
+  var mapHtml = '';
+  if(det.lat != null && det.lon != null){
+    var tile = latLonToTile(det.lat, det.lon, 6);
+    mapHtml = '<div class="fl-popup-map">'
+      +'<img src="https://tile.openstreetmap.org/6/'+tile.x+'/'+tile.y+'.png" alt="">'
+      +'<div class="fl-popup-map-pin">✈</div>'
+      +'</div><div class="fl-popup-map-attr">© OpenStreetMap</div>';
+  }
+
   var html = '<div class="fl-popup">'
-    +'<div class="fl-popup-head"><div class="fl-popup-code">✈ '+esc(ucus)+'</div><div class="fl-popup-close" id="fl-popup-close">✕</div></div>'
+    +headHtml
+    +photoHtml
     +'<div class="fl-popup-status" style="background:'+statusBg+';color:'+statusClr+'">'+esc(det.ucusDurumMetin||'')+'</div>'
-    +(det.havayolu?'<div class="fl-popup-airline">'+esc(det.havayolu)+'</div>':'')
     +rowsHtml
+    +mapHtml
     +'<a class="fl-popup-google" href="'+googleUrl+'" target="_blank" rel="noopener">Google\'da ara →</a>'
     +'</div>';
 
@@ -730,8 +751,21 @@ function showFlightPopup(ucus, tarih, saat){
     $ov = $('<div id="fl-popup-overlay"></div>').appendTo('body');
     $ov.on('click', function(e){ if(e.target===this) $ov.removeClass('open'); });
   }
-  $ov.html(html).addClass('open');
+  $ov.html(html);
+  /* Fade + scale animasyonu: önce class'sız ekle, bir sonraki frame'de 'open' ekle */
+  requestAnimationFrame(function(){
+    requestAnimationFrame(function(){ $ov.addClass('open'); });
+  });
   $('#fl-popup-close').on('click', function(){ $ov.removeClass('open'); });
+}
+
+/* Enlem/boylam -> OSM tile x/y (slippy map standardı) */
+function latLonToTile(lat, lon, zoom){
+  var n = Math.pow(2, zoom);
+  var x = Math.floor((lon + 180) / 360 * n);
+  var latRad = lat * Math.PI / 180;
+  var y = Math.floor((1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n);
+  return { x: x, y: y };
 }
 
 /* ════ VOUCHER ════ */
