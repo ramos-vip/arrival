@@ -177,18 +177,29 @@ function fr24MinutesOfDay(iso) {
   return tr ? (tr.getUTCHours() * 60 + tr.getUTCMinutes()) : null;
 }
 
+/* expectedMin (rezervasyondaki beklenen saat) varsa "Planlanan" kartı için
+   bugünün tarihiyle birleştirip aynı string formatını (dd.mm.yyyy HH:MM:00)
+   üretir — FR24 bunu vermediği için elimizdeki tek planlanan saat bu. */
+function planFromExpectedMin(expectedMin) {
+  if (expectedMin == null) return '';
+  const dmy = todayDMY();
+  const p = (n) => String(n).padStart(2, '0');
+  return dmy + ' ' + p(Math.floor(expectedMin / 60)) + ':' + p(expectedMin % 60) + ':00';
+}
+
 function buildResultFromFr24(rec, expectedMin) {
   const landed = !!(rec.flight_ended && rec.datetime_landed);
 
   const base = {
     havayolu: rec.operated_as || rec.painted_as || '',
     ucakTipi: rec.type || '',
-    kalkisSehir: rec.origin_icao || '',
+    kalkisSehir: '', // FR24 sadece ICAO kodu veriyor, şehir adı yok — kalkisIata'da gösterilir
     varisSehir: 'Antalya',
-    kalkisIata: '',
+    kalkisIata: rec.orig_icao || '',
     varisIata: 'AYT',
     kapi: '', terminal: '', bagajBandi: '', // FR24 bu bilgileri vermiyor — AYT'nin işi
-    planlananVaris: '', tahminiVaris: '', // FR24 planlanan/tahmini saat vermiyor, rezervasyondaki saat zaten arayüzde var
+    planlananVaris: planFromExpectedMin(expectedMin), // FR24 planlanan/tahmini saat vermiyor, elimizdeki rezervasyon saatini kullanırız
+    tahminiVaris: '',
     gercekVaris: landed ? fr24DateToTRString(rec.datetime_landed) : '',
     ucakFoto: '', havayoluLogo: '',
     lat: null, lon: null, irtifa: null, rota: [],
