@@ -758,11 +758,16 @@ function showFlightPopup(ucus, tarih, saat){
       +'</div>';
   }
 
-  /* ── SAATLER: planlanan / tahmini / gerçek ── */
+  /* ── SAATLER: planlanan / tahmini / gerçek ──
+     DHMI'nin "gerçek iniş" alanı bazen uçak hâlâ havadayken (yüksek irtifada)
+     bile hesaplanmış bir değerle doluyor — bu yüzden gerçekten inip inmediğini
+     irtifaya bakarak ayrıca doğruluyoruz, körü körüne "İndi" demiyoruz. */
   function fmtSaat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
+  var gercektenIndi = det.gercekVaris && typeof det.irtifa === 'number' && det.irtifa < 500;
   var timeCards = [];
   if(det.planlananVaris) timeCards.push(['Planlanan', fmtSaat(det.planlananVaris), '#8f9bb0']);
-  if(det.gercekVaris)    timeCards.push(['İndi', fmtSaat(det.gercekVaris), '#4ade80']);
+  if(gercektenIndi)         timeCards.push(['İndi', fmtSaat(det.gercekVaris), '#4ade80']);
+  else if(det.gercekVaris)  timeCards.push(['Güncel tahmin', fmtSaat(det.gercekVaris), statusClr]);
   else if(det.tahminiVaris) timeCards.push(['Tahmini', fmtSaat(det.tahminiVaris), statusClr]);
   var timeHtml = timeCards.length ? '<div class="flp-times">'+timeCards.map(function(t){
     return '<div class="flp-time"><div class="flp-time-lbl">'+esc(t[0])+'</div><div class="flp-time-val" style="color:'+t[2]+'">'+esc(t[1])+'</div></div>';
@@ -1357,6 +1362,3 @@ $(function(){
     setTimeout(function(){ $('#l-user').focus(); },200);
   }
 });
-
-
-
