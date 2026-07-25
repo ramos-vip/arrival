@@ -57,9 +57,9 @@ function initCustomCursor(){
     tx=e.clientX; ty=e.clientY;
     $d.css('transform','translate('+tx+'px,'+ty+'px) translate(-50%,-50%)');
     $sl.css({transform:'translate('+tx+'px,'+ty+'px) translate(-50%,-50%)',opacity:1});
-  }).on('mouseenter','button,.trow,.dc,a,.vchr-btn,.st-step',function(){
+  }).on('mouseenter','button,.trow,.dc,a,.vchr-btn,.st-step,.fl-chip',function(){
     $d.addClass('hov'); $r.addClass('hov');
-  }).on('mouseleave','button,.trow,.dc,a,.vchr-btn,.st-step',function(){
+  }).on('mouseleave','button,.trow,.dc,a,.vchr-btn,.st-step,.fl-chip',function(){
     $d.removeClass('hov'); $r.removeClass('hov');
   }).on('mousedown',function(){$d.addClass('clk');}).on('mouseup',function(){$d.removeClass('clk');});
   (function loop(){
@@ -333,12 +333,13 @@ function buildRow(d){
     var aClr=airlineColor(d.ucus||'');
     var chipStyle=aClr?'background:'+aClr+'22;border-color:'+aClr+'55;color:'+aClr+'':'';
     /* Canlı uçuş durumu (DHMI) — veri gelene kadar d.ucusDurum boş olduğu için hiçbir şey görünmez */
-    var flDot='';
+    var flDot='', flInfo='';
     if(d.ucusDurum){
-      var flDotClr = d.ucusDurum==='gecikti' ? '#fbbf24' : d.ucusDurum==='indi' ? '#4ade80' : '#c9a84c';
-      flDot='<span class="fl-dot" style="background:'+flDotClr+'" title="'+esc(d.ucusDurumMetin||'')+'"></span>';
+      var flDotClr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
+      flDot='<span class="fl-dot" style="background:'+flDotClr+'"></span>';
+      if(d.ucusGecikmeDk>0) flInfo='<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
     }
-    tripHtml+='<a class="fl-chip" style="'+chipStyle+'" href="https://www.google.com/search?q='+ucusUrl+'+flight" target="_blank" rel="noopener">'+flDot+'✈ '+ucus+'</a>';
+    tripHtml+='<span class="fl-chip" style="'+chipStyle+'" data-ucus="'+ucus+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'" data-google-url="https://www.google.com/search?q='+ucusUrl+'+flight">'+flDot+'✈ '+ucus+flInfo+'</span>';
   }
   var parts=[];
   if(kisi) parts.push('👤 '+kisi);
@@ -661,6 +662,7 @@ function enrichFlightStatuses(){
             d.ucusDurum      = res.ucusDurum;
             d.ucusDurumMetin = res.ucusDurumMetin || '';
             d.ucusGecikmeDk  = res.ucusGecikmeDk || 0;
+            d._flightDetail  = res; /* popup için tüm detay (kapı, terminal, saatler vb) */
             updateFlightBadgeInDom(d);
           }
         });
@@ -675,14 +677,61 @@ function updateFlightBadgeInDom(d){
   var $chip = $row.find('.fl-chip');
   if(!$chip.length) return;
 
-  $chip.find('.fl-dot').remove();
+  $chip.find('.fl-dot, .fl-info').remove();
   var clr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
-  $chip.prepend('<span class="fl-dot" style="background:'+clr+'" title="'+esc(d.ucusDurumMetin||'')+'"></span>');
-
-  $row.find('.fl-delay').remove();
+  $chip.prepend('<span class="fl-dot" style="background:'+clr+'"></span>');
   if(d.ucusGecikmeDk > 0){
-    $row.find('.td-trip').append('<div class="fl-delay">⏱ '+esc(d.ucusGecikmeDk)+' dk gecikti</div>');
+    $chip.append('<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>');
   }
+}
+
+/* ════ UÇUŞ DETAY POPUP ════ */
+function showFlightPopup(ucus, tarih, saat){
+  var d = null;
+  for(var i=0;i<allData.length;i++){
+    if(allData[i].ucus===ucus && allData[i].tarih===tarih && allData[i].saat===saat){ d=allData[i]; break; }
+  }
+  var det = d && d._flightDetail;
+  var googleUrl = 'https://www.google.com/search?q='+encodeURIComponent((ucus||'').replace(/\s/g,''))+'+flight';
+
+  if(!det || !det.ucusDurum){
+    /* Canlı veri yok — doğrudan Google'a düş */
+    window.open(googleUrl, '_blank', 'noopener');
+    return;
+  }
+
+  var statusClr = det.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
+  var statusBg  = det.ucusDurum==='gecikti' ? 'rgba(251,191,36,.15)' : 'rgba(74,222,128,.15)';
+
+  var rows = [];
+  if(det.havayolu)      rows.push(['Havayolu', det.havayolu]);
+  if(det.ucakTipi)      rows.push(['Uçak tipi', det.ucakTipi]);
+  if(det.terminal)      rows.push(['Terminal', det.terminal]);
+  if(det.kapi)          rows.push(['Kapı', det.kapi]);
+  if(det.bagajBandi)    rows.push(['Bagaj bandı', det.bagajBandi]);
+  if(det.planlananVaris) rows.push(['Planlanan iniş', det.planlananVaris.split(' ')[1]||det.planlananVaris]);
+  if(det.tahminiVaris)   rows.push(['Tahmini iniş', det.tahminiVaris.split(' ')[1]||det.tahminiVaris]);
+  if(det.gercekVaris)    rows.push(['Gerçek iniş', det.gercekVaris.split(' ')[1]||det.gercekVaris]);
+
+  var rowsHtml = rows.map(function(r){
+    return '<div class="fl-popup-row"><span>'+esc(r[0])+'</span><span>'+esc(r[1])+'</span></div>';
+  }).join('');
+
+  var html = '<div class="fl-popup">'
+    +'<div class="fl-popup-head"><div class="fl-popup-code">✈ '+esc(ucus)+'</div><div class="fl-popup-close" id="fl-popup-close">✕</div></div>'
+    +'<div class="fl-popup-status" style="background:'+statusBg+';color:'+statusClr+'">'+esc(det.ucusDurumMetin||'')+'</div>'
+    +(det.havayolu?'<div class="fl-popup-airline">'+esc(det.havayolu)+'</div>':'')
+    +rowsHtml
+    +'<a class="fl-popup-google" href="'+googleUrl+'" target="_blank" rel="noopener">Google\'da ara →</a>'
+    +'</div>';
+
+  var $ov = $('#fl-popup-overlay');
+  if(!$ov.length){
+    $ov = $('<div id="fl-popup-overlay"></div>').appendTo('body');
+    $ov.on('click', function(e){ if(e.target===this) $ov.removeClass('open'); });
+  }
+  $ov.html(html).addClass('open');
+  $('#fl-popup-close').on('click', function(){ $ov.removeClass('open'); });
 }
 
 /* ════ VOUCHER ════ */
@@ -1155,6 +1204,13 @@ $(function(){
   $(document).on('click', '.st-step', function(){
     var $b = $(this);
     updateStatus($b.data('t'), $b.data('s'), $b.data('m'), $b.data('d'), this);
+  });
+
+  /* Uçuş chip'i — canlı detay varsa popup, yoksa Google'a düş */
+  $(document).on('click', '.fl-chip', function(e){
+    e.stopPropagation();
+    var $c = $(this);
+    showFlightPopup($c.data('ucus'), $c.data('tarih'), $c.data('saat'));
   });
 
   /* Voucher butonları */
