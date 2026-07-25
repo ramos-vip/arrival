@@ -333,14 +333,12 @@ function buildRow(d){
     var aClr=airlineColor(d.ucus||'');
     var chipStyle=aClr?'background:'+aClr+'22;border-color:'+aClr+'55;color:'+aClr+'':'';
     /* Canlı uçuş durumu — veri gelene kadar d.ucusDurum boş olduğu için hiçbir şey görünmez.
-       AYT (havalimanı) kaynaklıysa gerçek durum yazısını (İndi/Son Bagaj/Bagaj Bantta vb.)
-       gösteriyoruz, yoksa sadece gecikme dakikasını. */
+       Rozet metni (İndi/Son Bagaj/Bagaj Bantta/gecikme dk) flChipLabel()'da belirlenir. */
     var flDot='', flInfo='';
     if(d.ucusDurum){
       var flDotClr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
       flDot='<span class="fl-dot" style="background:'+flDotClr+'"></span>';
-      if(d.aytDurum) flInfo='<span class="fl-info">'+esc(d.aytDurum)+'</span>';
-      else if(d.ucusGecikmeDk>0) flInfo='<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
+      flInfo=flChipLabel(d);
     }
     tripHtml+='<span class="fl-chip" style="'+chipStyle+'" data-ucus="'+ucus+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'" data-google-url="https://www.google.com/search?q='+ucusUrl+'+flight">'+flDot+'✈ '+ucus+flInfo+'</span>';
   }
@@ -704,6 +702,21 @@ function enrichFlightStatuses(){
     .catch(function(){});
 }
 
+/* Satırdaki uçuş rozetinde gösterilecek metni belirler:
+   1) AYT (havalimanı) kaynaklıysa kendi durum yazısı — Bekleniyor/Rötar/İndi/
+      Bagaj Bantta/Son Bagaj gibi gerçek yer hizmeti durumları sırayla gelir.
+   2) FR24 kaynaklıysa ve uçuş gerçekten inmişse "İndi" (gecikme varsa dahil) —
+      FR24'te bagaj bandı bilgisi yok, o yüzden sadece inip inmediğini söyler.
+      Havadayken satırda gereksiz "Havada" gürültüsü olmasın diye gösterilmez.
+   3) Hiçbiri yoksa sadece gecikme dakikası, o da varsa. */
+function flChipLabel(d){
+  if(d.aytDurum) return '<span class="fl-info">'+esc(d.aytDurum)+'</span>';
+  var det = d._flightDetail;
+  if(det && det.kaynak==='fr24' && det.gercekVaris) return '<span class="fl-info">'+esc(d.ucusDurumMetin||'İndi')+'</span>';
+  if(d.ucusGecikmeDk > 0) return '<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
+  return '';
+}
+
 function updateFlightBadgeInDom(d){
   var $row = $('.trow[data-tarih="'+d.tarih+'"][data-saat="'+d.saat+'"]');
   if(!$row.length) return;
@@ -713,11 +726,7 @@ function updateFlightBadgeInDom(d){
   $chip.find('.fl-dot, .fl-info').remove();
   var clr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
   $chip.prepend('<span class="fl-dot" style="background:'+clr+'"></span>');
-  if(d.aytDurum){
-    $chip.append('<span class="fl-info">'+esc(d.aytDurum)+'</span>');
-  } else if(d.ucusGecikmeDk > 0){
-    $chip.append('<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>');
-  }
+  $chip.append(flChipLabel(d));
 }
 
 /* ════ UÇUŞ DETAY POPUP ════ */
