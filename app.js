@@ -725,6 +725,10 @@ function updateFlightBadgeInDom(d){
 }
 
 /* ════ UÇUŞ DETAY POPUP ════ */
+var ICON_PLANE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2.5 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
+var ICON_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
+var ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+
 function openFlPopup(html){
   var $ov = $('#fl-popup-overlay');
   if(!$ov.length){
@@ -751,10 +755,10 @@ function showFlightPopup(ucus, tarih, saat){
        Google'a atmıyoruz, elimizdeki rezervasyon bilgisiyle sade bir kart gösteriyoruz. */
     var html0 = '<div class="fl-popup">'
       +'<div class="flp-hero" style="background:linear-gradient(135deg,#132139,#0a1424)">'
-        +'<div class="flp-close" id="fl-popup-close">✕</div>'
+        +'<button type="button" class="flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
         +'<div class="flp-hero-bottom">'
-          +'<div class="flp-logo flp-logo-ph">✈</div>'
-          +'<div><div class="flp-code">'+esc(ucus)+'</div>'
+          +'<div class="flp-logo flp-logo-ph">'+ICON_PLANE+'</div>'
+          +'<div class="flp-hero-text"><div class="flp-code">'+esc(ucus)+'</div>'
           +'<div class="flp-airline">'+esc(tarih)+' · '+esc(saat)+'</div></div>'
         +'</div>'
       +'</div>'
@@ -785,11 +789,11 @@ function showFlightPopup(ucus, tarih, saat){
     : 'background:linear-gradient(135deg,#132139,#0a1424)';
   var anons = ucus + ', ' + (det.varisSehir||'Antalya') + '\'ya ' + (det.ucusDurum==='gecikti' ? (det.ucusGecikmeDk+' dakika gecikmeli iniyor.') : 'zamanında iniyor.');
   var heroHtml = '<div class="flp-hero" style="'+heroStyle+'">'
-    +'<div class="flp-speak" id="fl-popup-speak" title="Sesli oku" data-anons="'+esc(anons)+'">🔊</div>'
-    +'<div class="flp-close" id="fl-popup-close">✕</div>'
+    +'<button type="button" class="flp-speak" id="fl-popup-speak" aria-label="Sesli oku" data-anons="'+esc(anons)+'">'+ICON_SPEAKER+'</button>'
+    +'<button type="button" class="flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
     +'<div class="flp-hero-bottom">'
-      +(det.havayoluLogo?'<img class="flp-logo" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo flp-logo-ph">✈</div>')
-      +'<div><div class="flp-code">'+esc(ucus)+'</div>'
+      +(det.havayoluLogo?'<img class="flp-logo" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo flp-logo-ph">'+ICON_PLANE+'</div>')
+      +'<div class="flp-hero-text"><div class="flp-code">'+esc(ucus)+'</div>'
       +'<div class="flp-airline">'+esc(det.havayolu||'Uçuş')+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div></div>'
       +'<div class="flp-status" style="color:'+statusClr+';border-color:'+statusClr+'55;background:'+statusClr+'1a">'+esc(det.ucusDurumMetin||'')+'</div>'
     +'</div></div>';
@@ -797,9 +801,10 @@ function showFlightPopup(ucus, tarih, saat){
   /* ── ROTA: kalkış → varış ── */
   var routeHtml = '';
   if(det.kalkisSehir || det.varisSehir){
+    var kalkisIataHtml = det.kalkisIata ? esc(det.kalkisIata) : '<span class="flp-iata-empty">'+ICON_PLANE+'</span>';
     routeHtml = '<div class="flp-route">'
-      +'<div class="flp-route-end"><div class="flp-iata">'+esc(det.kalkisIata||'—')+'</div><div class="flp-city">'+esc(det.kalkisSehir||'')+'</div></div>'
-      +'<div class="flp-route-line"><span class="flp-route-plane">✈</span></div>'
+      +'<div class="flp-route-end"><div class="flp-iata">'+kalkisIataHtml+'</div><div class="flp-city">'+esc(det.kalkisSehir||'')+'</div></div>'
+      +'<div class="flp-route-line"><span class="flp-route-plane">'+ICON_PLANE+'</span></div>'
       +'<div class="flp-route-end flp-route-to"><div class="flp-iata">'+esc(det.varisIata||'AYT')+'</div><div class="flp-city">'+esc(det.varisSehir||'Antalya')+'</div></div>'
       +'</div>';
   }
@@ -1370,15 +1375,22 @@ $(function(){
     showFlightPopup($c.data('ucus'), $c.data('tarih'), $c.data('saat'));
   });
 
-  /* Sesli anons — Web Speech API, tarayıcı yerleşik, ücretsiz */
+  /* Sesli anons — Web Speech API, tarayıcı yerleşik, ücretsiz.
+     Okurken düğmeye ".speaking" sınıfı eklenir — hem görsel geri bildirim
+     (basıldığı belli olsun) hem de tekrar tıklanınca iptal edilebilsin diye. */
   $(document).on('click', '.flp-speak', function(e){
     e.stopPropagation();
     if(!('speechSynthesis' in window)) return;
-    var metin = $(this).data('anons');
-    if(!metin) return;
+    var $btn = $(this);
     window.speechSynthesis.cancel();
+    if($btn.hasClass('speaking')){ $btn.removeClass('speaking'); return; }
+    var metin = $btn.data('anons');
+    if(!metin) return;
     var u = new SpeechSynthesisUtterance(metin);
     u.lang = 'tr-TR';
+    u.onend = u.onerror = function(){ $btn.removeClass('speaking'); };
+    $('.flp-speak').removeClass('speaking');
+    $btn.addClass('speaking');
     window.speechSynthesis.speak(u);
   });
 
