@@ -788,6 +788,12 @@ function showFlightPopup(ucus, tarih, saat){
     ? 'background-image:linear-gradient(180deg,rgba(6,13,26,.15),rgba(13,22,38,.96)),url('+det.ucakFoto+')'
     : 'background:linear-gradient(135deg,#132139,#0a1424)';
   var anons = ucus + ', ' + (det.varisSehir||'Antalya') + '\'ya ' + (det.ucusDurum==='gecikti' ? (det.ucusGecikmeDk+' dakika gecikmeli iniyor.') : 'zamanında iniyor.');
+  /* Kısa metinler ("İndi") kod/havayolunun yanında kalır; uzun metinler
+     (ör. "Bagaj Bantta · 21 dk gecikti") her zaman kendi satırına düşer —
+     yoksa flex-shrink:0 olan rozet, komşusu küçüle küçüle yer açsa bile
+     sığmayıp kırpılabiliyor. */
+  var statusMetin = det.ucusDurumMetin||'';
+  var statusCls = 'flp-status' + (statusMetin.length > 16 ? ' flp-status-wide' : '');
   var heroHtml = '<div class="flp-hero" style="'+heroStyle+'">'
     +'<button type="button" class="flp-speak" id="fl-popup-speak" aria-label="Sesli oku" data-anons="'+esc(anons)+'">'+ICON_SPEAKER+'</button>'
     +'<button type="button" class="flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
@@ -795,7 +801,7 @@ function showFlightPopup(ucus, tarih, saat){
       +(det.havayoluLogo?'<img class="flp-logo" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo flp-logo-ph">'+ICON_PLANE+'</div>')
       +'<div class="flp-hero-text"><div class="flp-code">'+esc(ucus)+'</div>'
       +'<div class="flp-airline">'+esc(det.havayolu||'Uçuş')+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div></div>'
-      +'<div class="flp-status" style="color:'+statusClr+';border-color:'+statusClr+'55;background:'+statusClr+'1a">'+esc(det.ucusDurumMetin||'')+'</div>'
+      +'<div class="'+statusCls+'" style="color:'+statusClr+';border-color:'+statusClr+'55;background:'+statusClr+'1a">'+esc(statusMetin)+'</div>'
     +'</div></div>';
 
   /* ── ROTA: kalkış → varış ── */

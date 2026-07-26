@@ -409,6 +409,14 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
   padding: 5px 11px; border-radius: 20px; border: 1px solid; letter-spacing: .2px;
   flex-shrink: 0;
 }
+/* Uzun rozet metni (ör. "Bagaj Bantta · 21 dk gecikti") için: flex-shrink:0 olan
+   bir komşu ile paylaşılan satırda flex-wrap tek başına yetmiyor (hero-text
+   küçülüp yer açmaya devam ediyor, rozet hiç alt satıra düşmüyor, sadece
+   kırpılıyor). flex-basis:100% ile HER ZAMAN kendi satırına zorlanır. */
+.flp-status-wide {
+  flex-basis: 100%; margin-left: 0; margin-top: 2px;
+  white-space: normal; text-align: center;
+}
 
 /* BODY */
 .flp-body { padding: 18px 18px 16px; }
