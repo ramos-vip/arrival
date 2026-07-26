@@ -608,7 +608,7 @@ function render(veriler){
   allData.forEach(function(d){
     if(d._flightDetail) eskiUcusVerisi[d.tarih+'|'+d.saat+'|'+d.ucus] = {
       ucusDurum: d.ucusDurum, ucusDurumMetin: d.ucusDurumMetin,
-      ucusGecikmeDk: d.ucusGecikmeDk, _flightDetail: d._flightDetail
+      ucusGecikmeDk: d.ucusGecikmeDk, aytDurum: d.aytDurum, _flightDetail: d._flightDetail
     };
   });
 
