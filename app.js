@@ -658,18 +658,17 @@ function render(veriler){
   enrichFlightStatuses();
 }
 
-/* ════ CANLI UÇUŞ DURUMU (AYT + FlightRadar24) ════
+/* ════ CANLI UÇUŞ DURUMU (AYT — antalya-airport.aero) ════
    Ayrı Cloudflare Worker'a sorar, VPS'e hiç dokunmaz.
    Worker deploy edilmediyse / erişilemezse sessizce hiçbir şey göstermez. */
 function enrichFlightStatuses(){
   if(!FLIGHT_STATUS_API || FLIGHT_STATUS_API.indexOf('YOUR-SUBDOMAIN') > -1) return;
 
   /* SADECE BUGÜN — panel dün+14 gün ileriyi birden tutuyor (75+ farklı uçuş
-     kodu olabiliyor), ama canlı kaynaklar zaten sadece bugünü/yakın zamanı
-     biliyor; geçmiş/gelecek günlerin uçuşlarını sormanın anlamı yok. Ayrıca
-     Cloudflare Worker'ların ücretsiz planında istek başına ~50 alt-istek
-     sınırı var ve FlightRadar24'ün kredi maliyeti var — çok fazla kod tek
-     seferde gönderilirse hem o sınır aşılır hem gereksiz kredi harcanır. */
+     kodu olabiliyor), ama AYT zaten sadece bugünü/yakın zamanı biliyor;
+     geçmiş/gelecek günlerin uçuşlarını sormanın anlamı yok. Ayrıca Cloudflare
+     Worker'ların ücretsiz planında istek başına ~50 alt-istek sınırı var —
+     çok fazla kod tek seferde gönderilirse Worker o sınırı aşıp çöküyordu. */
   var today = getToday();
   var codes = {};
   allData.forEach(function(d){
@@ -704,14 +703,11 @@ function enrichFlightStatuses(){
 
 /* Satırdaki uçuş rozetinde gösterilecek metni belirler:
    1) AYT (havalimanı) kaynaklıysa kendi durum yazısı — Bekleniyor/Rötar/İndi/
-      Bagaj Bantta/Son Bagaj gibi gerçek yer hizmeti durumları sırayla gelir.
-   2) FR24 kaynaklıysa "Havada" / "İndi" / "İndi · X dk gecikti" — FR24'te bagaj
-      bandı bilgisi yok, o yüzden sadece havada mı indi mi onu söyler.
-   3) Hiçbiri yoksa sadece gecikme dakikası, o da varsa. */
+      Bagaj Bantta/Son Bagaj/Belt Kapandı gibi gerçek yer hizmeti durumları
+      sırayla gelir.
+   2) Hiçbiri yoksa sadece gecikme dakikası, o da varsa. */
 function flChipLabel(d){
   if(d.aytDurum) return '<span class="fl-info">'+esc(d.aytDurum)+'</span>';
-  var det = d._flightDetail;
-  if(det && det.kaynak==='fr24' && d.ucusDurumMetin) return '<span class="fl-info">'+esc(d.ucusDurumMetin)+'</span>';
   if(d.ucusGecikmeDk > 0) return '<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
   return '';
 }
@@ -809,11 +805,10 @@ function showFlightPopup(ucus, tarih, saat){
   }
 
   /* ── SAATLER: planlanan / tahmini / gerçek ──
-     AYT (havalimanının kendi verisi) ve FlightRadar24 (flight-summary) ikisi de
-     onaylı/gerçek kayıt — "İndi" bilgisi için direkt güveniriz, ayrıca doğrulama
-     gerekmez (DHMI'nin aksine, bu ikisi tahmini değil gerçekleşmiş olayı verir). */
+     AYT (havalimanının kendi verisi) onaylı/gerçek kayıt — "İndi" bilgisi için
+     direkt güveniriz, ayrıca doğrulama gerekmez. */
   function fmtSaat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
-  var gercektenIndi = (det.kaynak==='ayt' || det.kaynak==='fr24')
+  var gercektenIndi = det.kaynak==='ayt'
     ? !!det.gercekVaris
     : (det.gercekVaris && typeof det.irtifa === 'number' && det.irtifa < 500);
   var timeCards = [];
