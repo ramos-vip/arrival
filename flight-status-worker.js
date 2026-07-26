@@ -199,6 +199,36 @@ function buildResultFromAyt(row) {
   }, base);
 }
 
+const AYT_NUMBER_TIME_TOLERANCE_MIN = 20; // numara+saat ile yapılan yaklaşık eşleştirmede kabul edilen fark
+
+function numericPart(code) {
+  const m = /(\d+)$/.exec((code || '').trim());
+  return m ? parseInt(m[1], 10) : null;
+}
+
+/* Rezervasyon sistemindeki kod AYT'de birebir bulunamazsa (ör. bir havayolu
+   için "STW198" girilmiş ama AYT bu uçuşu "2S/STW 198" yani IATA kodu "2S"
+   ile listeliyorsa) havayolu ön ekine bakmadan SADECE uçuş numarasına göre
+   AYT'nin tüm satırları taranır; planlanan saati rezervasyondaki beklenen
+   saate en yakın olan (ve toleransın içinde kalan) satır kullanılır. Bu,
+   havayolu kodu uyuşmazlıklarını otomatik olarak çözer. */
+function findAytByNumberAndTime(aytRows, code, expectedMin) {
+  if (expectedMin == null) return null;
+  const num = numericPart(code);
+  if (num == null) return null;
+
+  let best = null;
+  let bestDiff = Infinity;
+  for (const row of aytRows) {
+    if (numericPart(row.code) !== num) continue;
+    const schedMin = timeStrToMinutes(row.scheduled);
+    if (schedMin == null) continue;
+    const diff = Math.abs(schedMin - expectedMin);
+    if (diff < bestDiff) { bestDiff = diff; best = row; }
+  }
+  return (best && bestDiff <= AYT_NUMBER_TIME_TOLERANCE_MIN) ? best : null;
+}
+
 /* codes: [{code, expectedMin}] — AYT tek seferde çekilip hepsiyle eşleştirilir.
 
    İki ayrı önbellek katmanı var, birbirine KARIŞTIRILMAMALI:
@@ -240,8 +270,15 @@ async function resolveCodes(entries, cache, origin) {
 
       try {
         freshAytRow = aytByCode.get(norm);
+        let eslesmeYontemi = 'kod';
+        if (!freshAytRow) {
+          freshAytRow = findAytByNumberAndTime(aytRows, code, entry.expectedMin);
+          eslesmeYontemi = 'sayi-saat'; // havayolu ön eki uyuşmadı, numara+saatle bulundu
+        }
+
         if (freshAytRow) {
           value = buildResultFromAyt(freshAytRow);
+          value.eslesmeYontemi = eslesmeYontemi;
         } else {
           const stickyKey = new Request(origin + '/aytsticky/v3/' + norm);
           const stickyHit = await cache.match(stickyKey);
