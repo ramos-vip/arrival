@@ -249,8 +249,38 @@ async function handleRequest(request) {
   return withCors({ error: 'code veya codes parametresi zorunlu' }, 400);
 }
 
+/* Sabit origin — cron tetikleyicide gerçek bir istek olmadığı için url.origin
+   yok; yapışkan önbelleğin anahtarı client isteğindekiyle (url.origin) BİREBİR
+   aynı olmalı ki resolveCodes() sonradan bu kaydı bulabilsin. */
+const SELF_ORIGIN = 'https://silent-math-b4a9.ramosviptransfer.workers.dev';
+
+/* Cron ile (kimse panele bakmasa bile) periyodik çalışır: AYT'nin o anki
+   listesindeki HER satırı yapışkan önbelleğe yazar. Amaç: örn. sabah 06:00'da
+   kimse panelde değilken inen bir uçuş, AYT onu rolling window'dan düşürene
+   kadar hiç görülmemiş olmasın diye — aksi halde o uçuşun durumu sonsuza kadar
+   kaybolurdu (Worker sadece gerçek bir istek geldiğinde çalışır). */
+async function scheduledSync() {
+  const cache = caches.default;
+  const aytRows = await fetchAytArrivals().catch(() => []);
+  await Promise.all(aytRows.map(async (row) => {
+    const norm = normalizeCode(row.code);
+    if (!norm) return;
+    try {
+      const value = buildResultFromAyt(row);
+      const stickyKey = new Request(SELF_ORIGIN + '/aytsticky/v3/' + norm);
+      const resp = new Response(JSON.stringify(value), {
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
+      });
+      await cache.put(stickyKey, resp);
+    } catch (e) { /* tek satır yazılamazsa diğerlerini etkilemesin */ }
+  }));
+}
+
 export default {
   async fetch(request) {
     return handleRequest(request);
+  },
+  async scheduled(event, env, ctx) {
+    ctx.waitUntil(scheduledSync());
   },
 };

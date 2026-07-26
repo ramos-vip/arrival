@@ -1,3 +1,6 @@
 name = "silent-math-b4a9"
 main = "flight-status-worker.js"
 compatibility_date = "2026-07-25"
+
+[triggers]
+crons = ["*/5 * * * *"]
