@@ -59,14 +59,17 @@ function parseAytArrivals(html) {
   while ((m = rowRegex.exec(html))) {
     const row = m[1];
     const get = (re) => { const mm = re.exec(row); return mm ? mm[1].trim() : ''; };
-    const flightNum = get(/<td class="flightnum"><span>([^<]+)<\/span><\/td>/);
-    const airline = get(/<td class="airline"[^>]*title="([^"]+)"/);
-    const from = get(/<td class="from"><span>([^<]*)<\/span><\/td>/);
-    const scheduled = get(/<td class="time scheduled"><span>([^<]*)<\/span><\/td>/);
-    const estimated = get(/<td class="time estimated"><span>([^<]*)<\/span><\/td>/);
+    /* AYT zebra-çizgili satırlarda class'a ekstra "withbg" ekliyor
+       (ör. class="flightnum withbg") — [^"]* ile esnek eşleştirilmezse
+       satırların yarısı (withbg'li olanlar) tamamen atlanıyordu. */
+    const flightNum = get(/<td class="flightnum[^"]*"><span>([^<]+)<\/span><\/td>/);
+    const airline = get(/<td class="airline[^"]*"[^>]*title="([^"]+)"/);
+    const from = get(/<td class="from[^"]*"><span>([^<]*)<\/span><\/td>/);
+    const scheduled = get(/<td class="time scheduled[^"]*"><span>([^<]*)<\/span><\/td>/);
+    const estimated = get(/<td class="time estimated[^"]*"><span>([^<]*)<\/span><\/td>/);
     const belt = get(/<td class="belt[^"]*"><span>([^<]*)<\/span><\/td>/);
     const terminal = get(/<td class="terminal[^"]*"><span>([^<]*)<\/span><\/td>/);
-    const status = get(/<td class="status"><span>([^<]*)<\/span><\/td>/);
+    const status = get(/<td class="status[^"]*"><span>([^<]*)<\/span><\/td>/);
 
     const codeMatch = /^([A-Za-z0-9]{2})\/[A-Za-z0-9]+\s*(\d+)$/.exec(flightNum);
     const code = codeMatch ? (codeMatch[1].toUpperCase() + parseInt(codeMatch[2], 10)) : '';
