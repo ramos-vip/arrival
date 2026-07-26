@@ -11,9 +11,11 @@
 
    Kaynak: antalya-airport.aero (AYT) — yer hizmetlerinin girdiği gerçek
    "İndi / Bagaj Bantta / Son Bagaj / Belt Kapandı" durumları, ücretsiz.
-   AYT bir uçuşu rolling-window'dan (son ~25 satır) düşürürse, o uçuşun son
-   gerçek durumu "yapışkan" bir önbellekte 12 saat daha hatırlanır — böylece
-   uçuş listeden kalksa bile en son bilinen durum kaybolmaz.
+   Sayfanın kendi "Daha fazla" postback'i simüle edilerek varsayılan ~50
+   satırlık pencere ~340 satıra (kabaca bugün+yarın) genişletiliyor — bkz.
+   fetchAytArrivals(). AYT yine de bir uçuşu bu genişletilmiş pencereden
+   düşürürse, o uçuşun son gerçek durumu "yapışkan" bir önbellekte 12 saat
+   daha hatırlanır — böylece uçuş listeden kalksa bile kaybolmaz.
 
    Deploy:
      1) https://dash.cloudflare.com → Workers & Pages → ilgili Worker
@@ -78,11 +80,82 @@ function parseAytArrivals(html) {
   return rows;
 }
 
+/* AYT'nin sayfası Telerik RadAjax (ASP.NET WebForms) ile yazılmış: varsayılan
+   görünüm sadece ~50 satır gösteriyor, ekranın altındaki "Daha fazla" linki
+   bir postback ile ~340 satıra kadar genişletiyor (yaklaşık bugün+yarın).
+   Bu, sayfanın kendi "Daha fazla" tıklamasının birebir aynısı — session/
+   cookie gerekmiyor, ViewState'in kendisi durumu taşıyor: tek bir GET ile
+   forma ait gizli alanları okuyup aynı POST'u tekrar gönderiyoruz. */
+function extractHiddenField(html, name) {
+  const esc = name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  let re = new RegExp('name="' + esc + '"[^>]*value="([^"]*)"');
+  let m = re.exec(html);
+  if (m) return m[1];
+  re = new RegExp('value="([^"]*)"[^>]*name="' + esc + '"');
+  m = re.exec(html);
+  return m ? m[1] : '';
+}
+
+const AYT_LOADMORE_FIELDS = [
+  '__VIEWSTATE', '__VIEWSTATEGENERATOR', '__VIEWSTATEENCRYPTED', '__EVENTVALIDATION',
+  'RadStyleSheetManager1_TSSM', 'RadScriptManager1_TSM',
+  'ctl00_ctl00_RadFormDecorator_Main_ClientState',
+  'MobileMenu_ClientState',
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadTextBox_Keywords',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadTextBox_Keywords_ClientState',
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadDateTimePicker_Start',
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadDateTimePicker_Start$dateInput',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_Start_calendar_SD',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_Start_calendar_AD',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_Start_timeView_ClientState',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_Start_dateInput_ClientState',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_Start_ClientState',
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadDateTimePicker_End',
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadDateTimePicker_End$dateInput',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_End_calendar_SD',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_End_calendar_AD',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_End_timeView_ClientState',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_End_dateInput_ClientState',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadDateTimePicker_End_ClientState',
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadComboBox_Terminal',
+  'ctl00_ctl00_ContentPlaceHolder_ForNested_ContentPlaceHolder_ForNested_RadComboBox_Terminal_ClientState',
+];
+const AYT_LOADMORE_EVENT_TARGET = 'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$LinkButton_More';
+const AYT_LOADMORE_AJAX_PANEL =
+  'ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$ctl00$ctl00$ContentPlaceHolder_ForNested$ContentPlaceHolder_ForNested$RadAjaxPanel1Panel';
+
 async function fetchAytArrivals() {
-  const res = await fetch(AYT_URL, { headers: { 'User-Agent': BROWSER_UA } });
-  if (!res.ok) return [];
-  const html = await res.text();
-  return parseAytArrivals(html);
+  const res1 = await fetch(AYT_URL, { headers: { 'User-Agent': BROWSER_UA } });
+  if (!res1.ok) return [];
+  const html1 = await res1.text();
+  const base = parseAytArrivals(html1); // "Daha fazla" postback'i başarısız olursa en azından bu 50 satır döner
+
+  try {
+    const body = new URLSearchParams();
+    body.set('ctl00$ctl00$RadScriptManager1', AYT_LOADMORE_AJAX_PANEL + '|' + AYT_LOADMORE_EVENT_TARGET);
+    for (const name of AYT_LOADMORE_FIELDS) body.set(name, extractHiddenField(html1, name));
+    body.set('__EVENTTARGET', AYT_LOADMORE_EVENT_TARGET);
+    body.set('__EVENTARGUMENT', '');
+    body.set('__ASYNCPOST', 'true');
+    body.set('RadAJAXControlID', '');
+
+    const res2 = await fetch(AYT_URL, {
+      method: 'POST',
+      headers: {
+        'User-Agent': BROWSER_UA,
+        'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+        'X-MicrosoftAjax': 'Delta=true',
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+      body: body.toString(),
+    });
+    if (!res2.ok) return base;
+    const html2 = await res2.text();
+    const expanded = parseAytArrivals(html2);
+    return expanded.length >= base.length ? expanded : base;
+  } catch (e) {
+    return base; // "Daha fazla" simülasyonu bozulursa (AYT sayfa yapısı değişirse vb.) sessizce ilk 50 satıra düş
+  }
 }
 
 function buildResultFromAyt(row) {
@@ -234,6 +307,16 @@ async function handleRequest(request) {
 
   const codesParam = url.searchParams.get('codes');
   const codeParam = url.searchParams.get('code');
+  const debugParam = url.searchParams.get('debug');
+
+  if (debugParam === 'ayt') {
+    try {
+      const rows = await fetchAytArrivals();
+      return withCors({ rowCount: rows.length, sample: rows.slice(0, 3), has2141: rows.some((r) => r.code === 'U22141') });
+    } catch (e) {
+      return withCors({ error: String(e && e.message || e) }, 500);
+    }
+  }
 
   if (codesParam) {
     const entries = parseEntries(codesParam);
