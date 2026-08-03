@@ -1020,23 +1020,25 @@ function updateStatus(tarih, saat, musteri, durum, btn){
 function fireConfetti(x, y){
   if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
   var colors = ['#c9a227','#f0d060','#4ade80','#38bdf8','#a78bfa','#f87171'];
-  var n = 24;
+  var n = 42;
   for(var i=0;i<n;i++){
     var el = document.createElement('div');
     el.className = 'confetti-piece';
     var angle = Math.random()*Math.PI*2;
-    var dist  = 55 + Math.random()*110;
+    var dist  = 120 + Math.random()*260;
     var dx = Math.cos(angle)*dist;
-    var dy = Math.sin(angle)*dist - 50;
+    var dy = Math.sin(angle)*dist - 90;
+    var scale = .8 + Math.random()*.9;
     el.style.left = x+'px';
     el.style.top  = y+'px';
     el.style.background = colors[i % colors.length];
     el.style.setProperty('--dx', dx+'px');
     el.style.setProperty('--dy', dy+'px');
     el.style.setProperty('--rot', (Math.random()*720-360)+'deg');
-    el.style.animationDelay = (Math.random()*70)+'ms';
+    el.style.setProperty('--scale', scale);
+    el.style.animationDelay = (Math.random()*90)+'ms';
     document.body.appendChild(el);
-    (function(node){ setTimeout(function(){ node.remove(); }, 1000); })(el);
+    (function(node){ setTimeout(function(){ node.remove(); }, 1300); })(el);
   }
 }
 
