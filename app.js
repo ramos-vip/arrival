@@ -353,13 +353,14 @@ function buildRow(d){
   /* Karşılamacıda müşteri telefonu gizlenir */
   var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
 
-  /* Operasyon stepper */
+  /* Operasyon stepper — 2 adım: Karşılandı / Araçta (Teslim adımı kaldırıldı,
+     karşılamacılar hiç kullanmıyordu). Eski kayıtlarda "Teslim Edildi" hâlâ
+     olabilir — geriye dönük uyumluluk için o da "Araçta" (bitmiş) sayılır. */
   var yd    = d.yerel_durum || '';
-  var ydLvl = yd==='Karşılandı'?1:yd==='Araçta'?2:yd==='Teslim Edildi'?3:0;
+  var ydLvl = yd==='Karşılandı'?1:(yd==='Araçta'||yd==='Teslim Edildi')?2:0;
   var sc1=ydLvl>1?' done':ydLvl===1?' active':'';
-  var sc2=ydLvl>2?' done':ydLvl===2?' active':'';
-  var sc3=ydLvl===3?' active':'';
-  var lc1=ydLvl>=2?' done':'', lc2=ydLvl>=3?' done':'';
+  var sc2=ydLvl===2?' active':'';
+  var lc1=ydLvl>=2?' done':'';
   var te=esc(d.tarih), se=esc(d.saat), me=esc(d.musteri);
   var stHtml='<div class="st-track">'
     +'<div class="st-step s1'+sc1+'" data-t="'+te+'" data-s="'+se+'" data-m="'+me+'" data-d="Karşılandı">'
@@ -367,9 +368,6 @@ function buildRow(d){
     +'<div class="st-line'+lc1+'"></div>'
     +'<div class="st-step s2'+sc2+'" data-t="'+te+'" data-s="'+se+'" data-m="'+me+'" data-d="Araçta">'
       +'<div class="st-dot"></div><div class="st-label">Araçta</div></div>'
-    +'<div class="st-line'+lc2+'"></div>'
-    +'<div class="st-step s3'+sc3+'" data-t="'+te+'" data-s="'+se+'" data-m="'+me+'" data-d="Teslim Edildi">'
-      +'<div class="st-dot"></div><div class="st-label">Teslim</div></div>'
     +'</div>';
 
   var drvHtml;
@@ -384,7 +382,7 @@ function buildRow(d){
   var dateObj = parseTarih(d.tarih||'');
   var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
 
-  var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':yd==='Araçta'?' yd-aracta':yd==='Teslim Edildi'?' yd-teslim':'');
+  var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':(yd==='Araçta'||yd==='Teslim Edildi')?' yd-aracta':'');
   return '<tr class="'+trowClass+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-inner"><div class="cust-avatar" style="background:'+_avBg+'">'+_ini+'</div><div><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></div></div></td>'
@@ -991,8 +989,8 @@ function updateStatus(tarih, saat, musteri, durum, btn){
       _lastDataStr = '';
       haptic('success');
       showStatusFeedback(btn);
-      /* Stepper optimistik güncelleme */
-      var lvl = durum==='Karşılandı'?1:durum==='Araçta'?2:durum==='Teslim Edildi'?3:0;
+      /* Stepper optimistik güncelleme — 2 adım: Karşılandı / Araçta */
+      var lvl = durum==='Karşılandı'?1:durum==='Araçta'?2:0;
       $track.find('.st-step').each(function(i){
         var n=i+1;
         $(this).removeClass('done active').addClass(n<lvl?'done':n===lvl?'active':'');
@@ -1001,15 +999,45 @@ function updateStatus(tarih, saat, musteri, durum, btn){
         $(this).toggleClass('done', i+1 < lvl);
       });
       var $row = $track.closest('.trow');
-      $row.removeClass('yd-karsila yd-aracta yd-teslim');
+      $row.removeClass('yd-karsila yd-aracta');
       if(durum==='Karşılandı')      $row.addClass('yd-karsila');
       else if(durum==='Araçta')     $row.addClass('yd-aracta');
-      else if(durum==='Teslim Edildi') $row.addClass('yd-teslim');
+      /* Araçta = artık son adım, işi bitirdiklerini hissetsinler diye konfeti */
+      if(durum==='Araçta'){
+        var r = btn.getBoundingClientRect();
+        fireConfetti(r.left + r.width/2, r.top + r.height/2);
+      }
     }
   }).catch(function(){
     clearTimeout(timer);
     $track.removeClass('loading');
   });
+}
+
+/* ════ KONFETİ — "Araçta" son adıma geçince küçük kutlama ════
+   Harici kütüphane yok, düz DOM+CSS animasyonu. Azaltılmış hareket
+   tercihi olanlarda .confetti-piece CSS'te gizleniyor. */
+function fireConfetti(x, y){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var colors = ['#c9a227','#f0d060','#4ade80','#38bdf8','#a78bfa','#f87171'];
+  var n = 24;
+  for(var i=0;i<n;i++){
+    var el = document.createElement('div');
+    el.className = 'confetti-piece';
+    var angle = Math.random()*Math.PI*2;
+    var dist  = 55 + Math.random()*110;
+    var dx = Math.cos(angle)*dist;
+    var dy = Math.sin(angle)*dist - 50;
+    el.style.left = x+'px';
+    el.style.top  = y+'px';
+    el.style.background = colors[i % colors.length];
+    el.style.setProperty('--dx', dx+'px');
+    el.style.setProperty('--dy', dy+'px');
+    el.style.setProperty('--rot', (Math.random()*720-360)+'deg');
+    el.style.animationDelay = (Math.random()*70)+'ms';
+    document.body.appendChild(el);
+    (function(node){ setTimeout(function(){ node.remove(); }, 1000); })(el);
+  }
 }
 
 /* ════ SKELETON ════ */
@@ -1056,14 +1084,9 @@ function printList(tarih){
   var totalPax=liste.reduce(function(s,d){return s+(+d.kisi||0);},0);
   var assigned=liste.filter(function(d){return d.surucu;}).length;
 
-  var shield='<svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg" width="48" height="58">'
-    +'<defs><linearGradient id="pg" x1="0%" y1="0%" x2="100%" y2="100%">'
-    +'<stop offset="0%" stop-color="#f0d060"/><stop offset="50%" stop-color="#c9a227"/><stop offset="100%" stop-color="#8a6010"/>'
-    +'</linearGradient></defs>'
-    +'<path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="url(#pg)"/>'
-    +'<path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#07091a"/>'
-    +'<text x="50" y="78" text-anchor="middle" font-family="Georgia,serif" font-size="54" font-weight="bold" fill="url(#pg)">R</text>'
-    +'</svg>';
+  /* window.open('','_blank') ile açılan pencere about:blank olduğu için
+     göreli yol çalışmaz — logoyu mutlak URL ile yükleriz. */
+  var shield='<img src="'+location.origin+'/logo-shield.png" alt="Ramos NJT" width="48" height="57">';
 
   var rows=liste.map(function(d,i){
     var even=i%2===1;
@@ -1414,7 +1437,7 @@ $(function(){
 
   /* ── MOBİL SWIPE → sonraki durum ── */
   var _sw={};
-  var _NEXT={'':'Karşılandı','Karşılandı':'Araçta','Araçta':'Teslim Edildi','Teslim Edildi':''};
+  var _NEXT={'':'Karşılandı','Karşılandı':'Araçta','Araçta':'','Teslim Edildi':''};
   $(document).on('touchstart','.trow',function(e){
     var t=e.originalEvent.touches[0];
     _sw={el:this,x:t.clientX,y:t.clientY,ok:false};
