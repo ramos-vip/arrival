@@ -458,6 +458,9 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
 
 /* IZGARA */
 .flp-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+/* Hücre sayısı tek ise (ör. kapı/güncel tahmin yoksa) son satırda tek başına
+   kalan kart yarım boş bırakmasın diye tüm satırı kaplasın. */
+.flp-grid .flp-cell:nth-child(odd):last-child { grid-column: 1 / -1; }
 .flp-cell {
   display: flex; align-items: center; gap: 9px;
   background: rgba(255,255,255,.03); border: 1px solid rgba(229,184,77,.16);
