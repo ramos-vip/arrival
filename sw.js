@@ -3,7 +3,7 @@
    Rezervasyon verisi zaten localStorage'da ayrıca önbelleğe alınıyor (app.js,
    ramos_cache) — bu sadece SAYFANIN AÇILABİLMESİNİ garanti ediyor. */
 
-var CACHE_NAME = 'ramos-karsilama-v1';
+var CACHE_NAME = 'ramos-karsilama-v2';
 var APP_SHELL = ['./', './index.html', './app.js', './style.css'];
 
 self.addEventListener('install', function(event){
@@ -29,17 +29,18 @@ self.addEventListener('fetch', function(event){
   var isAppShell = url.origin === self.location.origin;
   if(!isAppShell) return; /* API/uçuş isteklerine karışma, onlar kendi mantığıyla çalışsın */
 
+  /* ÖNCE AĞ, olmazsa cache — tersi (cache-first) bu proje her gün defalarca
+     güncellendiği için tehlikeli: mobilde sekme sık sık yeniden yüklendiğinden
+     kullanıcı hep bir önceki sürümde takılı kalabiliyordu. Ağ varsa (neredeyse
+     her zaman) her seferinde en güncel kod gelir; sadece gerçekten çevrimdışı
+     kalınırsa son bilinen sürüme düşülür. */
   event.respondWith(
-    caches.match(req).then(function(cached){
-      var network = fetch(req).then(function(res){
-        if(res && res.ok){
-          var copy = res.clone();
-          caches.open(CACHE_NAME).then(function(cache){ cache.put(req, copy); });
-        }
-        return res;
-      }).catch(function(){ return cached; });
-      /* Ağ hızlıysa onu kullan, yoksa cache'e düş — "stale while revalidate" */
-      return cached || network;
-    })
+    fetch(req).then(function(res){
+      if(res && res.ok){
+        var copy = res.clone();
+        caches.open(CACHE_NAME).then(function(cache){ cache.put(req, copy); });
+      }
+      return res;
+    }).catch(function(){ return caches.match(req); })
   );
 });
