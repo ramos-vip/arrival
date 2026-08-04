@@ -606,7 +606,8 @@ function render(veriler){
   allData.forEach(function(d){
     if(d._flightDetail) eskiUcusVerisi[d.tarih+'|'+d.saat+'|'+d.ucus] = {
       ucusDurum: d.ucusDurum, ucusDurumMetin: d.ucusDurumMetin,
-      ucusGecikmeDk: d.ucusGecikmeDk, aytDurum: d.aytDurum, _flightDetail: d._flightDetail
+      ucusGecikmeDk: d.ucusGecikmeDk, aytDurum: d.aytDurum, _flightDetail: d._flightDetail,
+      _anonsYapildi: d._anonsYapildi /* otomatik sesli anonsun tekrarlanmaması için */
     };
   });
 
@@ -656,6 +657,24 @@ function render(veriler){
   enrichFlightStatuses();
 }
 
+/* Uçuş bu durumlardan birine ilk girdiğinde otomatik sesli anons tetiklenir. */
+var ANNOUNCE_STATUSES = ['İndi', 'Bagaj Bantta', 'Son Bagaj', 'Belt Kapandı'];
+
+/* Otomatik anons — manuel "sesli oku" butonundan farklı olarak ÖNCEKİ sesi
+   iptal etmez (cancel yok): birden fazla uçuş aynı anda inerse anonslar
+   üst üste binmez, sırayla kuyruğa girip birer birer okunur. */
+function speakAnons(metin){
+  if(!('speechSynthesis' in window) || !metin) return;
+  var u = new SpeechSynthesisUtterance(metin);
+  u.lang = 'tr-TR';
+  window.speechSynthesis.speak(u);
+}
+
+/* Sayfa ilk açıldığında zaten inmiş olan onlarca uçuş varsa hepsi birden
+   art arda anons edilmesin diye — ilk tur sessizce "zaten biliniyor" olarak
+   işaretlenir, anons sadece BUNDAN SONRAKİ gerçek geçişlerde başlar. */
+var _ilkEnrichTuru = true;
+
 /* ════ CANLI UÇUŞ DURUMU (AYT — antalya-airport.aero) ════
    Ayrı Cloudflare Worker'a sorar, VPS'e hiç dokunmaz.
    Worker deploy edilmediyse / erişilemezse sessizce hiçbir şey göstermez. */
@@ -692,9 +711,18 @@ function enrichFlightStatuses(){
             d.aytDurum       = res.aytDurum || ''; /* İndi/Son Bagaj/Bagaj Bantta vb. — satırdaki etikette gösterilir */
             d._flightDetail  = res; /* popup için tüm detay (kapı, terminal, saatler, rota vb) */
             updateFlightBadgeInDom(d);
+            /* Uçuş ilk kez "indi" ailesine geçtiğinde otomatik sesli anons —
+               karşılamacı popup açıp "sesli oku"ya basmasa da duysun. Sadece
+               BİR KERE (ilk yakalandığı durum ne olursa olsun — İndi, Bagaj
+               Bantta, hangisiyse), sonraki aşamalarda tekrar anons etmez. */
+            if(!d._anonsYapildi && ANNOUNCE_STATUSES.indexOf(d.aytDurum) > -1){
+              d._anonsYapildi = true;
+              if(!_ilkEnrichTuru) speakAnons((d.musteri||'Yolcu')+' geldi. '+d.ucus+' uçuşu, '+d.aytDurum+'.');
+            }
           }
         });
       });
+      _ilkEnrichTuru = false;
     })
     .catch(function(){});
 }
