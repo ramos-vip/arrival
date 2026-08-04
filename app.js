@@ -606,8 +606,7 @@ function render(veriler){
   allData.forEach(function(d){
     if(d._flightDetail) eskiUcusVerisi[d.tarih+'|'+d.saat+'|'+d.ucus] = {
       ucusDurum: d.ucusDurum, ucusDurumMetin: d.ucusDurumMetin,
-      ucusGecikmeDk: d.ucusGecikmeDk, aytDurum: d.aytDurum, _flightDetail: d._flightDetail,
-      _anonsYapildi: d._anonsYapildi /* otomatik sesli anonsun tekrarlanmaması için */
+      ucusGecikmeDk: d.ucusGecikmeDk, aytDurum: d.aytDurum, _flightDetail: d._flightDetail
     };
   });
 
@@ -670,10 +669,24 @@ function speakAnons(metin){
   window.speechSynthesis.speak(u);
 }
 
-/* Sayfa ilk açıldığında zaten inmiş olan onlarca uçuş varsa hepsi birden
-   art arda anons edilmesin diye — ilk tur sessizce "zaten biliniyor" olarak
-   işaretlenir, anons sadece BUNDAN SONRAKİ gerçek geçişlerde başlar. */
-var _ilkEnrichTuru = true;
+/* Hangi uçuşların anons edildiği localStorage'da (sayfa hafızasında değil)
+   tutulur — mobil tarayıcılar arka plana atılan sekmeleri sık sık sıfırdan
+   yüklüyor, sadece bellekte tutsaydık her yeniden yüklemede "ilk kez
+   görüyorum" sanıp sabahki uçuşları yeniden yeniden seslendirirdi. */
+function anonsDahaOnceMi(ucus, tarih){
+  try { return localStorage.getItem('ramos_anons_'+tarih+'_'+ucus) === '1'; }
+  catch(e){ return false; }
+}
+function anonsIsaretle(ucus, tarih){
+  try { localStorage.setItem('ramos_anons_'+tarih+'_'+ucus, '1'); } catch(e){}
+}
+
+/* "dd.mm.yyyy HH:mm:ss" -> Date */
+function parseAytZaman(s){
+  var m = /^(\d{2})\.(\d{2})\.(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/.exec(s||'');
+  return m ? new Date(+m[3], +m[2]-1, +m[1], +m[4], +m[5], +m[6]) : null;
+}
+var ANONS_TAZE_ESIK_DK = 20; // inişten bu yana bu dakikadan eskiyse artık "haber" sayılmaz, sessizce işaretlenir
 
 /* ════ CANLI UÇUŞ DURUMU (AYT — antalya-airport.aero) ════
    Ayrı Cloudflare Worker'a sorar, VPS'e hiç dokunmaz.
@@ -712,17 +725,20 @@ function enrichFlightStatuses(){
             d._flightDetail  = res; /* popup için tüm detay (kapı, terminal, saatler, rota vb) */
             updateFlightBadgeInDom(d);
             /* Uçuş ilk kez "indi" ailesine geçtiğinde otomatik sesli anons —
-               karşılamacı popup açıp "sesli oku"ya basmasa da duysun. Sadece
-               BİR KERE (ilk yakalandığı durum ne olursa olsun — İndi, Bagaj
-               Bantta, hangisiyse), sonraki aşamalarda tekrar anons etmez. */
-            if(!d._anonsYapildi && ANNOUNCE_STATUSES.indexOf(d.aytDurum) > -1){
-              d._anonsYapildi = true;
-              if(!_ilkEnrichTuru) speakAnons((d.musteri||'Yolcu')+' geldi. '+d.ucus+' uçuşu, '+d.aytDurum+'.');
+               karşılamacı popup açıp "sesli oku"ya basmasa da duysun. Bir kere
+               anons edilen uçuş localStorage'a işaretlenir, bir daha okunmaz.
+               Sadece gerçekten TAZE inişler seslendirilir (bkz. ANONS_TAZE_ESIK_DK)
+               — sayfa yeniden yüklendiğinde saatler önce inmiş bir uçuşu "yeni
+               haber" sanıp seslendirmesin diye. */
+            if(ANNOUNCE_STATUSES.indexOf(d.aytDurum) > -1 && !anonsDahaOnceMi(d.ucus, d.tarih)){
+              anonsIsaretle(d.ucus, d.tarih);
+              var inisZamani = parseAytZaman(res.gercekVaris);
+              var taze = inisZamani && (Date.now() - inisZamani.getTime()) < ANONS_TAZE_ESIK_DK*60000;
+              if(taze) speakAnons((d.musteri||'Yolcu')+' geldi. '+d.ucus+' uçuşu, '+d.aytDurum+'.');
             }
           }
         });
       });
-      _ilkEnrichTuru = false;
     })
     .catch(function(){});
 }
