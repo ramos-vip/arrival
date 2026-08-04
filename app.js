@@ -1446,6 +1446,11 @@ $(function(){
   var _sw={};
   var _NEXT={'':'Karşılandı','Karşılandı':'Araçta','Araçta':'','Teslim Edildi':''};
   $(document).on('touchstart','.trow',function(e){
+    /* Dokunulan yer bir link/buton (telefon, voucher, stepper vb.) ise swipe'ı
+       HİÇ başlatma — içerik kayınca parmağın altına farklı bir eleman gelip
+       istemsiz tıklama/arama tetikleyebiliyordu (iOS'un "otomatik arama/
+       yazdırma engellendi" uyarısının sebebi buydu). */
+    if($(e.target).closest('a, button, .phn, .vchr-btn, .st-step').length) return;
     var t=e.originalEvent.touches[0];
     _sw={el:this,x:t.clientX,y:t.clientY,ok:false};
   }).on('touchmove','.trow',function(e){
