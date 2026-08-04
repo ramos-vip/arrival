@@ -771,6 +771,12 @@ function updateFlightBadgeInDom(d){
 var ICON_PLANE = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M21 16v-2l-8-5V3.5a1.5 1.5 0 0 0-3 0V9l-8 5v2l8-2.5V19l-2.5 1.5V22l3.5-1 3.5 1v-1.5L13 19v-5.5l8 2.5z"/></svg>';
 var ICON_SPEAKER = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>';
 var ICON_CLOSE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+var ICON_CLOCK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.3 2"/></svg>';
+var ICON_PIN = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C7.86 2 4.5 5.36 4.5 9.5c0 5.7 6.44 11.68 6.72 11.93a1.1 1.1 0 0 0 1.56 0c.28-.25 6.72-6.23 6.72-11.93C19.5 5.36 16.14 2 12 2zm0 10.3a2.8 2.8 0 1 1 0-5.6 2.8 2.8 0 0 1 0 5.6z"/></svg>';
+var ICON_TERMINAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 21V7l8-4 8 4v14"/><path d="M4 21h16"/><path d="M9 21v-6h6v6"/></svg>';
+var ICON_BAG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>';
+var ICON_GATE = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4a1 1 0 0 1 1-1h4v18"/><path d="M15 3h3a1 1 0 0 1 1 1v17"/><path d="M3 21h18"/></svg>';
+var ICON_WALK = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="13.3" cy="4.6" r="2"/><path d="M10.3 8.4c.4-.5 1-.7 1.7-.6l2.9.5c.5.1.9.4 1.1.9l1.2 2.5-1.6.8-1-2-1.3-.2.8 3.5 2.6 2.5-1.2 1.3-2.6-2.5-.7-2.2-.9.8.3 2.9-2 3.3-1.5-.8 1.7-2.8-.9-3.9c-.2-.7 0-1.5.4-2z"/></svg>';
 
 function openFlPopup(html){
   var $ov = $('#fl-popup-overlay');
@@ -797,19 +803,19 @@ function showFlightPopup(ucus, tarih, saat){
     /* Canlı uçuş verisi yok (henüz takibe girmemiş / hiçbir kaynakta bulunamadı) —
        Google'a atmıyoruz, elimizdeki rezervasyon bilgisiyle sade bir kart gösteriyoruz. */
     var html0 = '<div class="fl-popup">'
-      +'<div class="flp-hero" style="background:linear-gradient(135deg,#132139,#0a1424)">'
-        +'<button type="button" class="flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
-        +'<div class="flp-hero-bottom">'
-          +'<div class="flp-logo flp-logo-ph">'+ICON_PLANE+'</div>'
-          +'<div class="flp-hero-text"><div class="flp-code">'+esc(ucus)+'</div>'
-          +'<div class="flp-airline">'+esc(tarih)+' · '+esc(saat)+'</div></div>'
+      +'<div class="flp-top flp-top-scene">'
+        +'<div class="flp-top-inner">'
+          +'<div class="flp-logo-box">'+ICON_PLANE+'</div>'
+          +'<div class="flp-top-text"><div class="flp-top-code">'+esc(ucus)+'</div>'
+          +'<div class="flp-top-airline">'+esc(tarih)+' · '+esc(saat)+'</div></div>'
+          +'<button type="button" class="flp-iconbtn flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
         +'</div>'
       +'</div>'
       +'<div class="flp-body">'
-        +(d ? '<div class="flp-route">'
-            +'<div class="flp-route-end"><div class="flp-city" style="max-width:110px;white-space:normal;">'+esc(d.nereden||'')+'</div></div>'
-            +'<div class="flp-route-line"><span class="flp-route-plane">✈</span></div>'
-            +'<div class="flp-route-end flp-route-to"><div class="flp-city" style="max-width:110px;white-space:normal;">'+esc(d.nereye||'')+'</div></div>'
+        +(d ? '<div class="flp-route-card">'
+            +'<div class="flp-route-pin"><span class="flp-route-pin-icon">'+ICON_PIN+'</span><div class="flp-route-city">'+esc(d.nereden||'')+'</div></div>'
+            +'<div class="flp-route-line"><span class="flp-route-badge">'+ICON_PLANE+'</span></div>'
+            +'<div class="flp-route-pin flp-route-pin-to"><span class="flp-route-pin-icon">'+ICON_PIN+'</span><div class="flp-route-city">'+esc(d.nereye||'')+'</div></div>'
           +'</div>' : '')
         +'<div class="flp-empty-msg">Bu uçuş henüz canlı takibe girmedi (kalkmamış olabilir ya da hiçbir kaynakta bulunamadı). Kalkışa yaklaşınca burada canlı durum görünecek.</div>'
       +'</div>'
@@ -820,76 +826,91 @@ function showFlightPopup(ucus, tarih, saat){
 
   /* Gecikme şiddetine göre renk kademesi */
   var dk = det.ucusGecikmeDk || 0;
-  var statusClr;
-  if(det.ucusDurum!=='gecikti')      statusClr='#4ade80';
-  else if(dk >= 45)                  statusClr='#f87171';
-  else if(dk >= 15)                  statusClr='#fb923c';
-  else                               statusClr='#fbbf24';
-
-  /* ── HERO: uçak fotosu (varsa) + üzerine kod/havayolu ── */
-  var heroStyle = det.ucakFoto
-    ? 'background-image:linear-gradient(180deg,rgba(6,13,26,.15),rgba(13,22,38,.96)),url('+det.ucakFoto+')'
-    : 'background:linear-gradient(135deg,#132139,#0a1424)';
+  var statusClr = det.ucusDurum!=='gecikti' ? '#32D583' : (dk>=45 ? '#F97066' : '#E5B84D');
   var anons = ucus + ', ' + (det.varisSehir||'Antalya') + '\'ya ' + (det.ucusDurum==='gecikti' ? (det.ucusGecikmeDk+' dakika gecikmeli iniyor.') : 'zamanında iniyor.');
-  /* Kısa metinler ("İndi") kod/havayolunun yanında kalır; uzun metinler
-     (ör. "Bagaj Bantta · 21 dk gecikti") her zaman kendi satırına düşer —
-     yoksa flex-shrink:0 olan rozet, komşusu küçüle küçüle yer açsa bile
-     sığmayıp kırpılabiliyor. */
-  var statusMetin = det.ucusDurumMetin||'';
-  var statusCls = 'flp-status' + (statusMetin.length > 16 ? ' flp-status-wide' : '');
-  var heroHtml = '<div class="flp-hero" style="'+heroStyle+'">'
-    +'<button type="button" class="flp-speak" id="fl-popup-speak" aria-label="Sesli oku" data-anons="'+esc(anons)+'">'+ICON_SPEAKER+'</button>'
-    +'<button type="button" class="flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
-    +'<div class="flp-hero-bottom">'
-      +(det.havayoluLogo?'<img class="flp-logo" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo flp-logo-ph">'+ICON_PLANE+'</div>')
-      +'<div class="flp-hero-text"><div class="flp-code">'+esc(ucus)+'</div>'
-      +'<div class="flp-airline">'+esc(det.havayolu||'Uçuş')+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div></div>'
-      +'<div class="'+statusCls+'" style="color:'+statusClr+';border-color:'+statusClr+'55;background:'+statusClr+'1a">'+esc(statusMetin)+'</div>'
-    +'</div></div>';
+  var statusMetin = det.ucusDurumMetin || (det.ucusDurum==='gecikti' ? (dk+' dk gecikti') : 'Zamanında');
+
+  /* ── HEADER: temsili uçak görseli (plane-hero.jpg varsa) üzerine kod/havayolu/aksiyonlar ──
+     det.ucakFoto bir kaynaktan gerçek uçuş fotosu sağlarsa öncelik onda; yoksa
+     projeye eklenecek temsili görsel (plane-hero.jpg), o da yoksa CSS ile
+     üretilmiş pist/ışık sahnesine düşer (background-image çoklu katman: url
+     404 verirse görünmez, altındaki katman zaten gösterilir). */
+  var heroUrl = det.ucakFoto || 'plane-hero.jpg';
+  var topStyle = ' style="background-image:linear-gradient(100deg,rgba(7,17,31,.94),rgba(7,17,31,.45) 55%,rgba(7,17,31,.18)),url(\''+heroUrl+'\')"';
+  var headHtml = '<div class="flp-top flp-top-scene flp-top-photo"'+topStyle+'>'
+    +'<div class="flp-top-inner">'
+      +(det.havayoluLogo?'<img class="flp-logo-box flp-logo-box-img" src="'+det.havayoluLogo+'" alt="">':'<div class="flp-logo-box">'+ICON_PLANE+'</div>')
+      +'<div class="flp-top-text"><div class="flp-top-code">'+esc(ucus)+'</div>'
+      +'<div class="flp-top-airline">'+esc((det.havayolu||'UÇUŞ').toUpperCase())+(det.ucakTipi?' · '+esc(det.ucakTipi):'')+'</div></div>'
+      +'<button type="button" class="flp-iconbtn flp-speak" id="fl-popup-speak" aria-label="Sesli oku" data-anons="'+esc(anons)+'">'+ICON_SPEAKER+'</button>'
+      +'<button type="button" class="flp-iconbtn flp-close" id="fl-popup-close" aria-label="Kapat">'+ICON_CLOSE+'</button>'
+    +'</div>'
+  +'</div>';
+
+  /* ── DURUM ROZETİ: dolgun renkli hap ── */
+  var statusHtml = '<div class="flp-status-pill" style="background:linear-gradient(135deg,rgba(255,255,255,.22),rgba(255,255,255,0) 55%),'+statusClr+'">'
+    +'<span class="flp-status-icon">'+ICON_CLOCK+'</span>'
+    +'<span class="flp-status-text">'+esc(statusMetin)+'</span>'
+  +'</div>';
 
   /* ── ROTA: kalkış → varış ── */
   var routeHtml = '';
   if(det.kalkisSehir || det.varisSehir){
     var kalkisIataHtml = det.kalkisIata ? esc(det.kalkisIata) : '<span class="flp-iata-empty">'+ICON_PLANE+'</span>';
-    routeHtml = '<div class="flp-route">'
-      +'<div class="flp-route-end"><div class="flp-iata">'+kalkisIataHtml+'</div><div class="flp-city">'+esc(det.kalkisSehir||'')+'</div></div>'
-      +'<div class="flp-route-line"><span class="flp-route-plane">'+ICON_PLANE+'</span></div>'
-      +'<div class="flp-route-end flp-route-to"><div class="flp-iata">'+esc(det.varisIata||'AYT')+'</div><div class="flp-city">'+esc(det.varisSehir||'Antalya')+'</div></div>'
+    routeHtml = '<div class="flp-route-card">'
+      +'<div class="flp-route-pin"><div class="flp-route-iata">'+kalkisIataHtml+'</div><div class="flp-route-city">'+esc(det.kalkisSehir||'')+'</div></div>'
+      +'<div class="flp-route-line"><span class="flp-route-badge">'+ICON_PLANE+'</span></div>'
+      +'<div class="flp-route-pin flp-route-pin-to"><div class="flp-route-iata">'+esc(det.varisIata||'AYT')+'</div><div class="flp-route-city">'+esc(det.varisSehir||'Antalya')+'</div></div>'
       +'</div>';
   }
 
-  /* ── SAATLER: planlanan / tahmini / gerçek ──
+  /* ── BİLGİ IZGARASI: planlanan/güncel saat + terminal + kapı + bagaj ──
      AYT (havalimanının kendi verisi) onaylı/gerçek kayıt — "İndi" bilgisi için
      direkt güveniriz, ayrıca doğrulama gerekmez. */
   function fmtSaat(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
   var gercektenIndi = det.kaynak==='ayt'
     ? !!det.gercekVaris
     : (det.gercekVaris && typeof det.irtifa === 'number' && det.irtifa < 500);
-  var timeCards = [];
-  if(det.planlananVaris) timeCards.push(['Planlanan', fmtSaat(det.planlananVaris), '#8f9bb0']);
-  if(gercektenIndi)         timeCards.push(['İndi', fmtSaat(det.gercekVaris), '#4ade80']);
-  else if(det.gercekVaris)  timeCards.push(['Güncel tahmin', fmtSaat(det.gercekVaris), statusClr]);
-  else if(det.tahminiVaris) timeCards.push(['Tahmini', fmtSaat(det.tahminiVaris), statusClr]);
-  var timeHtml = timeCards.length ? '<div class="flp-times">'+timeCards.map(function(t){
-    return '<div class="flp-time"><div class="flp-time-lbl">'+esc(t[0])+'</div><div class="flp-time-val" style="color:'+t[2]+'">'+esc(t[1])+'</div></div>';
+  var cells = [];
+  if(det.planlananVaris) cells.push({icon:ICON_PLANE, lbl:'Planlanan', val:fmtSaat(det.planlananVaris)});
+  if(gercektenIndi)          cells.push({icon:ICON_CLOCK, lbl:'İndi', val:fmtSaat(det.gercekVaris), clr:'#32D583'});
+  else if(det.gercekVaris)   cells.push({icon:ICON_CLOCK, lbl:'Güncel Tahmin', val:fmtSaat(det.gercekVaris), clr:statusClr});
+  else if(det.tahminiVaris)  cells.push({icon:ICON_CLOCK, lbl:'Tahmini', val:fmtSaat(det.tahminiVaris), clr:statusClr});
+  if(det.terminal)   cells.push({icon:ICON_TERMINAL, lbl:'Terminal', val:det.terminal});
+  if(det.kapi)        cells.push({icon:ICON_GATE, lbl:'Kapı', val:det.kapi});
+  if(det.bagajBandi)  cells.push({icon:ICON_BAG, lbl:'Bagaj', val:det.bagajBandi});
+  var gridHtml = cells.length ? '<div class="flp-grid">'+cells.map(function(c){
+    var cls = c.clr ? ' flp-cell--active' : '';
+    var style = c.clr ? ' style="--cc:'+c.clr+';--cc-bg:'+c.clr+'22;--cc-border:'+c.clr+'55;--cc-icon-bg:'+c.clr+'33"' : '';
+    return '<div class="flp-cell'+cls+'"'+style+'>'
+      +'<span class="flp-cell-icon">'+c.icon+'</span>'
+      +'<div class="flp-cell-text"><div class="flp-cell-lbl">'+esc((c.lbl||'').toUpperCase())+'</div><div class="flp-cell-val">'+esc(c.val)+'</div></div>'
+    +'</div>';
   }).join('')+'</div>' : '';
 
-  /* ── CHIP'LER: terminal / kapı / bagaj ── */
-  var chips = [];
-  if(det.terminal)   chips.push(['Terminal', det.terminal]);
-  if(det.kapi)       chips.push(['Kapı', det.kapi]);
-  if(det.bagajBandi) chips.push(['Bagaj', det.bagajBandi]);
-  var chipHtml = chips.length ? '<div class="flp-chips">'+chips.map(function(c){
-    return '<div class="flp-chip"><div class="flp-chip-lbl">'+esc(c[0])+'</div><div class="flp-chip-val">'+esc(c[1])+'</div></div>';
-  }).join('')+'</div>' : '';
+  /* ── YOLCU ÇIKIŞI: sadece uçak indiyse gösterilir, kabaca ortalama bekleme süresi
+     (bagaj + pasaport kontrolü) — tekil uçuşa özel canlı bir veri değil, tahmini bir aralık. ── */
+  var exitHtml = '';
+  if(gercektenIndi){
+    exitHtml = '<div class="flp-exit-card">'
+      +'<div class="flp-exit-left">'
+        +'<span class="flp-exit-icon">'+ICON_WALK+'</span>'
+        +'<div><div class="flp-exit-lbl">YOLCU ÇIKIŞI</div><div class="flp-exit-val">~15-20 dk</div></div>'
+      +'</div>'
+      +'<div class="flp-exit-scene"></div>'
+    +'</div>';
+  }
+
+  var footerHtml = '<a class="flp-footer-btn" href="'+googleUrl+'" target="_blank" rel="noopener"><span class="flp-footer-btn-icon">'+ICON_PIN+'</span>Google\'da Ara<span class="flp-footer-arrow">→</span></a>';
 
   var html = '<div class="fl-popup">'
-    +heroHtml
+    +headHtml
     +'<div class="flp-body">'
+      +statusHtml
       +routeHtml
-      +timeHtml
-      +chipHtml
-      +'<a class="fl-popup-google" href="'+googleUrl+'" target="_blank" rel="noopener">Google\'da ara →</a>'
+      +gridHtml
+      +exitHtml
+      +footerHtml
     +'</div>'
     +'</div>';
 
