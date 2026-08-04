@@ -271,8 +271,9 @@ function animateCount(el,to,suffix){
 }
 
 /* ════ AUTH ════ */
-/* Şifreler burada YOK — GAS Script Properties'te SHA-256 hash olarak saklanır.
-   Kaynak kodu görüntüleyen kimse şifreyi bulamaz. */
+/* Şifreler burada YOK — sunucuda (ramosnjttransfer.com) bcrypt hash olarak
+   saklanır, giriş panel_login.php üzerinden doğrulanır. Kaynak kodu
+   görüntüleyen kimse şifreyi bulamaz. */
 var _loginBusy = false;
 function getRole(){ return localStorage.getItem('ramos_rol')||'karsilama'; }
 function isYonetici(){ return getRole()==='yonetici'; }
@@ -467,7 +468,7 @@ function showDate(tarih){
     if(isLoading){
       $('#page').html(buildSkeleton(5));
     } else {
-      $('#page').html(emptyState('Bu tarih için transfer bulunamadı','Shadowtransfer\'de bu tarihe ait arrival kaydı yok veya tüm transferler iptal edildi.'));
+      $('#page').html(emptyState('Bu tarih için transfer bulunamadı','Bu tarihe ait arrival kaydı yok veya tüm transferler iptal edildi.'));
     }
     return;
   }
@@ -882,61 +883,17 @@ function showFlightPopup(ucus, tarih, saat){
     return '<div class="flp-chip"><div class="flp-chip-lbl">'+esc(c[0])+'</div><div class="flp-chip-val">'+esc(c[1])+'</div></div>';
   }).join('')+'</div>' : '';
 
-  /* ── HARİTA: uçağın son konumu + uçtuğu rotanın izi ── */
-  var mapHtml = '';
-  if(det.lat != null && det.lon != null){
-    var mapZoom = 6;
-    var tile = latLonToTile(det.lat, det.lon, mapZoom);
-    var alt = det.irtifa ? '<div class="flp-map-alt">'+Math.round(det.irtifa).toLocaleString('tr-TR')+' ft</div>' : '';
-
-    var trailSvg = '';
-    if(Array.isArray(det.rota) && det.rota.length > 1){
-      var pts = det.rota.map(function(p){
-        var px = latLonToPixel(p[0], p[1], mapZoom, tile.x, tile.y);
-        return px.x.toFixed(1)+','+px.y.toFixed(1);
-      }).join(' ');
-      trailSvg = '<svg class="flp-map-trail" viewBox="0 0 256 256" preserveAspectRatio="none">'
-        +'<polyline points="'+pts+'" fill="none" stroke="#c9a84c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.85"/>'
-        +'</svg>';
-    }
-
-    mapHtml = '<div class="flp-map">'
-      +'<img src="https://tile.openstreetmap.org/'+mapZoom+'/'+tile.x+'/'+tile.y+'.png" alt="">'
-      +trailSvg
-      +'<div class="flp-map-pin">✈</div>'+alt
-      +'</div>';
-  }
-
   var html = '<div class="fl-popup">'
     +heroHtml
     +'<div class="flp-body">'
       +routeHtml
       +timeHtml
       +chipHtml
-      +mapHtml
       +'<a class="fl-popup-google" href="'+googleUrl+'" target="_blank" rel="noopener">Google\'da ara →</a>'
     +'</div>'
     +'</div>';
 
   openFlPopup(html);
-}
-
-/* Enlem/boylam -> OSM tile x/y (slippy map standardı) */
-function latLonToTile(lat, lon, zoom){
-  var n = Math.pow(2, zoom);
-  var x = Math.floor((lon + 180) / 360 * n);
-  var latRad = lat * Math.PI / 180;
-  var y = Math.floor((1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n);
-  return { x: x, y: y };
-}
-
-/* Enlem/boylam -> belirli bir tile'ın içindeki piksel konumu (rota izi çizmek için) */
-function latLonToPixel(lat, lon, zoom, tileX, tileY){
-  var n = Math.pow(2, zoom);
-  var x = (lon + 180) / 360 * n;
-  var latRad = lat * Math.PI / 180;
-  var y = (1 - Math.log(Math.tan(latRad) + 1/Math.cos(latRad)) / Math.PI) / 2 * n;
-  return { x: (x - tileX) * 256, y: (y - tileY) * 256 };
 }
 
 /* ════ VOUCHER ════ */
@@ -1196,7 +1153,7 @@ function printList(tarih){
     +'</div>'
     +'<table><thead><tr><th>Saat</th><th>Müşteri'+(showTel?' / Tel':'')+'</th><th>Uçuş</th><th>Kişi</th><th>Araç</th><th>Güzergah</th><th>Şoför / Plaka / Tel</th><th>Durum</th></tr></thead>'
     +'<tbody>'+rows+'</tbody></table>'
-    +'<div class="footer"><span>shadowtransfer.com · RAMOS NJT VIP Transfer · Gizli — Yalnızca dahili kullanım</span>'
+    +'<div class="footer"><span>ramosnjttransfer.com · RAMOS NJT VIP Transfer · Gizli — Yalnızca dahili kullanım</span>'
     +'<span>'+tarihStr+' · '+new Date().toLocaleTimeString('tr-TR')+'</span></div>'
     +'<script>window.onload=function(){window.print()}<\/script>'
     +'</body></html>';
@@ -1320,7 +1277,11 @@ function yukle(){
 }
 
 /* ════ SESSION ════ */
-var SESSION_MS = 2 * 60 * 60 * 1000; /* 2 saat */
+/* Backend token'ı (panel_auth.php → PANEL_TOKEN_TTL) zaten 6 saatte kendiliğinden
+   geçersiz oluyor (401 dönünce yukle() otomatik çıkış yapıyor) — bu süre daha KISA
+   tutulursa (eskiden 2 saatti) karşılamacı tüm gün aktif kullanırken bile gereksiz
+   yere şifre girmeye zorlanıyordu. Artık backend'le aynı: 6 saat. */
+var SESSION_MS = 6 * 60 * 60 * 1000; /* 6 saat — panel_auth.php PANEL_TOKEN_TTL ile aynı */
 
 function checkSession(){
   if(localStorage.getItem('ramos_auth')!=='ok') return false;
