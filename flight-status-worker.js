@@ -251,7 +251,7 @@ async function resolveCodes(entries, cache, origin) {
   const cacheKeys = {};
 
   for (const entry of entries) {
-    const key = new Request(origin + '/cache/v3/' + normalizeCode(entry.code));
+    const key = new Request(origin + '/cache/v4/' + normalizeCode(entry.code));
     cacheKeys[entry.code] = key;
     const hit = await cache.match(key);
     if (hit) {
@@ -286,7 +286,7 @@ async function resolveCodes(entries, cache, origin) {
           value = buildResultFromAyt(freshAytRow);
           value.eslesmeYontemi = eslesmeYontemi;
         } else {
-          const stickyKey = new Request(origin + '/aytsticky/v3/' + norm);
+          const stickyKey = new Request(origin + '/aytsticky/v4/' + norm);
           const stickyHit = await cache.match(stickyKey);
           if (stickyHit) value = await stickyHit.json(); // AYT listeden düşmüş ama son gerçek durumu korunuyor
         }
@@ -308,7 +308,7 @@ async function resolveCodes(entries, cache, origin) {
          (AYT_STICKY_TTL) saklanır. */
       if (freshAytRow) {
         try {
-          const stickyKey = new Request(origin + '/aytsticky/v3/' + norm);
+          const stickyKey = new Request(origin + '/aytsticky/v4/' + norm);
           const resp2 = new Response(JSON.stringify(value), {
             headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
           });
@@ -396,7 +396,7 @@ async function scheduledSync() {
     if (!norm) return;
     try {
       const value = buildResultFromAyt(row);
-      const stickyKey = new Request(SELF_ORIGIN + '/aytsticky/v3/' + norm);
+      const stickyKey = new Request(SELF_ORIGIN + '/aytsticky/v4/' + norm);
       const resp = new Response(JSON.stringify(value), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
       });
