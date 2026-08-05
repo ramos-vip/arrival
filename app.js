@@ -1270,11 +1270,17 @@ function yukle(){
       }
     }
 
-    /* Akıllı polling: veri değişmediyse ekranı yeniden çizme */
+    /* Akıllı polling: rezervasyon verisi değişmediyse tabloyu yeniden çizme —
+       ama canlı uçuş durumu (İndi/Bagaj Bantta/Belt Kapandı) rezervasyon
+       verisini DEĞİŞTİRMEZ, bu yüzden render() (ve içindeki enrichFlightStatuses)
+       atlanınca satır rozeti donup kalıyordu — popup her açılışta ayrı tazelendiği
+       için oradan ilerleme görünüyor ama satırda görünmüyordu. Tablo aynı
+       kalsa da uçuş durumunu bağımsız olarak her pollingde tazele. */
     var newStr = JSON.stringify(data);
     if(newStr === _lastDataStr && allData.length > 0){
       var st = new Date().toLocaleString('tr-TR',{hour:'2-digit',minute:'2-digit'});
       $('#upd').text('Son güncelleme: '+st);
+      enrichFlightStatuses();
       return;
     }
     _lastDataStr = newStr;
