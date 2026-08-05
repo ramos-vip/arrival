@@ -185,16 +185,22 @@ function buildResultFromAyt(row) {
     eslesmeYontemi: 'kod',
   };
 
+  /* AYT'nin ham row.status metnini SADECE bilinen, okunaklı yer-hizmetleri
+     durumlarında ("İndi", "Bagaj Bantta" vb.) ekrana basıyoruz. Uçak henüz
+     inmemişken AYT bazen "Gecikme:05:31" gibi çiğ/teknik bir kod dönüyor —
+     onu olduğu gibi göstermek yerine sade "X dk gecikti" metnine düşüyoruz. */
+  const durumMetinKaynagi = landed ? row.status : '';
+
   if (delayMin > 5) {
     return Object.assign({
       ucusDurum: 'gecikti',
-      ucusDurumMetin: row.status ? row.status + ' · ' + delayMin + ' dk gecikti' : (delayMin + ' dk gecikti'),
+      ucusDurumMetin: durumMetinKaynagi ? durumMetinKaynagi + ' · ' + delayMin + ' dk gecikti' : (delayMin + ' dk gecikti'),
       ucusGecikmeDk: delayMin,
     }, base);
   }
   return Object.assign({
     ucusDurum: 'zamaninda',
-    ucusDurumMetin: row.status || 'Zamanında',
+    ucusDurumMetin: durumMetinKaynagi || 'Zamanında',
     ucusGecikmeDk: 0,
   }, base);
 }
