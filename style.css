@@ -1301,13 +1301,22 @@ body.theme-noon { background-image:
 @media print {
   @page { size: A4 portrait; margin: 0; }
 
+  /* Mobil (özellikle iOS) print/PDF motorları "position:fixed" + "vh" gibi
+     viewport-bağımlı birimleri sayfa (A4) yerine cihaz ekranına göre
+     hesaplayabiliyor — bu da orantısız/"yamuk" çıktıya yol açıyordu. En
+     güvenilir yöntem: html/body'yi doğrudan A4 mm'ye sabitleyip geri kalan
+     her şeyi SADECE yüzde (%) ile o zincire bağlamak — fixed/vh yok. */
+  html, body {
+    width: 210mm !important; height: 297mm !important;
+    margin: 0 !important; padding: 0 !important;
+  }
+
   body > *:not(#voucher-overlay) { display: none !important; }
 
   #voucher-overlay {
-    position: fixed !important; inset: 0 !important;
-    display: flex !important;
-    align-items: flex-start !important;
-    justify-content: flex-start !important;
+    position: static !important;
+    display: block !important;
+    width: 100% !important; height: 100% !important;
     background: #fff !important;
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -1315,13 +1324,8 @@ body.theme-noon { background-image:
   }
 
   #voucher-card {
-    /* Sabit "210mm/297mm" masaüstünde sorunsuz ama mobil print/PDF motorları
-       (özellikle iOS) bu mm değerlerini gerçek A4 fiziksel boyutuna doğru
-       çevirmiyor — sonuç orantısız/"yamuk" çıkan bir sayfa. @page zaten A4
-       tanımladığı için kart sadece o alanı %100 doldursun, oranı motor
-       kendisi (doğru şekilde) hesaplasın. */
     width: 100% !important;
-    height: 100vh !important;
+    height: 100% !important;
     max-width: none !important;
     min-width: 0 !important;
     border-radius: 0 !important;
