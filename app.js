@@ -683,29 +683,27 @@ function anonsIsaretle(ucus, tarih){
 }
 
 /* "Kim okusun" kararını artık sadece bu cihazın localStorage'ına değil,
-   sunucudaki PAYLAŞILAN kayda da soruyoruz (panel_anons_claim.php) — panel
-   aynı anda birden fazla telefon/tablette açık olabiliyor (birkaç
-   karşılamacı), her cihazın localStorage'ı birbirinden habersiz olduğu için
-   hepsi aynı iniş anını yakalayıp aynı anda seslendiriyordu ("1 kişi yerine
-   3 kişi okuyor"). Sunucu PRIMARY KEY(ucus,tarih) ile atomik karar veriyor:
-   sadece İLK isteği yapan cihaz "claimed:true" alır, okuma sırası onda olur.
-   Sunucuya ulaşılamazsa (ağ hatası vb.) eskisi gibi yerel karara düşülür —
-   anons hiç okunmamaktansa nadiren tekrar okunması daha az kötü. */
+   PAYLAŞILAN bir kayda da soruyoruz — panel aynı anda birden fazla telefon/
+   tablette açık olabiliyor (birkaç karşılamacı), her cihazın localStorage'ı
+   birbirinden habersiz olduğu için hepsi aynı iniş anını yakalayıp aynı anda
+   seslendiriyordu ("1 kişi yerine 3 kişi okuyor"). ramosnjttransfer.com'daki
+   ana sunucuya HİÇ dokunmuyoruz — zaten deploy ettiğimiz FLIGHT_STATUS_API
+   Worker'ının kendi Cache API'sini kullanan basit bir "ilk isteyen kazanır"
+   uç noktası var (?claim=). Gerçek atomik değil ama mevcut durumdan (hiç
+   koordinasyon yok) çok daha iyi. Worker'a ulaşılamazsa eskisi gibi yerel
+   karara düşülür — anons hiç okunmamaktansa nadiren tekrar okunması daha az
+   kötü. */
 function claimVeSeslendir(d){
-  var tok = localStorage.getItem('ramos_token')||'';
   var metin = (d.musteri||'Yolcu')+' geldi. '+d.ucus+' uçuşu, '+d.aytDurum+'.';
-  fetch(API_BASE + '/panel_anons_claim.php', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-    body: JSON.stringify({ ucus: d.ucus, tarih: d.tarih })
-  }).then(function(r){ return r.json().catch(function(){ return null; }); })
-  .then(function(claim){
-    anonsIsaretle(d.ucus, d.tarih);
-    if(!claim || claim.claimed !== false) speakAnons(metin);
-  }).catch(function(){
-    anonsIsaretle(d.ucus, d.tarih);
-    speakAnons(metin);
-  });
+  fetch(FLIGHT_STATUS_API + '?claim=' + encodeURIComponent(d.ucus) + '&tarih=' + encodeURIComponent(d.tarih))
+    .then(function(r){ return r.json().catch(function(){ return null; }); })
+    .then(function(claim){
+      anonsIsaretle(d.ucus, d.tarih);
+      if(!claim || claim.claimed !== false) speakAnons(metin);
+    }).catch(function(){
+      anonsIsaretle(d.ucus, d.tarih);
+      speakAnons(metin);
+    });
 }
 
 /* "dd.mm.yyyy HH:mm:ss" -> Date */

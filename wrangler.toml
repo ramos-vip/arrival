@@ -4,3 +4,15 @@ compatibility_date = "2026-07-25"
 
 [triggers]
 crons = ["*/5 * * * *"]
+
+# Aynı anda birden fazla cihazda açık panelin, aynı uçuşun inişini birbirinden
+# habersiz ayrı ayrı seslendirmesini önlemek için ("1 kişi yerine 3 kişi
+# okuyor") tek örnekli/atomik "ilk isteyen kazanır" claim'i — Cache API'nin
+# aksine gerçekten tutarlı, edge-propagation gecikmesi yok.
+[[durable_objects.bindings]]
+name = "ANONS_CLAIMS"
+class_name = "AnonsClaimDO"
+
+[[migrations]]
+tag = "v1"
+new_sqlite_classes = ["AnonsClaimDO"]

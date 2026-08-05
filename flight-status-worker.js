@@ -358,7 +358,7 @@ function withCors(body, status) {
   });
 }
 
-async function handleRequest(request) {
+async function handleRequest(request, env) {
   if (request.method === 'OPTIONS') return withCors({}, 204);
 
   const url = new URL(request.url);
@@ -391,7 +391,50 @@ async function handleRequest(request) {
     return withCors(result[codeParam] || { ucusDurum: null });
   }
 
+  const claimParam = url.searchParams.get('claim');
+  if (claimParam) {
+    /* Panel aynı anda birden fazla telefon/tablette açık olabiliyor (birkaç
+       karşılamacı) — sesli iniş anonsunu her cihaz kendi başına, birbirinden
+       habersiz karar verip tetiklerse hepsi aynı anda okuyor ("1 kişi yerine
+       3 kişi okuyor"). Backend'e (ramosnjttransfer.com) hiç dokunmadan, zaten
+       deploy ettiğimiz bu Worker'a bağlı bir Durable Object ile çözüyoruz:
+       her uçuş+tarih ("XQ591_05.08.2026" gibi) kendi TEK örneğine yönlenir,
+       o örnek istekleri sırayla işlediği için "ilk isteyen kazanır" GERÇEKTEN
+       atomik olur — Cache API'nin edge-propagation gecikmesi/yarış riski yok. */
+    const tarihParam = url.searchParams.get('tarih') || '';
+    const doId = env.ANONS_CLAIMS.idFromName(normalizeCode(claimParam) + '_' + tarihParam);
+    const stub = env.ANONS_CLAIMS.get(doId);
+    const doResp = await stub.fetch('https://do/claim');
+    const claimResult = await doResp.json();
+    return new Response(JSON.stringify(claimResult), {
+      headers: {
+        'Content-Type': 'application/json; charset=utf-8',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, OPTIONS',
+        'Cache-Control': 'no-store',
+      },
+    });
+  }
+
   return withCors({ error: 'code veya codes parametresi zorunlu' }, 400);
+}
+
+/* Uçuş+tarih başına TEK örnek — Durable Object'lerin garantisi gereği bu tek
+   örneğe gelen istekler HER ZAMAN sırayla (birbirini beklemeden çakışmadan)
+   işlenir, bu yüzden "daha önce claim edildi mi" kontrolü + yazma arasında
+   başka bir isteğin araya girmesi imkansızdır — gerçek atomiklik budur. */
+export class AnonsClaimDO {
+  constructor(state) {
+    this.state = state;
+  }
+  async fetch() {
+    const already = await this.state.storage.get('claimed');
+    if (already) {
+      return new Response(JSON.stringify({ claimed: false }));
+    }
+    await this.state.storage.put('claimed', true);
+    return new Response(JSON.stringify({ claimed: true }));
+  }
 }
 
 /* Sabit origin — cron tetikleyicide gerçek bir istek olmadığı için url.origin
@@ -429,8 +472,8 @@ async function scheduledSync() {
 }
 
 export default {
-  async fetch(request) {
-    return handleRequest(request);
+  async fetch(request, env) {
+    return handleRequest(request, env);
   },
   async scheduled(event, env, ctx) {
     ctx.waitUntil(scheduledSync());
