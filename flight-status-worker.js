@@ -73,9 +73,18 @@ function parseAytArrivals(html) {
     const terminal = get(/<td class="terminal[^"]*"><span>([^<]*)<\/span><\/td>/);
     const status = get(/<td class="status[^"]*"><span>([^<]*)<\/span><\/td>/);
 
-    const codeMatch = /^([A-Za-z0-9]{2})\/[A-Za-z0-9]+\s*(\d+)$/.exec(flightNum);
-    const code = codeMatch ? (codeMatch[1].toUpperCase() + parseInt(codeMatch[2], 10)) : '';
-    if (code) rows.push({ code, airline, from, scheduled, estimated, belt, terminal, status });
+    /* AYT çoğu satırı "SU/AFL 2124" gibi çift kod (marketing/operating carrier)
+       formatında listeliyor. Rezervasyon sistemine hangi kodla girildiği
+       değişebildiği için ikisini de saklıyoruz — aksi halde ikinci kodla
+       girilmiş uçuşlar sadece sayı+saat yaklaşık eşleşmesine kalırdı. */
+    const codeMatch = /^([A-Za-z0-9]{2})\/([A-Za-z0-9]+)\s*(\d+)$/.exec(flightNum);
+    let code = '', altCode = '';
+    if (codeMatch) {
+      const num = parseInt(codeMatch[3], 10);
+      code = codeMatch[1].toUpperCase() + num;
+      altCode = codeMatch[2].toUpperCase() + num;
+    }
+    if (code) rows.push({ code, altCode, airline, from, scheduled, estimated, belt, terminal, status });
   }
   return rows;
 }
@@ -264,7 +273,14 @@ async function resolveCodes(entries, cache, origin) {
   if (uncached.length) {
     const aytRows = await fetchAytArrivals().catch(() => []);
     const aytByCode = new Map();
-    aytRows.forEach((r) => { const k = normalizeCode(r.code); if (!aytByCode.has(k)) aytByCode.set(k, r); });
+    aytRows.forEach((r) => {
+      const k = normalizeCode(r.code);
+      if (!aytByCode.has(k)) aytByCode.set(k, r);
+      if (r.altCode) {
+        const k2 = normalizeCode(r.altCode);
+        if (!aytByCode.has(k2)) aytByCode.set(k2, r);
+      }
+    });
 
     /* Her kod TAMAMEN bağımsız try/catch içinde — biri patlarsa diğerlerini
        (Promise.all reject edip TÜM toplu isteği etkileyerek) bozmasın. */
@@ -396,11 +412,18 @@ async function scheduledSync() {
     if (!norm) return;
     try {
       const value = buildResultFromAyt(row);
-      const stickyKey = new Request(SELF_ORIGIN + '/aytsticky/v4/' + norm);
       const resp = new Response(JSON.stringify(value), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
       });
-      await cache.put(stickyKey, resp);
+      await cache.put(new Request(SELF_ORIGIN + '/aytsticky/v4/' + norm), resp.clone());
+      /* Çift kodlu satırlarda (ör. "SU/AFL 2124") ikinci kodu da yapışkan
+         önbelleğe yaz — rezervasyon o kodla girilmiş olabilir. */
+      if (row.altCode) {
+        const normAlt = normalizeCode(row.altCode);
+        if (normAlt && normAlt !== norm) {
+          await cache.put(new Request(SELF_ORIGIN + '/aytsticky/v4/' + normAlt), resp.clone());
+        }
+      }
     } catch (e) { /* tek satır yazılamazsa diğerlerini etkilemesin */ }
   }));
 }
