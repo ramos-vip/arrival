@@ -1315,10 +1315,15 @@ body.theme-noon { background-image:
   }
 
   #voucher-card {
-    width: 210mm !important;
-    height: 297mm !important;
+    /* Sabit "210mm/297mm" masaüstünde sorunsuz ama mobil print/PDF motorları
+       (özellikle iOS) bu mm değerlerini gerçek A4 fiziksel boyutuna doğru
+       çevirmiyor — sonuç orantısız/"yamuk" çıkan bir sayfa. @page zaten A4
+       tanımladığı için kart sadece o alanı %100 doldursun, oranı motor
+       kendisi (doğru şekilde) hesaplasın. */
+    width: 100% !important;
+    height: 100vh !important;
     max-width: none !important;
-    min-width: 210mm !important;
+    min-width: 0 !important;
     border-radius: 0 !important;
     box-shadow: none !important;
     animation: none !important;
