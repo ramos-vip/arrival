@@ -54,6 +54,19 @@ function todayDMY() {
   return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear();
 }
 
+/* "DD.MM.YYYY" -> deltaDays kaydırılmış "DD.MM.YYYY". Gece yarısını geçen
+   uçuşlar için lazım: kalkış 23:25 gibi bir önceki günse, AYT satırı hâlâ o
+   günün tarihini taşır ama rezervasyon (müşteri gece yarısından sonra
+   alınıyor diye) "ertesi gün" etiketlenmiş olabilir. */
+function shiftDateStr(dmy, deltaDays) {
+  const m = /^(\d{2})\.(\d{2})\.(\d{4})$/.exec(dmy || '');
+  if (!m) return '';
+  const d = new Date(Date.UTC(+m[3], +m[2] - 1, +m[1]));
+  d.setUTCDate(d.getUTCDate() + deltaDays);
+  const p = (n) => String(n).padStart(2, '0');
+  return p(d.getUTCDate()) + '.' + p(d.getUTCMonth() + 1) + '.' + d.getUTCFullYear();
+}
+
 function parseAytArrivals(html) {
   const rows = [];
   const rowRegex = /<tr class="status_[A-Za-z0-9]+">([\s\S]*?)<\/tr>/g;
@@ -196,7 +209,10 @@ function buildResultFromAyt(row) {
     gercekVaris: (landed && row.estimated) ? (dmy + ' ' + row.estimated + ':00') : '',
     ucakFoto: '', havayoluLogo: '',
     lat: null, lon: null, irtifa: null, rota: [],
-    aytDurum: row.status || '',
+    /* Satır rozetinde ("flChipLabel") doğrudan gösterilir — SADECE bilinen
+       iniş durumlarında (İndi/Bagaj Bantta vb.) ham AYT metnini geçir, yoksa
+       "Gecikme:01:17" gibi çiğ/teknik kodlar rozette olduğu gibi görünürdü. */
+    aytDurum: landed ? (row.status || '') : '',
     kaynak: 'ayt',
     eslesmeYontemi: 'kod',
   };
@@ -239,15 +255,19 @@ function findAytByNumberAndTime(aytRows, code, expectedMin, expectedDate) {
   const num = numericPart(code);
   if (num == null) return null;
 
+  /* Gece yarısını geçen uçuşlarda (ör. 23:25 kalkış) AYT satırı hâlâ bir
+     önceki günün tarihini taşıyabilir, rezervasyon ise "ertesi gün"
+     etiketlenmiş olabilir — bir gün öncesine de izin ver. */
+  const prevDate = expectedDate ? shiftDateStr(expectedDate, -1) : '';
+
   let best = null;
   let bestDiff = Infinity;
   for (const row of aytRows) {
     if (numericPart(row.code) !== num) continue;
     /* Aynı uçuş numarası her gün tekrarlanıyor — tarih biliniyorsa (rezervasyon
-       hangi güne aitse) farklı günün satırını asla eşleştirme, yoksa saat
-       toleransı içine yanlışlıkla düşebilir (ör. bugün 06:25 yerine yarın
-       06:15 gibi). */
-    if (expectedDate && row.date && row.date !== expectedDate) continue;
+       hangi güne aitse) sadece o gün veya bir öncesini (gece yarısı toleransı)
+       eşleştir, yoksa saat toleransı içine yanlışlıkla düşebilir. */
+    if (expectedDate && row.date && row.date !== expectedDate && row.date !== prevDate) continue;
     const schedMin = timeStrToMinutes(row.scheduled);
     if (schedMin == null) continue;
     const diff = Math.abs(schedMin - expectedMin);
@@ -273,7 +293,13 @@ function findAytByNumberAndTime(aytRows, code, expectedMin, expectedDate) {
 function pickByDate(rows, expectedDate) {
   if (!rows || !rows.length) return null;
   if (!expectedDate) return rows[0];
-  return rows.find((r) => r.date === expectedDate) || null;
+  const exact = rows.find((r) => r.date === expectedDate);
+  if (exact) return exact;
+  /* Gece yarısını geçen uçuşlar: kalkış 23:25 gibi bir önceki günse AYT
+     satırı hâlâ o günün tarihini taşır, rezervasyon "ertesi gün" etiketli
+     olabilir — aynı kodun bir gün öncesine ait satırını da kabul et. */
+  const prevDate = shiftDateStr(expectedDate, -1);
+  return rows.find((r) => r.date === prevDate) || null;
 }
 
 function stickyKeyFor(origin, normCode, date) {
@@ -328,7 +354,11 @@ async function resolveCodes(entries, cache, origin) {
           value = buildResultFromAyt(freshAytRow);
           value.eslesmeYontemi = eslesmeYontemi;
         } else {
-          const stickyHit = await cache.match(stickyKeyFor(origin, norm, entry.expectedDate));
+          let stickyHit = await cache.match(stickyKeyFor(origin, norm, entry.expectedDate));
+          /* Gece yarısı toleransı sticky okumada da geçerli — bkz. pickByDate. */
+          if (!stickyHit && entry.expectedDate) {
+            stickyHit = await cache.match(stickyKeyFor(origin, norm, shiftDateStr(entry.expectedDate, -1)));
+          }
           if (stickyHit) value = await stickyHit.json(); // AYT listeden düşmüş ama son gerçek durumu korunuyor
         }
       } catch (e) { /* değer null kalır, diğer kodları etkilemez */ }
