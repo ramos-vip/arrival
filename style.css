@@ -333,11 +333,13 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
   color: #fcd34d; font-weight: 700; font-size: 11px; margin-left: 1px;
 }
 .fl-delay {
-  font-size: 11.5px; font-weight: 700; color: #fcd34d;
-  display: flex; align-items: center; gap: 3px; margin-top: 3px;
+  font-size: 13px; font-weight: 700; color: #fcd34d;
+  display: flex; align-items: center; gap: 3px; margin: 4px 0;
 }
 .fl-delay-erken { color: #38bdf8; }
 .fl-delay-saat { font-weight: 800; animation: flBlink 1.7s ease-in-out infinite; }
+/* Uçak indiyse saat artık sabit bir gerçek — yanıp sönmesin. */
+.fl-delay-saat-sabit { animation: none; }
 @keyframes flBlink { 0%,100% { opacity: 1; } 50% { opacity: .38; } }
 @media (prefers-reduced-motion: reduce) {
   .fl-delay-saat { animation: none !important; }

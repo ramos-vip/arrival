@@ -343,11 +343,11 @@ function buildRow(d){
     }
     tripHtml+='<span class="fl-chip" style="'+chipStyle+'" data-ucus="'+ucus+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'" data-google-url="https://www.google.com/search?q='+ucusUrl+'+flight">'+flDot+'✈ '+ucus+flInfo+'</span>';
   }
+  tripHtml += flDelayLineHtml(d);
   var parts=[];
   if(kisi) parts.push('👤 '+kisi);
   if(arac&&arac!=='-') parts.push(arac);
   if(parts.length) tripHtml+='<div class="td-meta">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
-  tripHtml += flDelayLineHtml(d);
 
   /* Karşılamacıda müşteri telefonu gizlenir */
   var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
@@ -804,7 +804,10 @@ function flDelayLineHtml(d){
   var etiket = esc(gDk) + (d.ucusDurum==='erken' ? ' dk erken' : ' dk gecikti');
   var saat = fmtSaatKisa(d._flightDetail && d._flightDetail.tahminiVaris);
   var cls = 'fl-delay' + (d.ucusDurum==='erken' ? ' fl-delay-erken' : '');
-  return '<div class="'+cls+'">⏱ '+etiket+(saat?' <span class="fl-delay-saat">· '+esc(saat)+'</span>':'')+'</div>';
+  /* d.aytDurum sadece uçak indiğinde dolu olur (bkz. worker) — indiyse saat
+     artık değişmeyecek sabit bir gerçek, yanıp sönmesi anlamsız/yanıltıcı. */
+  var saatCls = d.aytDurum ? 'fl-delay-saat fl-delay-saat-sabit' : 'fl-delay-saat';
+  return '<div class="'+cls+'">⏱ '+etiket+(saat?' <span class="'+saatCls+'">· '+esc(saat)+'</span>':'')+'</div>';
 }
 
 function updateFlightBadgeInDom(d){
@@ -817,14 +820,13 @@ function updateFlightBadgeInDom(d){
   $chip.prepend('<span class="fl-dot" style="background:'+flDurumClr(d.ucusDurum)+'"></span>');
   $chip.append(flChipLabel(d));
 
-  /* ⏱ satırı: td-meta'dan (👤 kişi · araç) hemen sonra, yoksa fl-chip'ten
-     hemen sonra — ilk render'daki sırayla aynı yerde kalsın. */
+  /* ⏱ satırı: fl-chip'ten hemen sonra (araç/kişi satırından ÖNCE) —
+     ilk render'daki sırayla aynı yerde kalsın. */
   var $td = $chip.closest('.td-trip');
   $td.find('.fl-delay').remove();
   var delayHtml = flDelayLineHtml(d);
   if(delayHtml){
-    var $meta = $td.find('.td-meta');
-    if($meta.length) $meta.after(delayHtml); else $chip.after(delayHtml);
+    $chip.after(delayHtml);
   }
 }
 
