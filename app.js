@@ -729,7 +729,12 @@ function enrichFlightStatuses(){
   allData.forEach(function(d){
     if(d.tarih===today && d.ucus && d.ucus!=='-' && !codes[d.ucus]) codes[d.ucus] = d.saat||'';
   });
-  var codeList = Object.keys(codes).map(function(ucus){ return ucus+'@'+codes[ucus]; });
+  /* Saatin yanına tarihi de ekliyoruz — uçuş numaraları her gün tekrarlandığı
+     için (ör. bugünkü XQ0579 inip AYT'nin listesinden düşünce, aynı numaranın
+     yarınki henüz durumsuz satırı) Worker tarih verilmeden ikisini ayırt
+     edemiyor, bugünün "Belt Kapandı" hafızasının üstüne yanlışlıkla boş bir
+     "Zamanında" yazabiliyordu. */
+  var codeList = Object.keys(codes).map(function(ucus){ return ucus+'@'+codes[ucus]+'@'+today; });
   if(!codeList.length) return;
 
   /* Tek istekte tüm uçuşları sorar (N+1 yerine) — Worker tarafında

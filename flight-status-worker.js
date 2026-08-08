@@ -65,6 +65,13 @@ function parseAytArrivals(html) {
        (ör. class="flightnum withbg") — [^"]* ile esnek eşleştirilmezse
        satırların yarısı (withbg'li olanlar) tamamen atlanıyordu. */
     const flightNum = get(/<td class="flightnum[^"]*"><span>([^<]+)<\/span><\/td>/);
+    /* AYT'nin kendi verdiği "08.08.2026" tarihi — uçuş numaraları her gün
+       tekrarlandığı için (ör. bugün 06:25'te uçan XQ0579, yarın da 06:25'te
+       aynı numarayla uçar) bu alan olmadan "bugün" varsayımı, bugünkü uçuş
+       listeden düşünce yarınki (henüz durumsuz) aynı numaralı satırla
+       karışıyordu — o zaman sticky'deki "Belt Kapandı" hafızası yanlışlıkla
+       boş bir "Zamanında" ile eziliyordu. */
+    const date = get(/<td class="date[^"]*"><span>([^<]*)<\/span><\/td>/);
     const airline = get(/<td class="airline[^"]*"[^>]*title="([^"]+)"/);
     const from = get(/<td class="from[^"]*"><span>([^<]*)<\/span><\/td>/);
     const scheduled = get(/<td class="time scheduled[^"]*"><span>([^<]*)<\/span><\/td>/);
@@ -84,7 +91,7 @@ function parseAytArrivals(html) {
       code = codeMatch[1].toUpperCase() + num;
       altCode = codeMatch[2].toUpperCase() + num;
     }
-    if (code) rows.push({ code, altCode, airline, from, scheduled, estimated, belt, terminal, status });
+    if (code) rows.push({ code, altCode, date, airline, from, scheduled, estimated, belt, terminal, status });
   }
   return rows;
 }
@@ -168,7 +175,7 @@ async function fetchAytArrivals() {
 }
 
 function buildResultFromAyt(row) {
-  const dmy = todayDMY();
+  const dmy = row.date || todayDMY(); // AYT satırı kendi tarihini vermiyorsa (olmamalı) bugüne düş
   const schedMin = timeStrToMinutes(row.scheduled);
   const estMin = timeStrToMinutes(row.estimated);
   const landed = AYT_LANDED_STATUSES.indexOf(row.status) > -1;
@@ -227,7 +234,7 @@ function numericPart(code) {
    AYT'nin tüm satırları taranır; planlanan saati rezervasyondaki beklenen
    saate en yakın olan (ve toleransın içinde kalan) satır kullanılır. Bu,
    havayolu kodu uyuşmazlıklarını otomatik olarak çözer. */
-function findAytByNumberAndTime(aytRows, code, expectedMin) {
+function findAytByNumberAndTime(aytRows, code, expectedMin, expectedDate) {
   if (expectedMin == null) return null;
   const num = numericPart(code);
   if (num == null) return null;
@@ -236,6 +243,11 @@ function findAytByNumberAndTime(aytRows, code, expectedMin) {
   let bestDiff = Infinity;
   for (const row of aytRows) {
     if (numericPart(row.code) !== num) continue;
+    /* Aynı uçuş numarası her gün tekrarlanıyor — tarih biliniyorsa (rezervasyon
+       hangi güne aitse) farklı günün satırını asla eşleştirme, yoksa saat
+       toleransı içine yanlışlıkla düşebilir (ör. bugün 06:25 yerine yarın
+       06:15 gibi). */
+    if (expectedDate && row.date && row.date !== expectedDate) continue;
     const schedMin = timeStrToMinutes(row.scheduled);
     if (schedMin == null) continue;
     const diff = Math.abs(schedMin - expectedMin);
@@ -254,13 +266,27 @@ function findAytByNumberAndTime(aytRows, code, expectedMin) {
       kalktığında) son gerçek durumunu (ör. "Belt Kapandı") kaybetmeyelim
       diye; taze AYT satırı geldikçe üzerine yazılır, AYT sessiz kaldığında
       bu kullanılır — uçuş bulunamadı diye boşa düşmez. */
+/* Bir kod birden fazla satırla eşleşebilir (bugün + yarın, aynı uçuş numarası
+   her gün tekrarlandığı için). Tarih biliniyorsa SADECE o tarihe ait satır
+   geçerli sayılır — bilinmiyorsa (eski/tekli ?code= sorgusu gibi) geriye
+   dönük uyumluluk için ilk satıra düşülür. */
+function pickByDate(rows, expectedDate) {
+  if (!rows || !rows.length) return null;
+  if (!expectedDate) return rows[0];
+  return rows.find((r) => r.date === expectedDate) || null;
+}
+
+function stickyKeyFor(origin, normCode, date) {
+  return new Request(origin + '/aytsticky/v5/' + normCode + (date ? '_' + date : ''));
+}
+
 async function resolveCodes(entries, cache, origin) {
   const result = {};
   const uncached = [];
   const cacheKeys = {};
 
   for (const entry of entries) {
-    const key = new Request(origin + '/cache/v4/' + normalizeCode(entry.code));
+    const key = new Request(origin + '/cache/v5/' + normalizeCode(entry.code) + (entry.expectedDate ? '_' + entry.expectedDate : ''));
     cacheKeys[entry.code] = key;
     const hit = await cache.match(key);
     if (hit) {
@@ -273,13 +299,13 @@ async function resolveCodes(entries, cache, origin) {
   if (uncached.length) {
     const aytRows = await fetchAytArrivals().catch(() => []);
     const aytByCode = new Map();
+    const addToMap = (k, r) => {
+      if (!aytByCode.has(k)) aytByCode.set(k, []);
+      aytByCode.get(k).push(r);
+    };
     aytRows.forEach((r) => {
-      const k = normalizeCode(r.code);
-      if (!aytByCode.has(k)) aytByCode.set(k, r);
-      if (r.altCode) {
-        const k2 = normalizeCode(r.altCode);
-        if (!aytByCode.has(k2)) aytByCode.set(k2, r);
-      }
+      addToMap(normalizeCode(r.code), r);
+      if (r.altCode) addToMap(normalizeCode(r.altCode), r);
     });
 
     /* Her kod TAMAMEN bağımsız try/catch içinde — biri patlarsa diğerlerini
@@ -291,10 +317,10 @@ async function resolveCodes(entries, cache, origin) {
       let freshAytRow = null;
 
       try {
-        freshAytRow = aytByCode.get(norm);
+        freshAytRow = pickByDate(aytByCode.get(norm), entry.expectedDate);
         let eslesmeYontemi = 'kod';
         if (!freshAytRow) {
-          freshAytRow = findAytByNumberAndTime(aytRows, code, entry.expectedMin);
+          freshAytRow = findAytByNumberAndTime(aytRows, code, entry.expectedMin, entry.expectedDate);
           eslesmeYontemi = 'sayi-saat'; // havayolu ön eki uyuşmadı, numara+saatle bulundu
         }
 
@@ -302,8 +328,7 @@ async function resolveCodes(entries, cache, origin) {
           value = buildResultFromAyt(freshAytRow);
           value.eslesmeYontemi = eslesmeYontemi;
         } else {
-          const stickyKey = new Request(origin + '/aytsticky/v4/' + norm);
-          const stickyHit = await cache.match(stickyKey);
+          const stickyHit = await cache.match(stickyKeyFor(origin, norm, entry.expectedDate));
           if (stickyHit) value = await stickyHit.json(); // AYT listeden düşmüş ama son gerçek durumu korunuyor
         }
       } catch (e) { /* değer null kalır, diğer kodları etkilemez */ }
@@ -321,14 +346,15 @@ async function resolveCodes(entries, cache, origin) {
 
       /* Taze bir AYT satırı görüldüyse "yapışkan" önbelleğe de yazılır — AYT
          bu uçuşu sonradan listeden düşürse bile son gerçek durumu uzun süre
-         (AYT_STICKY_TTL) saklanır. */
+         (AYT_STICKY_TTL) saklanır. Satırın KENDİ tarihiyle anahtarlanır ki
+         yarının (henüz durumsuz) aynı numaralı satırı bugünkü hafızanın
+         üstüne asla yazamasın. */
       if (freshAytRow) {
         try {
-          const stickyKey = new Request(origin + '/aytsticky/v4/' + norm);
           const resp2 = new Response(JSON.stringify(value), {
             headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
           });
-          await cache.put(stickyKey, resp2);
+          await cache.put(stickyKeyFor(origin, norm, freshAytRow.date), resp2);
         } catch (e) { /* önbelleklenemezse bir dahaki döngüde tekrar taze AYT'den denenir */ }
       }
     }));
@@ -337,12 +363,17 @@ async function resolveCodes(entries, cache, origin) {
   return result;
 }
 
+/* Format: "KOD" veya "KOD@HH:MM" veya "KOD@HH:MM@DD.MM.YYYY" — tarih segmenti
+   opsiyonel (eski çağrılarla geriye dönük uyumlu), ama verilirse eşleştirme
+   çok daha güvenilir olur (bkz. pickByDate/findAytByNumberAndTime). */
 function parseEntries(param) {
   return param.split(',').map((raw) => {
-    var s = raw.trim();
-    var at = s.indexOf('@');
-    if (at === -1) return { code: s, expectedMin: null };
-    return { code: s.slice(0, at), expectedMin: timeStrToMinutes(s.slice(at + 1)) };
+    var parts = raw.trim().split('@');
+    return {
+      code: parts[0],
+      expectedMin: parts[1] ? timeStrToMinutes(parts[1]) : null,
+      expectedDate: parts[2] || '',
+    };
   }).filter((e) => e.code).slice(0, MAX_BATCH_ENTRIES); // Cloudflare alt-istek sınırını korumak için üst sınır
 }
 
@@ -387,7 +418,7 @@ async function handleRequest(request, env) {
   }
 
   if (codeParam) {
-    const result = await resolveCodes([{ code: codeParam, expectedMin: null }], cache, url.origin);
+    const result = await resolveCodes([{ code: codeParam, expectedMin: null, expectedDate: url.searchParams.get('tarih') || '' }], cache, url.origin);
     return withCors(result[codeParam] || { ucusDurum: null });
   }
 
@@ -458,13 +489,15 @@ async function scheduledSync() {
       const resp = new Response(JSON.stringify(value), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
       });
-      await cache.put(new Request(SELF_ORIGIN + '/aytsticky/v4/' + norm), resp.clone());
+      /* Satırın KENDİ tarihiyle anahtarla — aksi halde bugünün "Belt Kapandı"
+         hafızası, aynı numaralı yarınki (henüz durumsuz) satır tarafından ezilir. */
+      await cache.put(stickyKeyFor(SELF_ORIGIN, norm, row.date), resp.clone());
       /* Çift kodlu satırlarda (ör. "SU/AFL 2124") ikinci kodu da yapışkan
          önbelleğe yaz — rezervasyon o kodla girilmiş olabilir. */
       if (row.altCode) {
         const normAlt = normalizeCode(row.altCode);
         if (normAlt && normAlt !== norm) {
-          await cache.put(new Request(SELF_ORIGIN + '/aytsticky/v4/' + normAlt), resp.clone());
+          await cache.put(stickyKeyFor(SELF_ORIGIN, normAlt, row.date), resp.clone());
         }
       }
     } catch (e) { /* tek satır yazılamazsa diğerlerini etkilemesin */ }
