@@ -333,10 +333,10 @@ a.phn:hover { background: rgba(56,189,248,.14); color: #7dd3fc; }
   color: #fcd34d; font-weight: 700; font-size: 11px; margin-left: 1px;
 }
 .fl-delay {
-  font-size: 13px; font-weight: 700; color: #fcd34d;
+  font-size: 13px; font-weight: 700; color: #f87171;
   display: flex; align-items: center; gap: 3px; margin: 4px 0;
 }
-.fl-delay-erken { color: #38bdf8; }
+.fl-delay-erken { color: #4ade80; }
 .fl-delay-saat { font-weight: 800; animation: flBlink 1.7s ease-in-out infinite; }
 /* Uçak indiyse saat artık sabit bir gerçek — yanıp sönmesin. */
 .fl-delay-saat-sabit { animation: none; }

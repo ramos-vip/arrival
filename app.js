@@ -772,11 +772,10 @@ function enrichFlightStatuses(){
     .catch(function(){});
 }
 
-/* Uçuş durumuna göre nokta/metin rengi — gecikti: amber, erken: mavi,
-   diğerleri (zamanında/indi vb.): yeşil. */
+/* Uçuş durumuna göre nokta/metin rengi — gecikti: kırmızı, erken/zamanında/
+   indi vb.: yeşil. */
 function flDurumClr(ucusDurum){
-  if(ucusDurum==='gecikti') return '#fbbf24';
-  if(ucusDurum==='erken')   return '#38bdf8';
+  if(ucusDurum==='gecikti') return '#f87171';
   return '#4ade80';
 }
 
@@ -787,7 +786,7 @@ function flDurumClr(ucusDurum){
    2) Hiçbiri yoksa sadece gecikme/erken dakikası, o da varsa. */
 function flChipLabel(d){
   if(d.aytDurum) return '<span class="fl-info">'+esc(d.aytDurum)+'</span>';
-  if(d.ucusGecikmeDk) return '<span class="fl-info">'+esc(Math.abs(d.ucusGecikmeDk))+'dk</span>';
+  if(d.ucusGecikmeDk) return '<span class="fl-info" style="color:'+flDurumClr(d.ucusDurum)+'">'+esc(Math.abs(d.ucusGecikmeDk))+'dk</span>';
   return '';
 }
 
