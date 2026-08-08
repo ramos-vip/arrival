@@ -337,7 +337,7 @@ function buildRow(d){
        Rozet metni (İndi/Son Bagaj/Bagaj Bantta/gecikme dk) flChipLabel()'da belirlenir. */
     var flDot='', flInfo='';
     if(d.ucusDurum){
-      var flDotClr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
+      var flDotClr = flDurumClr(d.ucusDurum);
       flDot='<span class="fl-dot" style="background:'+flDotClr+'"></span>';
       flInfo=flChipLabel(d);
     }
@@ -347,9 +347,7 @@ function buildRow(d){
   if(kisi) parts.push('👤 '+kisi);
   if(arac&&arac!=='-') parts.push(arac);
   if(parts.length) tripHtml+='<div class="td-meta">'+parts.join(' &nbsp;·&nbsp; ')+'</div>';
-  if(d.ucusGecikmeDk && +d.ucusGecikmeDk>0){
-    tripHtml+='<div class="fl-delay">⏱ '+esc(d.ucusGecikmeDk)+' dk gecikti</div>';
-  }
+  tripHtml += flDelayLineHtml(d);
 
   /* Karşılamacıda müşteri telefonu gizlenir */
   var mustTel = isYonetici() ? (telLink(d.musteriTel)||'<span class="no-phone">—</span>') : '';
@@ -774,15 +772,39 @@ function enrichFlightStatuses(){
     .catch(function(){});
 }
 
+/* Uçuş durumuna göre nokta/metin rengi — gecikti: amber, erken: mavi,
+   diğerleri (zamanında/indi vb.): yeşil. */
+function flDurumClr(ucusDurum){
+  if(ucusDurum==='gecikti') return '#fbbf24';
+  if(ucusDurum==='erken')   return '#38bdf8';
+  return '#4ade80';
+}
+
 /* Satırdaki uçuş rozetinde gösterilecek metni belirler:
    1) AYT (havalimanı) kaynaklıysa kendi durum yazısı — Bekleniyor/Rötar/İndi/
       Bagaj Bantta/Son Bagaj/Belt Kapandı gibi gerçek yer hizmeti durumları
       sırayla gelir.
-   2) Hiçbiri yoksa sadece gecikme dakikası, o da varsa. */
+   2) Hiçbiri yoksa sadece gecikme/erken dakikası, o da varsa. */
 function flChipLabel(d){
   if(d.aytDurum) return '<span class="fl-info">'+esc(d.aytDurum)+'</span>';
-  if(d.ucusGecikmeDk > 0) return '<span class="fl-info">'+esc(d.ucusGecikmeDk)+'dk</span>';
+  if(d.ucusGecikmeDk) return '<span class="fl-info">'+esc(Math.abs(d.ucusGecikmeDk))+'dk</span>';
   return '';
+}
+
+/* "dd.mm.yyyy HH:mm:ss" -> "HH:mm" */
+function fmtSaatKisa(v){ return v ? (v.split(' ')[1]||v).substring(0,5) : ''; }
+
+/* Rötarlı/erken uçuşlarda satırın altına tahmini varış saatini de ekler —
+   saat kısmı hafifçe yanıp söner (canlı/güncel olduğunu hissettirsin diye),
+   ama tek satır ve mevcut ⏱ metniyle aynı yerde kalır, kalabalık olmasın. */
+function flDelayLineHtml(d){
+  if(d.ucusDurum!=='gecikti' && d.ucusDurum!=='erken') return '';
+  var gDk = Math.abs(d.ucusGecikmeDk||0);
+  if(!gDk) return '';
+  var etiket = esc(gDk) + (d.ucusDurum==='erken' ? ' dk erken' : ' dk gecikti');
+  var saat = fmtSaatKisa(d._flightDetail && d._flightDetail.tahminiVaris);
+  var cls = 'fl-delay' + (d.ucusDurum==='erken' ? ' fl-delay-erken' : '');
+  return '<div class="'+cls+'">⏱ '+etiket+(saat?' <span class="fl-delay-saat">· '+esc(saat)+'</span>':'')+'</div>';
 }
 
 function updateFlightBadgeInDom(d){
@@ -792,9 +814,18 @@ function updateFlightBadgeInDom(d){
   if(!$chip.length) return;
 
   $chip.find('.fl-dot, .fl-info').remove();
-  var clr = d.ucusDurum==='gecikti' ? '#fbbf24' : '#4ade80';
-  $chip.prepend('<span class="fl-dot" style="background:'+clr+'"></span>');
+  $chip.prepend('<span class="fl-dot" style="background:'+flDurumClr(d.ucusDurum)+'"></span>');
   $chip.append(flChipLabel(d));
+
+  /* ⏱ satırı: td-meta'dan (👤 kişi · araç) hemen sonra, yoksa fl-chip'ten
+     hemen sonra — ilk render'daki sırayla aynı yerde kalsın. */
+  var $td = $chip.closest('.td-trip');
+  $td.find('.fl-delay').remove();
+  var delayHtml = flDelayLineHtml(d);
+  if(delayHtml){
+    var $meta = $td.find('.td-meta');
+    if($meta.length) $meta.after(delayHtml); else $chip.after(delayHtml);
+  }
 }
 
 /* ════ UÇUŞ DETAY POPUP ════ */

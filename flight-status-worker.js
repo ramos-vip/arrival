@@ -230,6 +230,13 @@ function buildResultFromAyt(row) {
       ucusGecikmeDk: delayMin,
     }, base);
   }
+  if (delayMin < -5) {
+    return Object.assign({
+      ucusDurum: 'erken',
+      ucusDurumMetin: durumMetinKaynagi || (Math.abs(delayMin) + ' dk erken'),
+      ucusGecikmeDk: delayMin,
+    }, base);
+  }
   return Object.assign({
     ucusDurum: 'zamaninda',
     ucusDurumMetin: durumMetinKaynagi || 'Zamanında',
