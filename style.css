@@ -1351,6 +1351,8 @@ body.theme-noon { background-image:
   #voucher-overlay {
     all: unset !important;
     display: block !important;
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   #voucher-card {
@@ -1363,6 +1365,7 @@ body.theme-noon { background-image:
        bindiriyordu. Sabit height + overflow:hidden ile TEK sayfaya
        kilitliyoruz — içerik zaten kısa (logo+isim), taşma riski yok. */
     height: 297mm !important;
+    max-height: 297mm !important;
     overflow: hidden !important;
     max-width: none !important;
     min-width: 0 !important;
@@ -1370,6 +1373,12 @@ body.theme-noon { background-image:
     border-radius: 0 !important;
     box-shadow: none !important;
     animation: none !important;
+    /* overflow:hidden sadece GÖRSEL kırpma — sayfalama (pagination) davranışını
+       garanti etmiyor, bazı mobil motorlar taşan içeriği yine de 2. sayfaya
+       basıyor olabilir. break-inside/page-break-inside bu kutuyu SAYFALAMA
+       açısından da "bölme" diyen ayrı, daha doğrudan bir direktif. */
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
   }
 
   /* Koyu lacivert arka plan + beyaz yazı yerine (bkz. yukarıdaki not) burada
