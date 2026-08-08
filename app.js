@@ -775,8 +775,8 @@ function enrichFlightStatuses(){
 /* Uçuş durumuna göre nokta/metin rengi — gecikti: kırmızı, erken/zamanında/
    indi vb.: yeşil. */
 function flDurumClr(ucusDurum){
-  if(ucusDurum==='gecikti') return '#f87171';
-  return '#4ade80';
+  if(ucusDurum==='gecikti') return '#ef4444';
+  return '#22c55e';
 }
 
 /* Satırdaki uçuş rozetinde gösterilecek metni belirler:
