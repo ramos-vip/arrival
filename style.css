@@ -1336,6 +1336,16 @@ body.theme-noon { background-image:
      standart CSS direktifi — kullanıcının print ayarına bağlı değil. */
   * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
 
+  /* body'nin temel (ekran modu) kuralı min-height:100vh + koyu arka plan
+     taşıyor — bunu print'te hiç sıfırlamamıştık. Mobilde 100vh, kartın tam
+     297mm'sinin ÜSTÜNE fazladan yükseklik ekleyip boş/lacivert bir 2. sayfa
+     yaratıyordu (görünürdeki tüm çocuklar display:none olsa bile body'nin
+     KENDİ min-height'ı öyle kalıyor). */
+  html, body {
+    height: auto !important; min-height: 0 !important;
+    background: #fff !important; background-image: none !important;
+  }
+
   body > *:not(#voucher-overlay) { display: none !important; }
 
   #voucher-overlay {
@@ -1389,7 +1399,7 @@ body.theme-noon { background-image:
   }
   .v-logo-print svg { display: block !important; width: 100% !important; height: 100% !important; }
   .v-logo-print-r {
-    position: absolute !important; left: 50% !important; top: 63% !important;
+    position: absolute !important; left: 50% !important; top: 50% !important;
     transform: translate(-50%, -50%) !important;
     font-family: Georgia, 'Times New Roman', serif !important;
     font-size: 36px !important; font-weight: 900 !important;
