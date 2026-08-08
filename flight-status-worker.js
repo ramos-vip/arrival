@@ -54,6 +54,15 @@ function todayDMY() {
   return p(d.getDate()) + '.' + p(d.getMonth() + 1) + '.' + d.getFullYear();
 }
 
+/* Şu anki Türkiye saati "HH:MM" — Workers çalışma zamanının kendi saat
+   dilimine güvenmek yerine UTC+3'ü elle ekliyoruz (Türkiye DST kullanmıyor,
+   yıl boyu sabit UTC+3). */
+function turkeyNowHHMM() {
+  const d = new Date(Date.now() + 3 * 60 * 60 * 1000);
+  const p = (n) => String(n).padStart(2, '0');
+  return p(d.getUTCHours()) + ':' + p(d.getUTCMinutes());
+}
+
 /* "DD.MM.YYYY" -> deltaDays kaydırılmış "DD.MM.YYYY". Gece yarısını geçen
    uçuşlar için lazım: kalkış 23:25 gibi bir önceki günse, AYT satırı hâlâ o
    günün tarihini taşır ama rezervasyon (müşteri gece yarısından sonra
@@ -244,6 +253,25 @@ function buildResultFromAyt(row) {
   }, base);
 }
 
+/* Uçuş indiyse (value.aytDurum doluysa) tahminiVaris/gercekVaris'i AYT'nin
+   düzeltmediği "estimated" saati yerine LandedTimeDO'nun damgaladığı gerçek
+   Türkiye saatiyle değiştirir. İndiye kadarki (henüz inmemiş) durumlara HİÇ
+   dokunmaz — o kısım hâlâ AYT'nin estimated'ına göre çalışır. */
+async function applyLandedTime(env, value, code, date) {
+  if (!value || !value.aytDurum) return value;
+  try {
+    const id = env.LANDED_TIMES.idFromName(normalizeCode(code) + '_' + date);
+    const stub = env.LANDED_TIMES.get(id);
+    const resp = await stub.fetch('https://do/landed?v=' + encodeURIComponent(turkeyNowHHMM()));
+    const data = await resp.json();
+    const hhmm = (data && data.time) || turkeyNowHHMM();
+    const stamped = date + ' ' + hhmm + ':00';
+    value.gercekVaris = stamped;
+    value.tahminiVaris = stamped;
+  } catch (e) { /* DO'ya ulaşılamazsa AYT'nin kendi (belki yanlış) saatiyle devam */ }
+  return value;
+}
+
 const AYT_NUMBER_TIME_TOLERANCE_MIN = 20; // numara+saat ile yapılan yaklaşık eşleştirmede kabul edilen fark
 
 function numericPart(code) {
@@ -313,7 +341,7 @@ function stickyKeyFor(origin, normCode, date) {
   return new Request(origin + '/aytsticky/v5/' + normCode + (date ? '_' + date : ''));
 }
 
-async function resolveCodes(entries, cache, origin) {
+async function resolveCodes(entries, cache, origin, env) {
   const result = {};
   const uncached = [];
   const cacheKeys = {};
@@ -360,6 +388,10 @@ async function resolveCodes(entries, cache, origin) {
         if (freshAytRow) {
           value = buildResultFromAyt(freshAytRow);
           value.eslesmeYontemi = eslesmeYontemi;
+          /* Kanonik anahtar için HER ZAMAN satırın KENDİ birincil kodu +
+             tarihini kullan (norm, alt koddan gelmiş olabilir) — aynı fiziksel
+             uçuş hangi koddan sorulursa sorulsun aynı damgayı görsün. */
+          value = await applyLandedTime(env, value, freshAytRow.code, freshAytRow.date);
         } else {
           let stickyHit = await cache.match(stickyKeyFor(origin, norm, entry.expectedDate));
           /* Gece yarısı toleransı sticky okumada da geçerli — bkz. pickByDate. */
@@ -449,13 +481,13 @@ async function handleRequest(request, env) {
     const entries = parseEntries(codesParam);
     if (!entries.length) return withCors({ error: 'codes parametresi boş' }, 400);
     let result;
-    try { result = await resolveCodes(entries, cache, url.origin); }
+    try { result = await resolveCodes(entries, cache, url.origin, env); }
     catch (e) { result = {}; entries.forEach((en) => { result[en.code] = { ucusDurum: null }; }); }
     return withCors(result);
   }
 
   if (codeParam) {
-    const result = await resolveCodes([{ code: codeParam, expectedMin: null, expectedDate: url.searchParams.get('tarih') || '' }], cache, url.origin);
+    const result = await resolveCodes([{ code: codeParam, expectedMin: null, expectedDate: url.searchParams.get('tarih') || '' }], cache, url.origin, env);
     return withCors(result[codeParam] || { ucusDurum: null });
   }
 
@@ -505,6 +537,26 @@ export class AnonsClaimDO {
   }
 }
 
+/* Uçuş+tarih başına TEK örnek — AYT'nin "tahmini" saati inişten sonra çoğu
+   zaman düzeltilmiyor (gerçek iniş 01:05 olsa da satır 01:17'de kalabiliyor).
+   İlk "indi" görüldüğü anda o anki gerçek Türkiye saatini bir kere damgalar,
+   sonraki tüm sorgular (hangi cihazdan gelirse gelsin) hep aynı saati alır. */
+export class LandedTimeDO {
+  constructor(state) {
+    this.state = state;
+  }
+  async fetch(request) {
+    const url = new URL(request.url);
+    const fallback = url.searchParams.get('v') || '';
+    let stored = await this.state.storage.get('t');
+    if (!stored) {
+      stored = fallback;
+      await this.state.storage.put('t', stored);
+    }
+    return new Response(JSON.stringify({ time: stored }));
+  }
+}
+
 /* Sabit origin — cron tetikleyicide gerçek bir istek olmadığı için url.origin
    yok; yapışkan önbelleğin anahtarı client isteğindekiyle (url.origin) BİREBİR
    aynı olmalı ki resolveCodes() sonradan bu kaydı bulabilsin. */
@@ -515,14 +567,15 @@ const SELF_ORIGIN = 'https://silent-math-b4a9.ramosviptransfer.workers.dev';
    kimse panelde değilken inen bir uçuş, AYT onu rolling window'dan düşürene
    kadar hiç görülmemiş olmasın diye — aksi halde o uçuşun durumu sonsuza kadar
    kaybolurdu (Worker sadece gerçek bir istek geldiğinde çalışır). */
-async function scheduledSync() {
+async function scheduledSync(env) {
   const cache = caches.default;
   const aytRows = await fetchAytArrivals().catch(() => []);
   await Promise.all(aytRows.map(async (row) => {
     const norm = normalizeCode(row.code);
     if (!norm) return;
     try {
-      const value = buildResultFromAyt(row);
+      let value = buildResultFromAyt(row);
+      value = await applyLandedTime(env, value, row.code, row.date);
       const resp = new Response(JSON.stringify(value), {
         headers: { 'Content-Type': 'application/json', 'Cache-Control': 'max-age=' + AYT_STICKY_TTL },
       });
@@ -546,6 +599,6 @@ export default {
     return handleRequest(request, env);
   },
   async scheduled(event, env, ctx) {
-    ctx.waitUntil(scheduledSync());
+    ctx.waitUntil(scheduledSync(env));
   },
 };

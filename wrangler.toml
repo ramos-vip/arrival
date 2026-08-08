@@ -13,6 +13,18 @@ crons = ["*/5 * * * *"]
 name = "ANONS_CLAIMS"
 class_name = "AnonsClaimDO"
 
+# AYT'nin "tahmini" saati inişten sonra çoğu zaman düzeltilmiyor (gerçek iniş
+# 01:05 olsa da satırda 01:17 kalabiliyor). Uçuş+tarih başına TEK örnek: bir
+# uçuş ilk kez "indi" görüldüğünde o anki gerçek Türkiye saatini bir kere
+# damgalar, sonrasında hep aynı (doğru) saati döner — cihazlar arası tutarlı.
+[[durable_objects.bindings]]
+name = "LANDED_TIMES"
+class_name = "LandedTimeDO"
+
 [[migrations]]
 tag = "v1"
 new_sqlite_classes = ["AnonsClaimDO"]
+
+[[migrations]]
+tag = "v2"
+new_sqlite_classes = ["LandedTimeDO"]
