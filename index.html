@@ -117,7 +117,7 @@
     <!-- Üst / logo bölümü -->
     <div class="v-header">
       <div class="v-logo-wrap">
-        <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+        <svg class="v-logo-screen" viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="gld" x1="0%" y1="0%" x2="100%" y2="100%">
               <stop offset="0%"   stop-color="#f0d060"/>
@@ -134,6 +134,18 @@
                 font-family="Georgia, 'Times New Roman', serif"
                 font-size="54" font-weight="bold" fill="url(#gld)">R</text>
         </svg>
+        <!-- Print-özel yedek: AYNI kalkan şekli ama gradyan/gömülü-<text> YOK
+             (düz renk dolgu + HTML harf üstte) — bazı mobil print motorlarında
+             (iOS) gradyan/SVG-metin bozuk çıkıyordu, şekil aynı kalsın diye
+             sadece o iki riskli kısmı kaldırdık. Ekranda gizli, sadece print'te
+             görünür (bkz. style.css @media print). -->
+        <div class="v-logo-print">
+          <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 4 L96 22 L96 60 Q96 91 50 117 Q4 91 4 60 L4 22 Z" fill="#c9a227"/>
+            <path d="M50 13 L88 29 L88 60 Q88 87 50 109 Q12 87 12 60 L12 29 Z" fill="#07091a"/>
+          </svg>
+          <span class="v-logo-print-r">R</span>
+        </div>
       </div>
       <div class="v-co-name">RAMOS NJT</div>
       <div class="v-co-sub">VIP TRANSFER</div>

@@ -1258,6 +1258,7 @@ body.theme-noon { background-image:
 }
 .v-logo-wrap { margin-bottom: 12px; }
 .v-logo-wrap svg { width: 64px; height: 76px; }
+.v-logo-print { display: none; } /* sadece print'te görünür, bkz. @media print */
 .v-co-name { font-size: 18px; font-weight: 900; color: #fff; letter-spacing: .8px; line-height: 1.2; }
 .v-co-sub  { font-size: 10px; font-weight: 700; color: #c9a227; letter-spacing: 3.5px; margin-top: 5px; }
 
@@ -1347,7 +1348,12 @@ body.theme-noon { background-image:
     flex-direction: column !important;
     box-sizing: border-box !important;
     width: 210mm !important;
-    min-height: 297mm !important;
+    /* min-height (içerik taşarsa 2. sayfaya aksın diye) pratikte tam tersi
+       sorun çıkardı: en ufak taşma bile bomboş/lacivert bir 2. sayfa
+       bindiriyordu. Sabit height + overflow:hidden ile TEK sayfaya
+       kilitliyoruz — içerik zaten kısa (logo+isim), taşma riski yok. */
+    height: 297mm !important;
+    overflow: hidden !important;
     max-width: none !important;
     min-width: 0 !important;
     margin: 0 !important;
@@ -1370,7 +1376,25 @@ body.theme-noon { background-image:
     background: #fff !important;
     border-bottom: 1px solid #e5ddc4 !important;
   }
-  .v-logo-wrap svg { width: 100px !important; height: 120px !important; }
+  /* Ekran SVG'sindeki gradyan dolgu + gömülü <text> bazı mobil print
+     motorlarında (iOS) bozuk çıkıyordu — AYNI kalkan şeklini, sadece düz
+     renk dolgu ve HTML harfle (gradyan/SVG-metin yok) print'e özel ayrı bir
+     kopyadan gösteriyoruz; şekil/oran birebir aynı kalıyor. */
+  .v-logo-screen { display: none !important; }
+  .v-logo-print {
+    display: block !important;
+    position: relative !important;
+    width: 70px !important; height: 84px !important;
+    margin: 0 auto !important;
+  }
+  .v-logo-print svg { display: block !important; width: 100% !important; height: 100% !important; }
+  .v-logo-print-r {
+    position: absolute !important; left: 50% !important; top: 63% !important;
+    transform: translate(-50%, -50%) !important;
+    font-family: Georgia, 'Times New Roman', serif !important;
+    font-size: 36px !important; font-weight: 900 !important;
+    color: #c9a227 !important; line-height: 1 !important;
+  }
   .v-co-name  { font-size: 30px !important; color: #07091a !important; }
   .v-co-sub   { font-size: 14px !important; letter-spacing: 6px !important; color: #8a6010 !important; }
 
