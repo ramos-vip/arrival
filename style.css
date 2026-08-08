@@ -1326,6 +1326,15 @@ body.theme-noon { background-image:
 @media print {
   @page { size: A4 portrait; margin: 0; }
 
+  /* Tarayıcılar mürekkep tasarrufu için arka plan renklerini/görsellerini
+     VARSAYILAN OLARAK yazdırmaz — kullanıcı yazdırma penceresinde "Arka
+     plan grafikleri"ni işaretlemediği sürece. Koyu .v-header üstündeki
+     BEYAZ yazı, arka plan basılmayınca beyaz sayfada görünmez olup
+     "tamamen boş sayfa" izlenimi veriyordu. Bu, tarayıcının o
+     varsayılanını ATLAYIP arka planı HER ZAMAN olduğu gibi bas diyen
+     standart CSS direktifi — kullanıcının print ayarına bağlı değil. */
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
+
   body > *:not(#voucher-overlay) { display: none !important; }
 
   #voucher-overlay {
@@ -1347,6 +1356,10 @@ body.theme-noon { background-image:
     animation: none !important;
   }
 
+  /* Koyu lacivert arka plan + beyaz yazı yerine (bkz. yukarıdaki not) burada
+     AYRICA açık arka plan + koyu yazıya çeviriyoruz — tek bir çözüme
+     (print-color-adjust) güvenmek yerine iki katmanlı güvenlik: arka plan
+     hiç basılmasa bile yazı zaten koyu olduğu için görünür kalır. */
   .v-header {
     flex-shrink: 0 !important;
     padding: 48px 60px 30px !important;
@@ -1354,10 +1367,12 @@ body.theme-noon { background-image:
     flex-direction: column !important;
     align-items: center !important;
     text-align: center !important;
+    background: #fff !important;
+    border-bottom: 1px solid #e5ddc4 !important;
   }
   .v-logo-wrap svg { width: 100px !important; height: 120px !important; }
-  .v-co-name  { font-size: 30px !important; }
-  .v-co-sub   { font-size: 14px !important; letter-spacing: 6px !important; }
+  .v-co-name  { font-size: 30px !important; color: #07091a !important; }
+  .v-co-sub   { font-size: 14px !important; letter-spacing: 6px !important; color: #8a6010 !important; }
 
   .v-goldbar  { flex-shrink: 0 !important; height: 5px !important; }
 
