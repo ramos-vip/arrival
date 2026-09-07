@@ -312,6 +312,15 @@ function telLink(v){
 }
 
 /* ════ BUILD ROW ════ */
+/* Sadece yönetici + sadece PANELDEN elle eklenen transferlerde (d.manuelId
+   dolu) düzenle/sil ikonları gösterilir — gerçek rezervasyonlara hiç
+   dokunulamaz (o alan onlarda hiç gelmiyor, bkz. panel_feed.php). */
+function manuelActionsHtml(d){
+  if(!isYonetici() || !d.manuelId) return '';
+  return '<button class="edit-btn" data-manuel-id="'+d.manuelId+'" title="Düzenle">✏️</button>'
+       + '<button class="del-btn" data-manuel-id="'+d.manuelId+'" title="Sil">🗑️</button>';
+}
+
 function buildRow(d){
   /* Voucher için satırı kaydet */
   if(!window.__voucherRows) window.__voucherRows = [];
@@ -386,7 +395,7 @@ function buildRow(d){
   var trowClass = 'trow'+(isKlinik?' trow-klinik':'')+(yd==='Karşılandı'?' yd-karsila':(yd==='Araçta'||yd==='Teslim Edildi')?' yd-aracta':'');
   return '<tr class="'+trowClass+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
-    +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-inner"><div class="cust-avatar" style="background:'+_avBg+'">'+_ini+'</div><div><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></div></div></td>'
+    +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-inner"><div class="cust-avatar" style="background:'+_avBg+'">'+_ini+'</div><div><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button>'+manuelActionsHtml(d)+'</div></div></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
     +'<td class="td-route" data-label="GÜZERGAH">'
       +(isKlinik?'<div class="klinik-badge">🏥 KLİNİK İŞİ</div>':'')
@@ -1072,19 +1081,90 @@ function wireAddFormEnterFlow(){
   });
 }
 
+/* null: yeni ekleme modu. Bir sayı: o manuelId'li kaydı düzenleme modu —
+   submitAddTransfer() buna bakıp panel_add.php yerine panel_edit.php'ye
+   gönderir. */
+var _editingManuelId = null;
+
 function openAddModal(){
+  _editingManuelId = null;
+  $('#add-modal-title').text('＋ Yeni Transfer Ekle');
+  $('#add-submit-btn').text('Kaydet →');
   $('#add-err').text('');
-  $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+  $('#add-submit-btn').prop('disabled',false);
   $('#f-ucus-info').text('');
   $('#f-klinik').prop('checked', false);
+  $('#f-tarih,#f-saat,#f-musteri,#f-tel,#f-ucus,#f-kisi,#f-arac,#f-surucu,#f-plaka,#f-stel').val('');
+  $('#f-nereden').val('Antalya Havalimanı');
+  $('#f-nereye').val('');
   /* Bugünün tarihini varsayılan yap */
-  if(!$('#f-tarih').val()) $('#f-tarih').val(getToday());
+  $('#f-tarih').val(getToday());
   fillAddFormSuggestions();
   wireAddFormEnterFlow();
   $('#add-modal').addClass('open');
   setTimeout(function(){ $('#f-musteri').focus(); },200);
 }
+
+/* Aynı formu düzenleme moduna geçirip mevcut kaydın değerleriyle doldurur —
+   sadece panelden eklenen (manuelId'li) transferler için, bkz. manuelActionsHtml. */
+function openEditModal(manuelId){
+  var d = null;
+  for(var i=0;i<allData.length;i++){ if(allData[i].manuelId===manuelId){ d=allData[i]; break; } }
+  if(!d){ alert('Kayıt bulunamadı, liste yenileniyor…'); yukle(); return; }
+
+  _editingManuelId = manuelId;
+  $('#add-modal-title').text('✏️ Transferi Düzenle');
+  $('#add-submit-btn').text('Güncelle →');
+  $('#add-err').text('');
+  $('#add-submit-btn').prop('disabled',false);
+  $('#f-ucus-info').text('');
+
+  $('#f-tarih').val(d.tarih||'');
+  $('#f-saat').val(d.saat||'');
+  $('#f-musteri').val(d.musteri||'');
+  $('#f-tel').val(d.musteriTel||'');
+  $('#f-ucus').val(d.ucus||'');
+  $('#f-kisi').val(d.kisi||'');
+  $('#f-arac').val(d.arac||'');
+  $('#f-nereden').val(d.nereden||'Antalya Havalimanı');
+  var isKlinik = isKlinikNereye(d.nereye);
+  $('#f-nereye').val(isKlinik ? klinikTemizNereye(d.nereye) : (d.nereye||''));
+  $('#f-klinik').prop('checked', isKlinik);
+  $('#f-surucu').val(d.surucu||'');
+  $('#f-plaka').val(d.surucuPlaka||'');
+  $('#f-stel').val(d.surucuTel||'');
+
+  fillAddFormSuggestions();
+  wireAddFormEnterFlow();
+  $('#add-modal').addClass('open');
+  setTimeout(function(){ $('#f-musteri').focus(); },200);
+}
+
 function closeAddModal(){ $('#add-modal').removeClass('open'); }
+
+/* Panelden eklenmiş bir transferi siler — geri alınamaz, tek onayla. */
+function deleteManualTransfer(manuelId, $btn){
+  if(!confirm('Bu transferi silmek istediğine emin misin? Bu işlem geri alınamaz.')) return;
+  var tok = localStorage.getItem('ramos_token')||'';
+  $btn.prop('disabled', true).text('…');
+  fetch(API_BASE + '/panel_delete.php', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
+    body: JSON.stringify({ id: manuelId })
+  }).then(function(r){ return r.json().catch(function(){ return null; }); })
+  .then(function(res){
+    if(res && res.ok){
+      _lastDataStr = '';
+      yukle();
+    } else {
+      alert('❌ ' + ((res && res.error) || 'Silme başarısız, tekrar dene'));
+      $btn.prop('disabled', false).text('🗑️');
+    }
+  }).catch(function(){
+    alert('❌ Sunucu yanıt vermedi, tekrar dene');
+    $btn.prop('disabled', false).text('🗑️');
+  });
+}
 
 /* Klinik işlerini karşılamacıya net göstermek için — ayrı bir DB kolonu
    AÇMADAN (backend'e dokunmadan), "nereye" alanının başına tanınabilir bir
@@ -1105,33 +1185,42 @@ function submitAddTransfer(){
     return;
   }
   if($('#f-klinik').is(':checked') && !isKlinikNereye(nereye)) nereye = KLINIK_ETIKET + nereye;
-  $('#add-submit-btn').prop('disabled',true).text('Kaydediliyor…');
+
+  var isEdit = !!_editingManuelId;
+  var endpoint = isEdit ? '/panel_edit.php' : '/panel_add.php';
+  var busyText = isEdit ? 'Güncelleniyor…' : 'Kaydediliyor…';
+  var idleText = isEdit ? 'Güncelle →' : 'Kaydet →';
+  $('#add-submit-btn').prop('disabled',true).text(busyText);
   var tok = localStorage.getItem('ramos_token')||'';
 
   var ctrl = ('AbortController' in window) ? new AbortController() : null;
   var timer = setTimeout(function(){ if(ctrl) ctrl.abort(); }, 20000);
 
-  fetch(API_BASE + '/panel_add.php', {
+  var payload = {
+    tarih: tarih, saat: saat, musteri: musteri,
+    musteriTel:  $('#f-tel').val().trim(),
+    ucus:        $('#f-ucus').val().trim(),
+    kisi:        $('#f-kisi').val().trim(),
+    arac:        $('#f-arac').val().trim(),
+    nereden:     nereden,
+    nereye:      nereye,
+    surucu:      $('#f-surucu').val().trim(),
+    surucuPlaka: $('#f-plaka').val().trim(),
+    surucuTel:   $('#f-stel').val().trim()
+  };
+  if(isEdit) payload.id = _editingManuelId;
+
+  fetch(API_BASE + endpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + tok },
-    body: JSON.stringify({
-      tarih: tarih, saat: saat, musteri: musteri,
-      musteriTel:  $('#f-tel').val().trim(),
-      ucus:        $('#f-ucus').val().trim(),
-      kisi:        $('#f-kisi').val().trim(),
-      arac:        $('#f-arac').val().trim(),
-      nereden:     nereden,
-      nereye:      nereye,
-      surucu:      $('#f-surucu').val().trim(),
-      surucuPlaka: $('#f-plaka').val().trim(),
-      surucuTel:   $('#f-stel').val().trim()
-    }),
+    body: JSON.stringify(payload),
     signal: ctrl ? ctrl.signal : undefined
   }).then(function(r){ return r.json().catch(function(){ return null; }); })
   .then(function(res){
     clearTimeout(timer);
     if(res && res.ok){
       closeAddModal();
+      _editingManuelId = null;
       /* Formu temizle */
       $('#f-tarih,#f-saat,#f-musteri,#f-tel,#f-ucus,#f-kisi,#f-arac,#f-nereye,#f-surucu,#f-plaka,#f-stel').val('');
       $('#f-klinik').prop('checked', false);
@@ -1139,13 +1228,13 @@ function submitAddTransfer(){
       _lastDataStr = ''; /* cache'i iptal et — yeni veri çekilsin */
       yukle();
     } else {
-      $('#add-err').text('❌ ' + ((res && res.error) || 'Kayıt başarısız, tekrar dene'));
-      $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+      $('#add-err').text('❌ ' + ((res && res.error) || 'İşlem başarısız, tekrar dene'));
+      $('#add-submit-btn').prop('disabled',false).text(idleText);
     }
   }).catch(function(){
     clearTimeout(timer);
     $('#add-err').text('❌ Sunucu yanıt vermedi, tekrar dene');
-    $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+    $('#add-submit-btn').prop('disabled',false).text(idleText);
   });
 }
 
@@ -1622,6 +1711,16 @@ $(function(){
     e.stopPropagation();
     showVoucher(+$(this).data('idx'));
   });
+
+  /* Manuel transfer düzenle/sil (sadece yönetici, sadece panelden eklenenler) */
+  $(document).on('click', '.edit-btn', function(e){
+    e.stopPropagation();
+    openEditModal(+$(this).data('manuel-id'));
+  });
+  $(document).on('click', '.del-btn', function(e){
+    e.stopPropagation();
+    deleteManualTransfer(+$(this).data('manuel-id'), $(this));
+  });
   $('#v-close-btn').on('click', function(){ $('#voucher-overlay').removeClass('open'); });
   $('#v-print-btn').on('click', function(){ window.print(); });
   /* Overlay dışına tıklayınca kapat */
@@ -1637,7 +1736,7 @@ $(function(){
        HİÇ başlatma — içerik kayınca parmağın altına farklı bir eleman gelip
        istemsiz tıklama/arama tetikleyebiliyordu (iOS'un "otomatik arama/
        yazdırma engellendi" uyarısının sebebi buydu). */
-    if($(e.target).closest('a, button, .phn, .vchr-btn, .st-step').length) return;
+    if($(e.target).closest('a, button, .phn, .vchr-btn, .st-step, .edit-btn, .del-btn').length) return;
     var t=e.originalEvent.touches[0];
     _sw={el:this,x:t.clientX,y:t.clientY,ok:false};
   }).on('touchmove','.trow',function(e){
