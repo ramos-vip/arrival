@@ -837,21 +837,24 @@ body.theme-noon { background-image:
 
 /* ════ KLİNİK İŞİ VURGULA ════ — küçük bir rozete gizlenmesin diye SATIRIN
    TAMAMI belirgin pembe/magenta tonda — karşılamacı listeye şöyle bir
-   bakınca bile hiç kaçırmasın. */
-.trow-klinik > td { background: rgba(244,114,182,.2) !important; }
-.trow-klinik:hover > td { background: rgba(244,114,182,.28) !important; }
-/* Çift satırlarda ayrı bir kural (.trow:nth-child(even) > td:first-child)
-   SADECE ilk hücrenin (SAAT) rengini daha spesifik olduğu için eziyordu —
-   dinlenme halinde o tek sütun pembe görünmüyordu. Burada bilerek eşit/daha
-   yüksek özgüllükle tekrar veriyoruz ki tüm satır (SAAT dahil) tutarlı kalsın. */
+   bakınca bile hiç kaçırmasın.
+   NOT: ".trow:nth-child(even) > td { background:#0b1120 !important }" (çift
+   satırlar için genel zebra rengi) bizim tek class'lı kuralımızdan daha
+   spesifik (class+pseudo+element > class+element) — satır listede çift
+   sırada denk gelince rengi eziyordu ("bazen oluyor bazen olmuyor" hissi
+   buradan geliyordu). Hem tek hem çift satır için AYNI/daha yüksek
+   özgüllükte ayrıca yazıyoruz ki konumdan bağımsız hep tutarlı olsun. */
+.trow-klinik > td,
+.trow.trow-klinik:nth-child(even) > td {
+  background: rgba(244,114,182,.2) !important;
+}
+.trow-klinik:hover > td,
+.trow.trow-klinik:nth-child(even):hover > td {
+  background: rgba(244,114,182,.28) !important;
+}
 .trow-klinik > td:first-child,
 .trow.trow-klinik:nth-child(even) > td:first-child {
-  background: rgba(244,114,182,.2) !important;
   border-left-width: 4px !important; border-left-color:#f472b6 !important;
-}
-.trow-klinik:hover > td:first-child,
-.trow.trow-klinik:nth-child(even):hover > td:first-child {
-  background: rgba(244,114,182,.28) !important;
 }
 .trow-klinik { box-shadow: inset 0 0 0 1px rgba(244,114,182,.22); }
 .klinik-badge {
@@ -1624,6 +1627,12 @@ body.theme-noon { background-image:
   /* ── Table & TD şeffaf ── */
   table { background: transparent !important; }
   .trow > td { background: transparent !important; }
+  /* Klinik satırları burada (dar ekran) İSTİSNA — yd-karsila/yd-aracta gibi
+     sadece sol zaman şeridini renklendirmekle yetinmiyoruz, kartın TAMAMI
+     pembe kalsın istendi (bkz. önceki not). Yukarıdaki transparent kuralını
+     bilerek eziyoruz. */
+  .trow-klinik > td { background: rgba(244,114,182,.2) !important; }
+  .trow-klinik:hover > td { background: rgba(244,114,182,.28) !important; }
 
   /* ── Zaman şeridi ── */
   .trow > td:first-child {
@@ -1634,6 +1643,7 @@ body.theme-noon { background-image:
   }
   .trow.yd-karsila > td:first-child { background: rgba(56,189,248,.1)  !important; border-left-color: #38bdf8 !important; }
   .trow.yd-aracta  > td:first-child { background: rgba(251,191,36,.1)  !important; border-left-color: #fbbf24 !important; }
+  .trow-klinik > td:first-child { background: rgba(244,114,182,.2) !important; border-left-color: #f472b6 !important; }
 
   /* Bölüm ayraçları */
   .trow > td.td-cust  { border-bottom: 1px solid rgba(255,255,255,.07) !important; position: relative; z-index: 2; }
