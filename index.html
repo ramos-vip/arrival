@@ -93,15 +93,25 @@
       <div class="fg"><label>Saat *</label><input id="f-saat" type="text" placeholder="HH:MM"></div>
       <div class="fg full"><label>Müşteri Adı *</label><input id="f-musteri" type="text" placeholder="Ad Soyad"></div>
       <div class="fg"><label>Müşteri Tel</label><input id="f-tel" type="text" placeholder="905..."></div>
-      <div class="fg"><label>Uçuş No</label><input id="f-ucus" type="text" placeholder="XQ169"></div>
+      <div class="fg">
+        <label>Uçuş No</label>
+        <input id="f-ucus" type="text" placeholder="XQ169" autocomplete="off" oninput="checkUcusNoLive()">
+        <div id="f-ucus-info" class="fg-hint"></div>
+      </div>
       <div class="fg"><label>Kişi Sayısı</label><input id="f-kisi" type="text" placeholder="2"></div>
-      <div class="fg full"><label>Araç</label><input id="f-arac" type="text" placeholder="Ultra VIP Maybach"></div>
+      <div class="fg full"><label>Araç</label><input id="f-arac" type="text" placeholder="Ultra VIP Maybach" list="dl-arac" autocomplete="off"></div>
       <div class="fg full"><label>Nereden *</label><input id="f-nereden" type="text" placeholder="Antalya Havalimanı" value="Antalya Havalimanı"></div>
-      <div class="fg full"><label>Nereye *</label><input id="f-nereye" type="text" placeholder="Otel adı veya adres"></div>
-      <div class="fg"><label>Şoför</label><input id="f-surucu" type="text" placeholder="Şoför adı"></div>
+      <div class="fg full"><label>Nereye *</label><input id="f-nereye" type="text" placeholder="Otel adı veya adres" list="dl-nereye" autocomplete="off"></div>
+      <div class="fg full">
+        <label class="fg-check"><input id="f-klinik" type="checkbox"> 🏥 Bu bir klinik işi — karşılamacıya rozet olarak gösterilsin</label>
+      </div>
+      <div class="fg"><label>Şoför</label><input id="f-surucu" type="text" placeholder="Şoför adı" list="dl-surucu" autocomplete="off" onchange="autoFillDriverDetails()"></div>
       <div class="fg"><label>Plaka</label><input id="f-plaka" type="text" placeholder="07 AA 001"></div>
       <div class="fg full"><label>Şoför Tel</label><input id="f-stel" type="text" placeholder="905..."></div>
     </div>
+    <datalist id="dl-surucu"></datalist>
+    <datalist id="dl-arac"></datalist>
+    <datalist id="dl-nereye"></datalist>
     <div id="add-err" style="margin-top:12px;font-size:12px;color:#f87171;min-height:18px"></div>
     <div class="modal-acts">
       <button class="btn-cx" onclick="closeAddModal()">İptal</button>

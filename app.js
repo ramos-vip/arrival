@@ -174,7 +174,7 @@ function initRichTooltip(){
     if(d.arac)       h+='<div class="rt-row"><span>🚗</span>'+esc(d.arac)+'</div>';
     if(d.kisi)       h+='<div class="rt-row"><span>👤</span>'+esc(d.kisi)+' kişi</div>';
     if(d.nereden)    h+='<div class="rt-row rf"><span>↑</span>'+esc(d.nereden)+'</div>';
-    if(d.nereye)     h+='<div class="rt-row rt"><span>↓</span>'+esc(d.nereye)+'</div>';
+    if(d.nereye)     h+='<div class="rt-row rt"><span>↓</span>'+esc(klinikTemizNereye(d.nereye))+(isKlinikNereye(d.nereye)?' 🏥':'')+'</div>';
     if(d.surucu)     h+='<div class="rt-row"><span>🚘</span>'+esc(d.surucu)+'</div>';
     $t.html(h).show();
   }).on('mousemove','.cust-name',function(e){
@@ -324,7 +324,9 @@ function buildRow(d){
   var _ini=_nm.split(/\s+/).map(function(w){return w[0]||'';}).join('').substring(0,2).toUpperCase();
   var _hue=0; for(var _ic=0;_ic<_nm.length;_ic++) _hue=(_hue+_nm.charCodeAt(_ic)*37)%360;
   var _avBg='hsl('+_hue+',42%,28%)';
-  var nereden=esc(d.nereden||'-'), nereye=esc(d.nereye||'-');
+  var _nereyeRaw = d.nereye||'';
+  var isKlinik = isKlinikNereye(_nereyeRaw);
+  var nereden=esc(d.nereden||'-'), nereye=esc((isKlinik?klinikTemizNereye(_nereyeRaw):_nereyeRaw)||'-');
   var ucus=esc(d.ucus||''), kisi=esc(d.kisi||''), arac=esc(d.arac||'');
   var ucusUrl = encodeURIComponent((d.ucus||'').replace(/\s/g,''));
   var surucu=esc(d.surucu||''), plaka=esc(d.surucuPlaka||'');
@@ -381,12 +383,13 @@ function buildRow(d){
   var dateObj = parseTarih(d.tarih||'');
   var tarihKisa = dateObj ? '<div class="td-tarih">'+dateObj.getDate()+' '+MO[dateObj.getMonth()]+'</div>' : '';
 
-  var trowClass = 'trow'+(yd==='Karşılandı'?' yd-karsila':(yd==='Araçta'||yd==='Teslim Edildi')?' yd-aracta':'');
+  var trowClass = 'trow'+(isKlinik?' trow-klinik':'')+(yd==='Karşılandı'?' yd-karsila':(yd==='Araçta'||yd==='Teslim Edildi')?' yd-aracta':'');
   return '<tr class="'+trowClass+'" data-tarih="'+esc(d.tarih)+'" data-saat="'+esc(d.saat)+'">'
     +'<td class="td-time"  data-label="SAAT">'+saat+tarihKisa+'</td>'
     +'<td class="td-cust"  data-label="MÜŞTERİ"><div class="cust-inner"><div class="cust-avatar" style="background:'+_avBg+'">'+_ini+'</div><div><div class="cust-name" title="'+isim+'">'+isim+'</div>'+mustTel+'<button class="vchr-btn" data-idx="'+vIdx+'">🎫 Voucher</button></div></div></td>'
     +'<td class="td-trip"  data-label="UÇUŞ / ARAÇ">'+tripHtml+'</td>'
     +'<td class="td-route" data-label="GÜZERGAH">'
+      +(isKlinik?'<div class="klinik-badge">🏥 KLİNİK İŞİ</div>':'')
       +'<div class="route-vis">'
         +'<div class="rv-row"><span class="rv-dot rv-from-dot"></span><span class="rv-text route-from">'+nereden+'</span></div>'
         +'<div class="rv-dashes"></div>'
@@ -877,7 +880,7 @@ function showFlightPopup(ucus, tarih, saat){
         +(d ? '<div class="flp-route-card">'
             +'<div class="flp-route-pin"><span class="flp-route-pin-icon">'+ICON_PIN+'</span><div class="flp-route-city">'+esc(d.nereden||'')+'</div></div>'
             +'<div class="flp-route-line"><span class="flp-route-badge">'+ICON_PLANE+'</span></div>'
-            +'<div class="flp-route-pin flp-route-pin-to"><span class="flp-route-pin-icon">'+ICON_PIN+'</span><div class="flp-route-city">'+esc(d.nereye||'')+'</div></div>'
+            +'<div class="flp-route-pin flp-route-pin-to"><span class="flp-route-pin-icon">'+ICON_PIN+'</span><div class="flp-route-city">'+esc(klinikTemizNereye(d.nereye)||'')+'</div></div>'
           +'</div>' : '')
         +'<div class="flp-empty-msg">Bu uçuş henüz canlı takibe girmedi (kalkmamış olabilir ya da hiçbir kaynakta bulunamadı). Kalkışa yaklaşınca burada canlı durum görünecek.</div>'
       +'</div>'
@@ -989,15 +992,107 @@ function showVoucher(idx){
 }
 
 /* ════ TRANSFER EKLE ════ */
+
+/* Şoför/Araç/Nereye alanları için geçmiş kayıtlardan otomatik tamamlama —
+   her seferinde aynı şoför/araç/adresi baştan yazmak yerine öneriden seçilsin.
+   Şoför, önceki kaydından plaka+tel'i de hatırlar (bilinen bir isim seçilince
+   otomatik doldurur, boş alanları eziyor sadece — elle girilmişi bozmaz). */
+var _driverLookup = {};
+function fillAddFormSuggestions(){
+  var drivers = {}, vehicles = {}, dropoffs = {};
+  _driverLookup = {};
+  allData.forEach(function(d){
+    var isim = (d.surucu||'').trim();
+    if(isim){
+      drivers[isim] = true;
+      if(!_driverLookup[isim] || d.surucuPlaka || d.surucuTel){
+        _driverLookup[isim] = { plaka: d.surucuPlaka||'', tel: d.surucuTel||'' };
+      }
+    }
+    var arac = (d.arac||'').trim();
+    if(arac && arac!=='-') vehicles[arac] = true;
+    var nereye = klinikTemizNereye(d.nereye||'').trim();
+    if(nereye) dropoffs[nereye] = true;
+  });
+  var toOptions = function(obj){ return Object.keys(obj).sort().map(function(v){ return '<option value="'+esc(v)+'">'; }).join(''); };
+  $('#dl-surucu').html(toOptions(drivers));
+  $('#dl-arac').html(toOptions(vehicles));
+  $('#dl-nereye').html(toOptions(dropoffs));
+}
+
+/* Bilinen bir şoför adı girilince (datalist'ten seçilerek ya da elle aynısı
+   yazılarak) plaka/tel boşsa otomatik doldurur. */
+function autoFillDriverDetails(){
+  var isim = $('#f-surucu').val().trim();
+  var bilinen = _driverLookup[isim];
+  if(!bilinen) return;
+  if(!$('#f-plaka').val().trim() && bilinen.plaka) $('#f-plaka').val(bilinen.plaka);
+  if(!$('#f-stel').val().trim() && bilinen.tel) $('#f-stel').val(bilinen.tel);
+}
+
+/* Uçuş no yazılırken (debounce ile) FLIGHT_STATUS_API'den anlık doğrulama —
+   hiçbir alanı otomatik DOLDURMAZ (Nereden/Nereye/Saat idari bir karar,
+   uçuşun kendi rotasıyla karışmasın), sadece "gerçekten böyle bir uçuş var,
+   işte havayolu ve durumu" diye küçük bir onay satırı gösterip yazım
+   hatalarını (yanlış kod, yanlış gün) erken yakalatır. */
+var _ucusInfoTimer = null;
+function checkUcusNoLive(){
+  clearTimeout(_ucusInfoTimer);
+  var kod = $('#f-ucus').val().trim();
+  var $hint = $('#f-ucus-info');
+  if(!kod || !FLIGHT_STATUS_API || FLIGHT_STATUS_API.indexOf('YOUR-SUBDOMAIN')>-1){ $hint.text(''); return; }
+  _ucusInfoTimer = setTimeout(function(){
+    $hint.text('Kontrol ediliyor…').removeClass('fg-hint-ok fg-hint-err');
+    fetch(FLIGHT_STATUS_API + '?code=' + encodeURIComponent(kod))
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .then(function(res){
+        if($('#f-ucus').val().trim() !== kod) return; /* kullanıcı bu arada değiştirdi, eski sonucu gösterme */
+        if(res && res.ucusDurum){
+          $hint.addClass('fg-hint-ok').removeClass('fg-hint-err')
+            .text('✓ '+(res.havayolu||'Uçuş')+(res.kalkisSehir?' · '+res.kalkisSehir+' → Antalya':''));
+        } else {
+          $hint.addClass('fg-hint-err').removeClass('fg-hint-ok').text('Bu kod AYT\'de bulunamadı (yine de kaydedebilirsin)');
+        }
+      }).catch(function(){ $hint.text(''); });
+  }, 500);
+}
+
+/* Enter'a basınca sıradaki alana geçer, son alanda Kaydet'i tetikler —
+   formu baştan sona fareyle tıklamadan, tek elle hızlıca doldurmak için. */
+var ADD_FORM_FIELD_ORDER = ['f-tarih','f-saat','f-musteri','f-tel','f-ucus','f-kisi','f-arac','f-nereden','f-nereye','f-surucu','f-plaka','f-stel'];
+function wireAddFormEnterFlow(){
+  ADD_FORM_FIELD_ORDER.forEach(function(id, i){
+    $('#'+id).off('keydown.addform').on('keydown.addform', function(e){
+      if(e.key !== 'Enter') return;
+      e.preventDefault();
+      var next = ADD_FORM_FIELD_ORDER[i+1];
+      if(next) $('#'+next).focus().select();
+      else submitAddTransfer();
+    });
+  });
+}
+
 function openAddModal(){
   $('#add-err').text('');
   $('#add-submit-btn').prop('disabled',false).text('Kaydet →');
+  $('#f-ucus-info').text('');
+  $('#f-klinik').prop('checked', false);
   /* Bugünün tarihini varsayılan yap */
   if(!$('#f-tarih').val()) $('#f-tarih').val(getToday());
+  fillAddFormSuggestions();
+  wireAddFormEnterFlow();
   $('#add-modal').addClass('open');
   setTimeout(function(){ $('#f-musteri').focus(); },200);
 }
 function closeAddModal(){ $('#add-modal').removeClass('open'); }
+
+/* Klinik işlerini karşılamacıya net göstermek için — ayrı bir DB kolonu
+   AÇMADAN (backend'e dokunmadan), "nereye" alanının başına tanınabilir bir
+   etiket ekliyoruz. Satır listesi bu etiketi görünce özel bir "KLİNİK"
+   rozeti çiziyor, etiketin kendisini adres olarak göstermiyor. */
+var KLINIK_ETIKET = '🏥 KLİNİK — ';
+function isKlinikNereye(nereye){ return (nereye||'').indexOf(KLINIK_ETIKET) === 0; }
+function klinikTemizNereye(nereye){ return isKlinikNereye(nereye) ? nereye.slice(KLINIK_ETIKET.length) : (nereye||''); }
 
 function submitAddTransfer(){
   var tarih   = $('#f-tarih').val().trim();
@@ -1009,6 +1104,7 @@ function submitAddTransfer(){
     $('#add-err').text('❌ Tarih, Saat, Müşteri ve Nereye zorunludur');
     return;
   }
+  if($('#f-klinik').is(':checked') && !isKlinikNereye(nereye)) nereye = KLINIK_ETIKET + nereye;
   $('#add-submit-btn').prop('disabled',true).text('Kaydediliyor…');
   var tok = localStorage.getItem('ramos_token')||'';
 
@@ -1038,6 +1134,8 @@ function submitAddTransfer(){
       closeAddModal();
       /* Formu temizle */
       $('#f-tarih,#f-saat,#f-musteri,#f-tel,#f-ucus,#f-kisi,#f-arac,#f-nereye,#f-surucu,#f-plaka,#f-stel').val('');
+      $('#f-klinik').prop('checked', false);
+      $('#f-ucus-info').text('');
       _lastDataStr = ''; /* cache'i iptal et — yeni veri çekilsin */
       yukle();
     } else {
@@ -1184,7 +1282,7 @@ function printList(tarih){
       +'<td>'+(d.ucus?'<span class="chip-ucus">✈ '+esc(d.ucus)+'</span>':'<span class="nd">—</span>')+'</td>'
       +'<td class="ctr">'+esc(d.kisi||'—')+'</td>'
       +'<td class="sm">'+esc(d.arac||'—')+'</td>'
-      +'<td><span class="from">↑</span> '+esc(d.nereden||'')+'<br><span class="to">↓</span> '+esc(d.nereye||'')+'</td>'
+      +'<td>'+(isKlinikNereye(d.nereye)?'<span class="chip-klinik">🏥 KLİNİK</span><br>':'')+'<span class="from">↑</span> '+esc(d.nereden||'')+'<br><span class="to">↓</span> '+esc(klinikTemizNereye(d.nereye)||'')+'</td>'
       +'<td><strong>'+esc(d.surucu||'—')+'</strong>'
         +(d.surucuPlaka?'<br><span class="plaka">'+esc(d.surucuPlaka)+'</span>':'')
         +(d.surucuTel?'<br><small>📞 +'+esc(d.surucuTel)+'</small>':'')+'</td>'
