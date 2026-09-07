@@ -303,6 +303,17 @@ function parseTarih(s){
   return new Date(+p[2], +p[1]-1, +p[0]);
 }
 
+/* "gg.aa.yyyy" (bizim iç format) <-> "yyyy-aa-gg" (native <input type=date>'in
+   kendi formatı) — Transfer Ekle/Düzenle formundaki takvim seçici için. */
+function dmyToIso(dmy){
+  var p=(dmy||'').split('.');
+  return p.length===3 ? (p[2]+'-'+p[1]+'-'+p[0]) : '';
+}
+function isoToDmy(iso){
+  var p=(iso||'').split('-');
+  return p.length===3 ? (p[2]+'.'+p[1]+'.'+p[0]) : '';
+}
+
 function getToday()    { return fmtK(new Date()); }
 function getTomorrow() { var d=new Date(); d.setDate(d.getDate()+1); return fmtK(d); }
 
@@ -1102,8 +1113,8 @@ function openAddModal(){
   $('#f-tarih,#f-saat,#f-musteri,#f-tel,#f-ucus,#f-kisi,#f-arac,#f-surucu,#f-plaka,#f-stel').val('');
   $('#f-nereden').val('Antalya Havalimanı');
   $('#f-nereye').val('');
-  /* Bugünün tarihini varsayılan yap */
-  $('#f-tarih').val(getToday());
+  /* Bugünün tarihini varsayılan yap — native date input kendi formatını (yyyy-aa-gg) ister */
+  $('#f-tarih').val(dmyToIso(getToday()));
   fillAddFormSuggestions();
   wireAddFormEnterFlow();
   $('#add-modal').addClass('open');
@@ -1124,7 +1135,7 @@ function openEditModal(manuelId){
   $('#add-submit-btn').prop('disabled',false);
   $('#f-ucus-info').text('');
 
-  $('#f-tarih').val(d.tarih||'');
+  $('#f-tarih').val(dmyToIso(d.tarih));
   $('#f-saat').val(d.saat||'');
   $('#f-musteri').val(d.musteri||'');
   $('#f-tel').val(d.musteriTel||'');
@@ -1180,7 +1191,8 @@ function isKlinikNereye(nereye){ return (nereye||'').indexOf(KLINIK_ETIKET) === 
 function klinikTemizNereye(nereye){ return isKlinikNereye(nereye) ? nereye.slice(KLINIK_ETIKET.length) : (nereye||''); }
 
 function submitAddTransfer(){
-  var tarih   = $('#f-tarih').val().trim();
+  /* Native date input "yyyy-aa-gg" verir — backend hep "gg.aa.yyyy" bekliyor */
+  var tarih   = isoToDmy($('#f-tarih').val().trim());
   var saat    = $('#f-saat').val().trim();
   var musteri = $('#f-musteri').val().trim();
   var nereden = $('#f-nereden').val().trim();

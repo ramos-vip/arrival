@@ -1130,6 +1130,14 @@ body.theme-noon { background-image:
 .fg input:focus, .fg select:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
 .fg input::placeholder { color: #243450; }
 .fg select option { background: #0d1e38; }
+/* Tarih/saat: native takvim + saat seçici — koyu tema ile uyumlu görünsün
+   diye color-scheme:dark, tarayıcının kendi ikon/pencere rengini karanlığa
+   çevirir (aksi halde beyaz bir kutu gibi göze batardı). */
+.fg input[type="date"], .fg input[type="time"] { color-scheme: dark; }
+.fg input[type="date"]::-webkit-calendar-picker-indicator,
+.fg input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(70%) sepia(70%) saturate(400%) hue-rotate(2deg); cursor: pointer;
+}
 .fg-hint { font-size: 11px; color: #64748b; min-height: 14px; }
 .fg-hint-ok  { color: #22c55e; }
 .fg-hint-err { color: #f87171; }
