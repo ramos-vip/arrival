@@ -317,8 +317,13 @@ function telLink(v){
    dokunulamaz (o alan onlarda hiç gelmiyor, bkz. panel_feed.php). */
 function manuelActionsHtml(d){
   if(!isYonetici() || !d.manuelId) return '';
-  return '<button class="edit-btn" data-manuel-id="'+d.manuelId+'" title="Düzenle">✏️</button>'
-       + '<button class="del-btn" data-manuel-id="'+d.manuelId+'" title="Sil">🗑️</button>';
+  /* Satırın üst-sağ köşesine mutlak konumlu — .trow'un position:relative'ine
+     göre yerleşir (hangi hücrenin içine yazıldığı önemsiz), Voucher butonuyla
+     aynı satırda sıkışmasın diye ayrı bir "köşe menüsü" gibi durur. */
+  return '<div class="row-actions">'
+       + '<button class="edit-btn" data-manuel-id="'+d.manuelId+'" title="Düzenle">✏️</button>'
+       + '<button class="del-btn" data-manuel-id="'+d.manuelId+'" title="Sil">🗑️</button>'
+       + '</div>';
 }
 
 function buildRow(d){

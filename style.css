@@ -835,10 +835,13 @@ body.theme-noon { background-image:
 .trow.next-up > td { background:rgba(251,191,36,.045) !important; }
 .trow.next-up > td:first-child { border-left-color:#fbbf24 !important; }
 
-/* ════ KLİNİK İŞİ VURGULA ════ — karşılamacı ilk bakışta ayırt edebilsin diye
-   satır boyunca pembe/magenta vurgu + rota hücresinde ayrı bir rozet. */
-.trow-klinik > td:first-child { border-left-color:#f472b6 !important; }
-.trow-klinik > td { background: rgba(244,114,182,.045) !important; }
+/* ════ KLİNİK İŞİ VURGULA ════ — küçük bir rozete gizlenmesin diye SATIRIN
+   TAMAMI belirgin pembe/magenta tonda — karşılamacı listeye şöyle bir
+   bakınca bile hiç kaçırmasın. */
+.trow-klinik > td:first-child { border-left-width: 4px !important; border-left-color:#f472b6 !important; }
+.trow-klinik > td { background: rgba(244,114,182,.12) !important; }
+.trow-klinik:hover > td { background: rgba(244,114,182,.18) !important; }
+.trow-klinik { box-shadow: inset 0 0 0 1px rgba(244,114,182,.22); }
 .klinik-badge {
   display: inline-flex; align-items: center; gap: 4px;
   background: rgba(244,114,182,.16); border: 1px solid rgba(244,114,182,.4);
@@ -1249,15 +1252,22 @@ body.theme-noon { background-image:
   white-space: nowrap;
 }
 .vchr-btn:hover { background: rgba(201,162,39,.2); border-color: rgba(201,162,39,.45); }
+/* Voucher butonuyla sıkışmasın diye ayrı bir "köşe menüsü" — .trow'un
+   position:relative'ine göre satırın sağ üst köşesine oturur. */
+.row-actions {
+  position: absolute; top: 8px; right: 10px; z-index: 3;
+  display: flex; gap: 5px;
+}
 .edit-btn, .del-btn {
   display: inline-flex; align-items: center; justify-content: center;
-  width: 22px; height: 22px; margin-top: 8px; margin-left: 5px;
-  background: rgba(148,163,184,.08); border: 1px solid rgba(148,163,184,.22);
-  border-radius: 20px; cursor: pointer; font-size: 11px; line-height: 1;
-  transition: background .15s, border-color .15s;
+  width: 26px; height: 26px;
+  background: rgba(8,14,26,.85); backdrop-filter: blur(4px);
+  border: 1px solid rgba(148,163,184,.28);
+  border-radius: 20px; cursor: pointer; font-size: 12px; line-height: 1;
+  transition: background .15s, border-color .15s, transform .15s;
 }
-.edit-btn:hover { background: rgba(96,165,250,.18); border-color: rgba(96,165,250,.45); }
-.del-btn:hover  { background: rgba(248,113,113,.18); border-color: rgba(248,113,113,.45); }
+.edit-btn:hover { background: rgba(96,165,250,.22); border-color: rgba(96,165,250,.5); transform: scale(1.08); }
+.del-btn:hover  { background: rgba(248,113,113,.22); border-color: rgba(248,113,113,.5); transform: scale(1.08); }
 
 /* ════════════════════════════════
    VOUCHER OVERLAY / KART
