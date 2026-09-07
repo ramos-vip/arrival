@@ -838,9 +838,21 @@ body.theme-noon { background-image:
 /* ════ KLİNİK İŞİ VURGULA ════ — küçük bir rozete gizlenmesin diye SATIRIN
    TAMAMI belirgin pembe/magenta tonda — karşılamacı listeye şöyle bir
    bakınca bile hiç kaçırmasın. */
-.trow-klinik > td:first-child { border-left-width: 4px !important; border-left-color:#f472b6 !important; }
-.trow-klinik > td { background: rgba(244,114,182,.12) !important; }
-.trow-klinik:hover > td { background: rgba(244,114,182,.18) !important; }
+.trow-klinik > td { background: rgba(244,114,182,.2) !important; }
+.trow-klinik:hover > td { background: rgba(244,114,182,.28) !important; }
+/* Çift satırlarda ayrı bir kural (.trow:nth-child(even) > td:first-child)
+   SADECE ilk hücrenin (SAAT) rengini daha spesifik olduğu için eziyordu —
+   dinlenme halinde o tek sütun pembe görünmüyordu. Burada bilerek eşit/daha
+   yüksek özgüllükle tekrar veriyoruz ki tüm satır (SAAT dahil) tutarlı kalsın. */
+.trow-klinik > td:first-child,
+.trow.trow-klinik:nth-child(even) > td:first-child {
+  background: rgba(244,114,182,.2) !important;
+  border-left-width: 4px !important; border-left-color:#f472b6 !important;
+}
+.trow-klinik:hover > td:first-child,
+.trow.trow-klinik:nth-child(even):hover > td:first-child {
+  background: rgba(244,114,182,.28) !important;
+}
 .trow-klinik { box-shadow: inset 0 0 0 1px rgba(244,114,182,.22); }
 .klinik-badge {
   display: inline-flex; align-items: center; gap: 4px;
